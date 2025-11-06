@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "P09MAX",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

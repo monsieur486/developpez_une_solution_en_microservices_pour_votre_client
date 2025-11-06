@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ajouter un patient</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div class="container">
+    <div class="starter-template">
+        <h5>Ajouter un patient</h5>
+        <div th:if="${errorMessage}">
+            <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
+                <ul>
+                    <li th:each="msg : ${errorMessage.messages}" th:text="${msg}"></li>
+                </ul>
+            </div>
+        </div>
+        <form method="post" th:action="@{/app/dashboard/ajout}" th:object="${patient}">
+            <label for="firstName">Prénom :</label>
+            <input id="firstName" th:field="*{firstName}" type="text"/>
+            <br/>
+            <label for="lastName">Nom :</label>
+            <input id="lastName" th:field="*{lastName}" type="text"/>
+            <br/>
+            <label for="birthDate">Date de naissance :</label>
+            <input id="birthDate" th:field="*{birthDate}" type="date"/>
+            <br/>
+            <label for="gender">Gender :</label>
+            <select id="gender" th:field="*{gender}">
+                <option value="">A définir</option>
+                <option value="M">Masculin</option>
+                <option value="F">Féminin</option>
+            </select>
+            <br/>
+            <label for="address">Adresse :</label>
+            <input id="address" th:field="*{postalAddress}" type="text"/>
+            <br/>
+            <label for="phoneNumber">Numéro de téléphone :</label>
+            <input id="phoneNumber" th:field="*{phoneNumber}" type="text"/>
+            <br/>
+            <button type="submit">Créer</button>
+        </form>
+        <p><a th:href="@{/app/dashboard}">Retout à la liste des patients</a></p>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

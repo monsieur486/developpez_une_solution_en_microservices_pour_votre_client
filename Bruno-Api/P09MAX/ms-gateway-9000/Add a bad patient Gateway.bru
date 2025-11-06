@@ -1,0 +1,26 @@
+meta {
+  name: Add a bad patient Gateway
+  type: http
+  seq: 10
+}
+
+post {
+  url: http://127.0.0.1:9000/ms-patients/patients
+  body: json
+  auth: basic
+}
+
+auth:basic {
+  username: app_user
+  password: app_password
+}
+
+body:json {
+  {
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

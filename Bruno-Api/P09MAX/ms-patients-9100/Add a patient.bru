@@ -1,0 +1,30 @@
+meta {
+  name: Add a patient
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://127.0.0.1:9100/patients
+  body: json
+  auth: basic
+}
+
+auth:basic {
+  username: app_user
+  password: app_password
+}
+
+body:json {
+  {
+    "firstName": "Laurent",
+    "lastName": "Touret",
+    "birthDate": "1973-03-01",
+    "gender": "M"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

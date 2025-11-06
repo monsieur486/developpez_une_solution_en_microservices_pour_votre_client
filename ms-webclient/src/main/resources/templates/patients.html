@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Liste des patients</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div class="container">
+    <div class="starter-template">
+        <h5>Liste des patients</h5>
+        <div th:if="${errorMessage}">
+            <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
+                <ul>
+                    <li th:each="msg : ${errorMessage.messages}" th:text="${msg}"></li>
+                </ul>
+            </div>
+        </div>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Prénom</th>
+                <th>Nom</th>
+                <th>Date de naissance</th>
+                <th>Genre</th>
+                <th>Adresse postale</th>
+                <th>Téléphone</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="patient : ${patients}">
+                <td th:text="${patient.firstName}"></td>
+                <td th:text="${patient.lastName}"></td>
+                <td th:text="${#temporals.format(patient.birthDate, 'dd/MM/yyyy')}"></td>
+                <td th:text="${patient.gender}"></td>
+                <td th:text="${patient.postalAddress}"></td>
+                <td th:text="${patient.phoneNumber}"></td>
+                <td>
+                    <a th:href="@{'/app/dashboard/' + ${patient.id}}">🎫 Fiche</a> |
+                    <a th:href="@{'/app/dashboard/' + ${patient.id} +'/update' }">✍️ Modifier</a> |
+                    <a th:href="@{'/app/dashboard/' + ${patient.id} + '/notes'}">📝 Notes</a> |
+                    <a th:href="@{'/app/dashboard/' + ${patient.id} + '/evaluation'}">⚠️ Risque</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <a th:href="@{/app/dashboard/ajout}">✚ Ajouter patient</a>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

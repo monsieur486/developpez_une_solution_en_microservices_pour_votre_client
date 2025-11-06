@@ -1,0 +1,21 @@
+meta {
+  name: Get one patient
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://127.0.0.1:9100/patients/1
+  body: none
+  auth: basic
+}
+
+auth:basic {
+  username: app_user
+  password: app_password
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

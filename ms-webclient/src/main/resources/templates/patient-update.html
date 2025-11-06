@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Mise à jour fiche patient</title>
+    <th:block th:replace="~{fragments/header :: header-css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div class="container">
+    <div class="starter-template">
+        <h5>Mise à jour fiche patient</h5>
+        <div th:if="${errorMessage}">
+            <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
+                <ul>
+                    <li th:each="msg : ${errorMessage.messages}" th:text="${msg}"></li>
+                </ul>
+            </div>
+        </div>
+        <div th:if="${patient}">
+            <form method="post" th:action="@{/app/dashboard/{id}/update(id=${id})}">
+                <input name="id" th:value="${id}" type="hidden"/>
+                <label for="firstName">Prénom :</label>
+                <input id="firstName" name="firstName" th:value="${patient.firstName}" type="text"/>
+                <br/>
+                <label for="lastName">Nom :</label>
+                <input id="lastName" name="lastName" th:value="${patient.lastName}" type="text"/>
+                <br/>
+                <label for="birthDate">Date de naissance :</label>
+                <input id="birthDate" name="birthDate" th:value="${patient.birthDate}" type="date"/>
+                <br/>
+                <label for="gender">Gender :</label>
+                <select id="gender" name="gender">
+                    <option th:selected="${patient.gender == 'M'}" value="M">Masculin</option>
+                    <option th:selected="${patient.gender == 'F'}" value="F">Féminin</option>
+                </select>
+                <br/>
+                <label for="address">Adresse :</label>
+                <input id="address" name="postalAddress"
+                       th:value="${submittedPostalAddress != null ? submittedPostalAddress : patient.postalAddress}"
+                       type="text"/>
+                <br/>
+                <label for="phoneNumber">Numéro de téléphone :</label>
+                <input id="phoneNumber" name="phoneNumber"
+                       th:value="${submittedPhoneNumber != null ? submittedPhoneNumber : patient.phoneNumber}"
+                       type="text"/>
+                <br/>
+                <button type="submit">Mettrte à jour</button>
+            </form>
+            <p><a th:href="@{/app/dashboard/{id}(id=${id})}">Retour à la fiche patient</a></p>
+        </div>
+        <div th:if="${patient == null}">
+            <p><a th:href="@{/app/dashboard}">Retour à la liste des patients</a></p>
+        </div>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

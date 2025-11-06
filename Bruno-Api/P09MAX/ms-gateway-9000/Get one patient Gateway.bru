@@ -1,0 +1,21 @@
+meta {
+  name: Get one patient Gateway
+  type: http
+  seq: 10
+}
+
+get {
+  url: http://127.0.0.1:9000/ms-patients/patients/10
+  body: none
+  auth: basic
+}
+
+auth:basic {
+  username: app_user
+  password: app_password
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

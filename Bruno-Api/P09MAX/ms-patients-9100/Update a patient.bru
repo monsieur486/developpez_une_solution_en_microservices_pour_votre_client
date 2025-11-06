@@ -1,0 +1,32 @@
+meta {
+  name: Update a patient
+  type: http
+  seq: 2
+}
+
+put {
+  url: http://127.0.0.1:9100/patients/5
+  body: json
+  auth: basic
+}
+
+auth:basic {
+  username: app_user
+  password: app_password
+}
+
+body:json {
+  {
+    "firstName": "Laurent",
+    "lastName": "Touret",
+    "birthDate": "1973-03-01",
+    "gender": "M",
+    "postalAddress": "1 rue de la Gare",
+    "phoneNumber": "123-456-789"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

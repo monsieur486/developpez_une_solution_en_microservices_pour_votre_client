@@ -1,0 +1,60 @@
+services:
+
+    patients-db:
+        image: postgres:16
+        container_name: patients-db
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB:-patientsdb}
+            POSTGRES_USER: ${POSTGRES_USER:-patient_user}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-patient_pass}
+        ports:
+            - "5432:5432"
+        volumes:
+            - db_data:/var/lib/postgresql/data
+
+    ms-pgadmin:
+        image: dpage/pgadmin4
+        container_name: ms-pgadmin
+        profiles: ["dev"]
+        depends_on:
+            - patients-db
+        ports:
+            - "5433:80"
+        environment:
+            PGADMIN_DEFAULT_EMAIL: ${POSTGRES_USER:-patient_user}@pgadmin.com
+            PGADMIN_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-patient_pass}
+            # Don't require the user to login
+            PGADMIN_CONFIG_SERVER_MODE: 'False'
+            # Don't require a "master" password after logging in
+            PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+        volumes:
+            - pgadmin-data:/var/lib/pgadmin
+
+    notes-db:
+        image: mongo:8.0.14
+        container_name: notes-db
+        environment:
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-notes_user}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-notes_password}
+        ports:
+            - "27017:27017"
+        volumes:
+            - database-data:/data/db
+
+    ms-mexpress:
+        image: mongo-express:latest
+        container_name: ms-mexpress
+        profiles: ["dev"]
+        depends_on:
+            - notes-db
+        ports:
+            - 27018:8081
+        environment:
+            ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME:-notes_user}
+            ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-notes_password}
+            ME_CONFIG_MONGODB_SERVER: notes-db
+
+volumes:
+  db_data:
+  database-data:
+  pgadmin-data:

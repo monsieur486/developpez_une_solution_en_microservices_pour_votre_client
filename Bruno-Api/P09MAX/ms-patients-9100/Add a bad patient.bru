@@ -1,0 +1,26 @@
+meta {
+  name: Add a bad patient
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://127.0.0.1:9100/patients
+  body: json
+  auth: basic
+}
+
+auth:basic {
+  username: app_user
+  password: app_password
+}
+
+body:json {
+  {
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

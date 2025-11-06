@@ -1,0 +1,15 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: ms-webclient
+
+app:
+  gateway:
+    base-url: http://ms-gateway:9000
+  auth:
+    username: ${APP_USERNAME:app_user}
+    password: ${APP_PASSWORD:app_password}
+
+server:
+  port: 8080

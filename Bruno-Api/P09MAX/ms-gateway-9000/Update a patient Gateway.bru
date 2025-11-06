@@ -1,0 +1,32 @@
+meta {
+  name: Update a patient Gateway
+  type: http
+  seq: 11
+}
+
+put {
+  url: http://127.0.0.1:9000/ms-patients/patients/5
+  body: json
+  auth: basic
+}
+
+auth:basic {
+  username: app_user
+  password: app_password
+}
+
+body:json {
+  {
+    "firstName": "",
+    "lastName": "",
+    "birthDate": "",
+    "gender": "",
+    "postalAddress": "1 rue de la Gare",
+    "phoneNumber": "123-456-789"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,31 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  application:
+    name: ms-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+              filters:
+                - name: StripPrefix
+                  args:
+                    parts: 1
+server:
+  port: 9000
+
+management:
+  endpoints.web.exposure.include: health,info,gateway
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://ms-eureka:8761/eureka
+    registerWithEureka: true
+    fetchRegistry: true

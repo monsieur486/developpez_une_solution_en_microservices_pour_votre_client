@@ -1,0 +1,47 @@
+# GATEWAY - application.yml
+spring:
+  application:
+    name: ms-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            # ajoute la config CORS aussi sur le SimpleUrlHandler (utile pour OPTIONS)
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:9000"
+                  - "http://ms-gateway:9000"
+                allowedMethods: [ GET, POST, PUT, PATCH, DELETE, OPTIONS ]
+                allowedHeaders: [ "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With", "*" ]
+                exposedHeaders: [ "Authorization" ]
+                allowCredentials: true
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+              filters:
+                - name: StripPrefix
+                  args:
+                    parts: 1
+
+server:
+  port: 9000
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    disable-swagger-default-url: true
+    urls:
+      - name: ms-patients
+        url: /ms-patients/v3/api-docs
+      - name: ms-notes
+        url: /ms-notes/v3/api-docs
+      - name: ms-risque
+        url: /ms-risque/v3/api-docs
+    urlsPrimaryName: ms-patients
