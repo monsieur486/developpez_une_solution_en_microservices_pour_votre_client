@@ -1,18 +1,24 @@
 meta {
-  name: Not found patient
+  name: Ajoute bad note
   type: http
-  seq: 7
+  seq: 3
 }
 
-get {
-  url: http://127.0.0.1:9100/patients/10
-  body: none
+post {
+  url: http://127.0.0.1:9200/patients/5/notes
+  body: json
   auth: basic
 }
 
 auth:basic {
   username: app_user
   password: app_password
+}
+
+body:json {
+  {
+      "content": ""
+    }
 }
 
 settings {

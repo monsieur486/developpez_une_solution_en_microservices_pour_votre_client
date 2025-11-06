@@ -1,11 +1,11 @@
 meta {
-  name: Add a bad patient Gateway
+  name: Ajoute note
   type: http
-  seq: 10
+  seq: 2
 }
 
 post {
-  url: http://127.0.0.1:9000/ms-patients/patients
+  url: http://127.0.0.1:9200/patients/5/notes
   body: json
   auth: basic
 }
@@ -17,7 +17,8 @@ auth:basic {
 
 body:json {
   {
-  }
+      "content": "yes"
+    }
 }
 
 settings {

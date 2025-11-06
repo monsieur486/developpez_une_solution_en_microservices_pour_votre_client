@@ -1,0 +1,37 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  application:
+    name: ms-notes
+
+  data:
+    mongodb:
+      host: notes-db
+      port: 27017
+      username: ${MONGO_INITDB_ROOT_USERNAME:notes_user}
+      password: ${MONGO_INITDB_ROOT_PASSWORD:notes_password}
+      database: notesdb
+      authentication-database: admin
+
+mongock:
+  migration-scan-package:
+    - com.mr486.msnotes.dbchangelogs
+
+security:
+  app-user:
+    username: ${APP_USERNAME:app_user}
+    password: ${APP_PASSWORD:app_password}
+
+server:
+  port: 9200
+
+management:
+  endpoints.web.exposure.include: health,info
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://ms-eureka:8761/eureka
+    registerWithEureka: true
+    fetchRegistry: true
