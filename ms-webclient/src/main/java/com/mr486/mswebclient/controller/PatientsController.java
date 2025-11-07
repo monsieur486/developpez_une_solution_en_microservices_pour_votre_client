@@ -3,7 +3,7 @@ package com.mr486.mswebclient.controller;
 import com.mr486.mswebclient.dto.ErrorMessage;
 import com.mr486.mswebclient.dto.Patient;
 import com.mr486.mswebclient.dto.PatientForm;
-import com.mr486.mswebclient.tools.PatientErrorResponse;
+import com.mr486.mswebclient.tools.ErrorResponseTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -27,13 +27,15 @@ public class PatientsController {
 
   private final RestTemplate restTemplate;
   private final String gatewayBase;
-  private final PatientErrorResponse patientErrorResponse;
+  private final ErrorResponseTools errorResponseTools;
+
+  private final String microserviceName = "ms-patients";
 
   public PatientsController(RestTemplate restTemplate,
-                            @Value("${app.gateway.base-url}") String gatewayBase, PatientErrorResponse patientErrorResponse) {
+                            @Value("${app.gateway.base-url}") String gatewayBase, ErrorResponseTools errorResponseTools) {
     this.restTemplate = restTemplate;
     this.gatewayBase = gatewayBase;
-    this.patientErrorResponse = patientErrorResponse;
+    this.errorResponseTools = errorResponseTools;
   }
 
   @GetMapping("/dashboard")
@@ -50,7 +52,7 @@ public class PatientsController {
       patients = response.getBody();
       model.addAttribute("patients", patients);
     } catch (Exception ex) {
-      ErrorMessage errorMessage = patientErrorResponse.getErrorMessage(ex.getMessage());
+      ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("errorMessage", errorMessage);
     }
     return "patients";
@@ -75,7 +77,7 @@ public class PatientsController {
       );
       return "redirect:/app/dashboard";
     } catch (Exception ex) {
-      ErrorMessage errorMessage = patientErrorResponse.getErrorMessage(ex.getMessage());
+      ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("patient", patient);
       model.addAttribute("errorMessage", errorMessage);
       return "patient-ajout";

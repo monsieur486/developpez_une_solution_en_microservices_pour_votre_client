@@ -10,9 +10,9 @@ import java.util.List;
 
 @Component
 @Slf4j
-public class PatientErrorResponse {
+public class ErrorResponseTools {
 
-  public ErrorMessage getErrorMessage(String exceptionMessage) {
+  public ErrorMessage getErrorMessage(String exceptionMessage, String microserviceName) {
     ErrorMessage errorMessage = new ErrorMessage();
     try {
       int firstBrace = exceptionMessage.indexOf('{');
@@ -29,7 +29,7 @@ public class PatientErrorResponse {
       errorMessage.setMessages(error.getMessages());
     } catch (Exception e) {
       errorMessage.setCritical(true);
-      errorMessage.setMessages(List.of("ms-patient ne répond pas."));
+      errorMessage.setMessages(List.of(microserviceName + " ne répond pas."));
     }
     return errorMessage;
   }

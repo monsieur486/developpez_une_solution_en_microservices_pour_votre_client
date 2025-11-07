@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ajouter une note</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body>
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div class="container">
+    <div class="starter-template">
+        <h5>Ajouter une note</h5>
+        <div th:if="${errorMessage}">
+            <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
+                <ul>
+                    <li th:each="msg : ${errorMessage.messages}" th:text="${msg}"></li>
+                </ul>
+            </div>
+        </div>
+        <form method="post" th:action="@{'/app/dashboard/' + ${patientId} + '/notes'}" th:object="${note}">
+            <label for="content"></label>
+            <textarea cols="60" id="content" maxlength="500" placeholder="Saisissez la note (max 500 caractères)"
+                      rows="5"
+                      th:field="*{content}"></textarea>
+            <button type="submit">Créer</button>
+        </form>
+        <p><a th:href="@{'/app/dashboard/' + ${patientId} + '/notes'}">Retout à la liste des notes</a></p>
+    </div>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

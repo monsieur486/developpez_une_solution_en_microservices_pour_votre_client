@@ -3,7 +3,7 @@ package com.mr486.mswebclient.controller;
 import com.mr486.mswebclient.dto.ErrorMessage;
 import com.mr486.mswebclient.dto.Patient;
 import com.mr486.mswebclient.dto.PatientForm;
-import com.mr486.mswebclient.tools.PatientErrorResponse;
+import com.mr486.mswebclient.tools.ErrorResponseTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -22,13 +22,15 @@ public class PatientDetailController {
 
   private final RestTemplate restTemplate;
   private final String gatewayBase;
-  private final PatientErrorResponse patientErrorResponse;
+  private final ErrorResponseTools errorResponseTools;
+
+  private final String microserviceName = "ms-patients";
 
   public PatientDetailController(RestTemplate restTemplate,
-                                 @Value("${app.gateway.base-url}") String gatewayBase, PatientErrorResponse patientErrorResponse) {
+                                 @Value("${app.gateway.base-url}") String gatewayBase, ErrorResponseTools errorResponseTools) {
     this.restTemplate = restTemplate;
     this.gatewayBase = gatewayBase;
-    this.patientErrorResponse = patientErrorResponse;
+    this.errorResponseTools = errorResponseTools;
   }
 
   @GetMapping("/dashboard/{id}")
@@ -44,7 +46,7 @@ public class PatientDetailController {
       Patient patient = response.getBody();
       model.addAttribute("patient", patient);
     } catch (Exception ex) {
-      ErrorMessage errorMessage = patientErrorResponse.getErrorMessage(ex.getMessage());
+      ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("errorMessage", errorMessage);
     }
     return "patient-detail";
@@ -64,7 +66,7 @@ public class PatientDetailController {
       model.addAttribute("patient", patient);
       return "patient-update";
     } catch (Exception ex) {
-      ErrorMessage errorMessage = patientErrorResponse.getErrorMessage(ex.getMessage());
+      ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("errorMessage", errorMessage);
       return "patient-detail";
     }
@@ -83,7 +85,7 @@ public class PatientDetailController {
       );
       return "redirect:/app/dashboard/" + id;
     } catch (Exception ex) {
-      ErrorMessage errorMessage = patientErrorResponse.getErrorMessage(ex.getMessage());
+      ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("patient", patient);
       model.addAttribute("id", id);
       model.addAttribute("errorMessage", errorMessage);
