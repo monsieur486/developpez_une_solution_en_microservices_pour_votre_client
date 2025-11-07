@@ -1,27 +1,110 @@
 services:
 
-    patients-db:
-        image: postgres:16
-        container_name: patients-db
-        environment:
-            POSTGRES_DB: ${POSTGRES_DB:-patientsdb}
-            POSTGRES_USER: ${POSTGRES_USER:-patient_user}
-            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-patient_pass}
-        ports:
-            - "5432:5432"
-        volumes:
-            - db_data:/var/lib/postgresql/data
+  ms-eureka:
+    build:
+      context: ms-eureka
+      dockerfile: Dockerfile
+    container_name: ms-eureka
+    profiles: ["fullstack"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8761:8761"
 
-    notes-db:
-        image: mongo:8.0.14
-        container_name: notes-db
-        environment:
-            MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-notes_user}
-            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-notes_password}
-        ports:
-            - "27017:27017"
-        volumes:
-            - database-data:/data/db
+  ms-gateway:
+    build:
+      context: ms-gateway
+      dockerfile: Dockerfile
+    container_name: ms-gateway
+    profiles: ["fullstack"]
+    depends_on:
+      - ms-eureka
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "9000:9000"
+
+  patients-db:
+    image: postgres:16
+    container_name: patients-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-patientsdb}
+      POSTGRES_USER: ${POSTGRES_USER:-patient_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-patient_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  notes-db:
+    image: mongo:8.0.14
+    container_name: notes-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-notes_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-notes_password}
+    ports:
+      - "27017:27017"
+    volumes:
+      - database-data:/data/db
+
+  ms-patients:
+    build:
+      context: ms-patients
+      dockerfile: Dockerfile
+    profiles: [ "fullstack" ]
+    depends_on:
+      - ms-eureka
+      - patients-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+
+  ms-notes:
+    build:
+      context: ms-notes
+      dockerfile: Dockerfile
+    profiles: [ "fullstack" ]
+    depends_on:
+      - ms-eureka
+      - notes-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+
+  ms-risque:
+    build:
+      context: ms-risque
+      dockerfile: Dockerfile
+    profiles: [ "fullstack" ]
+    depends_on:
+      - ms-eureka
+      - ms-patients
+      - ms-notes
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+
+  ms-webclient:
+    build:
+      context: ms-webclient
+      dockerfile: Dockerfile
+    profiles: [ "fullstack" ]
+    container_name: ms-webclient
+    depends_on:
+      - ms-eureka
+      - ms-gateway
+      - ms-patients
+      - ms-notes
+      - ms-risque
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+    ports:
+      - "${PORT_WEBCLIENT:-8080}:8080"
 
 volumes:
   db_data:

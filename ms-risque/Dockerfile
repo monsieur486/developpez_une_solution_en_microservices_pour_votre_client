@@ -3,8 +3,8 @@ WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
 
-FROM openjdk:17-jdk-alpine
-RUN addgroup -S spring && adduser -S spring -G spring
+FROM eclipse-temurin:17-jdk
+RUN groupadd -r spring && useradd -r -g spring spring
 EXPOSE 9300
 USER spring:spring
 ARG JAR_FILE=/app/target/*.jar
