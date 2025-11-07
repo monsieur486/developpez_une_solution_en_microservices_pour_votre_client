@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Evaluation rique patient</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body>
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div class="container">
+    <div class="starter-template">
+        <h5>Evaluation rique patient</h5>
+        <p>Risque : <span th:text="${evaluation}"></span></p>
+    </div>
+    <p><a th:href="@{'/app/dashboard/' + ${patientId}}">Retour à la fiche patient</a></p>
+    <p><a th:href="@{/app/dashboard}">Retout à la liste des patients</a></p>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
