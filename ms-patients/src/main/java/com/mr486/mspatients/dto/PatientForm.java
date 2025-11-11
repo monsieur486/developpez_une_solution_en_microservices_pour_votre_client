@@ -10,16 +10,16 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class PatientForm {
-  @NotBlank(message = "Le prénom ne peut pas être vide")
+  @NotBlank(message = "le prénom ne peut pas être vide")
   private String firstName;
 
-  @NotBlank(message = "Le nom de famille ne peut pas être vide")
+  @NotBlank(message = "le nom de famille ne peut pas être vide")
   private String lastName;
 
-  @NotNull(message = "La date de naissance ne peut pas être nulle")
+  @NotNull(message = "la date de naissance ne peut pas être nulle")
   private LocalDate birthDate;
 
-  @NotBlank(message = "Le genre ne peut pas être vide")
+  @NotBlank(message = "le genre ne peut pas être vide")
   private String gender;
 
   private String postalAddress;

@@ -2,6 +2,7 @@ package com.mr486.msrisque.service;
 
 import com.mr486.msrisque.dto.Note;
 import com.mr486.msrisque.dto.Patient;
+import com.mr486.msrisque.dto.Risque;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,7 @@ public class EvaluationService {
     return declencheursCount;
   }
 
-  public String evaluationDuRisque(Long patientId) {
+  public Risque evaluationDuRisque(Long patientId) {
     Patient patient = patientService.getPatientById(patientId);
     List<Note> notes = notesService.getNotesByPatientId(patientId);
     String genre = patient.getGender();
@@ -74,7 +75,7 @@ public class EvaluationService {
       niveauRisque = "None";
     }
 
-    return niveauRisque;
+    return new Risque(niveauRisque);
   }
 
   private int calculAge(LocalDate birthDate) {

@@ -2,7 +2,6 @@ package com.mr486.msnotes.configuration;
 
 import com.mr486.msnotes.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -10,10 +9,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Global exception handler for the application.
@@ -23,21 +18,10 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  @Value("${spring.application.name:application}")
-  private String appName;
-
-  /* ---------- Outils ---------- */
-
-  private ResponseEntity<ErrorResponse> build(List<String> messages,
-                                              HttpServletRequest req,
-                                              HttpStatus status) {
+  private ResponseEntity<ErrorResponse> build(String message, HttpStatus status) {
     ErrorResponse body = ErrorResponse.builder()
-            .timestamp(Instant.now().toString())
-            .path(req.getRequestURI())
             .status(status.value())
-            .errorCode(status.toString())
-            .microserviceName(appName)
-            .messages(messages)
+            .message(message)
             .build();
     return ResponseEntity.status(status).body(body);
   }
@@ -51,14 +35,15 @@ public class GlobalExceptionHandler {
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
-    List<String> messages = new ArrayList<>();
+    StringBuilder messages = new StringBuilder();
     for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
-      messages.add(fe.getField() + ": " + fe.getDefaultMessage());
+      messages.append(fe.getDefaultMessage());
+      messages.append(", ");
     }
-    ex.getBindingResult().getGlobalErrors()
-            .forEach(err -> messages.add(err.getObjectName() + ": " + err.getDefaultMessage()));
-
-    return build(messages, request, HttpStatus.BAD_REQUEST);
+    if (messages.length() > 2) {
+      messages.setLength(messages.length() - 2); // Remove last ", "
+    }
+    return build(messages.toString(), HttpStatus.BAD_REQUEST);
   }
 
   /**
@@ -69,8 +54,8 @@ public class GlobalExceptionHandler {
    * @return ResponseEntity containing an error message
    */
   @ExceptionHandler(NoHandlerFoundException.class)
-  public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpServletRequest req) {
-    return build(List.of(ex.getMessage()), req, HttpStatus.NOT_FOUND);
+  public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex) {
+    return build(ex.getMessage(), HttpStatus.NOT_FOUND);
   }
 
   /**
@@ -81,7 +66,7 @@ public class GlobalExceptionHandler {
    * @return ResponseEntity containing an ApiResponse with error details
    */
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest req) {
-    return build(List.of(ex.getMessage()), req, HttpStatus.INTERNAL_SERVER_ERROR);
+  public ResponseEntity<ErrorResponse> handleException(Exception ex) {
+    return build(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
   }
 }

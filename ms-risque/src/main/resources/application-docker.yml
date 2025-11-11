@@ -5,6 +5,10 @@ spring:
   application:
     name: ms-risque
 
+  web:
+    resources:
+      add-mappings: false
+
   cloud:
     openfeign:
       client:

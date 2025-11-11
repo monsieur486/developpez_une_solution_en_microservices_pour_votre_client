@@ -5,13 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ErrorMessage {
-  private List<String> messages;
-  private Boolean critical = false;
+  Integer status;
+  String message;
+
+  public Boolean critical() {
+    return this.status != null && this.status >= 500;
+  }
 }

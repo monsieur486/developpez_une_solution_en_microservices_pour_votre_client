@@ -9,7 +9,8 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class NotesService {
+public class
+NotesService {
 
   private final NoteClient noteClient;
 

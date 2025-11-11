@@ -1,4 +1,4 @@
-package com.mr486.mspatients.dto;
+package com.mr486.msrisque.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ErrorResponse {
-  Integer status;
-  String message;
+public class Risque {
+  private String level;
 }

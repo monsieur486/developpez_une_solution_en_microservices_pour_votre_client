@@ -22,34 +22,28 @@ public class PatientService {
   public Patient findById(Long id) {
     return patientRepository
             .findById(id)
-            .orElseThrow(() -> new NotFoundException("Aucun patient trouvé avec l'id: " + id));
+            .orElseThrow(() -> new NotFoundException("aucun patient trouvé avec l'id: " + id));
   }
 
   public Patient savePatient(PatientForm patientForm) {
-    Patient patient = fromPatientForm(patientForm);
+    Patient patient = new Patient();
+    getPatientFromForm(patient, patientForm);
     return patientRepository.save(patient);
   }
 
   public Patient updatePatient(Long id, PatientForm patientForm) {
     Patient patient = patientRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Aucun patient trouvé avec l'id: " + id));
-    patient.setFirstName(patientForm.getFirstName());
-    patient.setLastName(patientForm.getLastName());
-    patient.setBirthDate(patientForm.getBirthDate());
-    patient.setGender(patientForm.getGender());
-    patient.setPostalAddress(patientForm.getPostalAddress());
-    patient.setPhoneNumber(patientForm.getPhoneNumber());
+            .orElseThrow(() -> new NotFoundException("aucun patient trouvé avec l'id: " + id));
+    getPatientFromForm(patient, patientForm);
     return patientRepository.save(patient);
   }
 
-  private Patient fromPatientForm(PatientForm patientForm) {
-    Patient patient = new Patient();
+  private void getPatientFromForm(Patient patient, PatientForm patientForm) {
     patient.setFirstName(patientForm.getFirstName());
     patient.setLastName(patientForm.getLastName());
     patient.setBirthDate(patientForm.getBirthDate());
     patient.setGender(patientForm.getGender());
     patient.setPostalAddress(patientForm.getPostalAddress());
     patient.setPhoneNumber(patientForm.getPhoneNumber());
-    return patient;
   }
 }

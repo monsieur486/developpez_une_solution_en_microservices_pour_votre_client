@@ -5,6 +5,10 @@ spring:
   application:
     name: ms-risque
 
+  web:
+    resources:
+      add-mappings: false   # évite que les ressources statiques interceptent les 404
+
   cloud:
     openfeign:
       client:

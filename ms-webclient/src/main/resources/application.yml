@@ -13,3 +13,7 @@ app:
 
 server:
   port: 8080
+  error:
+    whitelabel:
+      enabled: false
+    path: /error

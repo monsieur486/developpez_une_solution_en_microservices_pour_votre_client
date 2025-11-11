@@ -1,24 +1,18 @@
 meta {
-  name: Ajoute note
+  name: Toutes les notes evaluation
   type: http
-  seq: 2
+  seq: 4
 }
 
-post {
-  url: http://127.0.0.1:9200/patients/5/notes
-  body: json
+get {
+  url: http://127.0.0.1:9300/patients/4/evaluation
+  body: none
   auth: basic
 }
 
 auth:basic {
   username: app_user
   password: app_password
-}
-
-body:json {
-  {
-      "content": "yes!!!"
-    }
 }
 
 settings {

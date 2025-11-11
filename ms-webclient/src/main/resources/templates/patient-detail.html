@@ -12,9 +12,7 @@
     <div class="starter-template">
         <div th:if="${errorMessage}">
             <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
-                <ul>
-                    <li th:each="msg : ${errorMessage.messages}" th:text="${msg}"></li>
-                </ul>
+                <span th:text="${errorMessage.message}"></span>
             </div>
         </div>
         <div th:if="${patient}">

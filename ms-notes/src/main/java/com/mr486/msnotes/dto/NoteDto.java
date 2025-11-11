@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class NoteDto {
-  @NotBlank(message = "La note de doit pas être vide")
+  @NotBlank(message = "la note de doit pas être vide")
   private String content;
 }

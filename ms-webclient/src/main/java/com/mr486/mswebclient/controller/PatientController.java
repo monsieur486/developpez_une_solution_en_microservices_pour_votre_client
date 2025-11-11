@@ -23,7 +23,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/app")
 @Slf4j
-public class PatientsController {
+public class PatientController {
 
   private final RestTemplate restTemplate;
   private final String gatewayBase;
@@ -31,8 +31,8 @@ public class PatientsController {
 
   private final String microserviceName = "ms-patients";
 
-  public PatientsController(RestTemplate restTemplate,
-                            @Value("${app.gateway.base-url}") String gatewayBase, ErrorResponseTools errorResponseTools) {
+  public PatientController(RestTemplate restTemplate,
+                           @Value("${app.gateway.base-url}") String gatewayBase, ErrorResponseTools errorResponseTools) {
     this.restTemplate = restTemplate;
     this.gatewayBase = gatewayBase;
     this.errorResponseTools = errorResponseTools;

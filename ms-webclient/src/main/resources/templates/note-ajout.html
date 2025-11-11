@@ -13,9 +13,7 @@
         <h5>Ajouter une note</h5>
         <div th:if="${errorMessage}">
             <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
-                <ul>
-                    <li th:each="msg : ${errorMessage.messages}" th:text="${msg}"></li>
-                </ul>
+                <span th:text="${errorMessage.message}"></span>
             </div>
         </div>
         <form method="post" th:action="@{'/app/dashboard/' + ${patientId} + '/notes'}" th:object="${note}">
