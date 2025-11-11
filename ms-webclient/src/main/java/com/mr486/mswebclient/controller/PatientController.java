@@ -38,8 +38,8 @@ public class PatientController {
     this.errorResponseTools = errorResponseTools;
   }
 
-  @GetMapping("/dashboard")
-  public String dashboard(Model model) {
+  @GetMapping("/patients")
+  public String patients(Model model) {
     List<Patient> patients = List.of();
     try {
       ResponseEntity<List<Patient>> response = restTemplate.exchange(
@@ -55,16 +55,16 @@ public class PatientController {
       ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("errorMessage", errorMessage);
     }
-    return "patients";
+    return "patients/patients";
   }
 
-  @GetMapping("/dashboard/ajout")
+  @GetMapping("/patients/ajout")
   public String showCreatePatientForm(Model model) {
     model.addAttribute("patient", new PatientForm());
-    return "patient-ajout";
+    return "patients/patient-ajout";
   }
 
-  @PostMapping("/dashboard/ajout")
+  @PostMapping("/patients/ajout")
   public String ajoutPatientPost(@ModelAttribute PatientForm patient, Model model) {
     HttpEntity<PatientForm> requestEntity = new HttpEntity<>(patient);
     try {
@@ -75,12 +75,12 @@ public class PatientController {
               new ParameterizedTypeReference<>() {
               }
       );
-      return "redirect:/app/dashboard";
+      return "redirect:/app/patients";
     } catch (Exception ex) {
       ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("patient", patient);
       model.addAttribute("errorMessage", errorMessage);
-      return "patient-ajout";
+      return "patients/patient-ajout";
     }
   }
 }

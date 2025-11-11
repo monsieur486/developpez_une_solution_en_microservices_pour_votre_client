@@ -17,7 +17,7 @@
         </div>
         <div th:if="${patient}">
             <h5>Fiche patient
-                <a th:href="@{/app/dashboard/{id}/update(id=${patient.id})}">✍️ modifier</a>
+                <a th:href="@{/app/patients/{id}/update(id=${patient.id})}">✍️ modifier</a>
             </h5>
             <p>Prénom : <span th:text="${patient.firstName}"></span></p>
             <p>Nom : <span th:text="${patient.lastName}"></span></p>
@@ -25,10 +25,12 @@
             <p>Genre : <span th:text="${patient.gender}"></span></p>
             <p>Adresse : <span th:text="${patient.postalAddress}"></span></p>
             <p>Téléphone : <span th:text="${patient.phoneNumber}"></span></p>
-            <p><a th:href="@{/app/dashboard}">Retour à la liste des patients</a></p>
+            <p><a th:href="@{/app/patients/{id}/notes(id=${patient.id})}">📝 Notes</a></p>
+            <p><a th:href="@{/app/patients/{id}/evaluation(id=${patient.id})}">⚠️ Risque</a></p>
+            <p><a th:href="@{/app/patients}">Retour à la liste des patients</a></p>
         </div>
         <div th:if="${patient == null}">
-            <p><a th:href="@{/app/dashboard}">Retour à la liste des patients</a></p>
+            <p><a th:href="@{/app/patients}">Retour à la liste des patients</a></p>
         </div>
     </div>
 </div>

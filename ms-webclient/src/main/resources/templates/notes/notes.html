@@ -28,9 +28,10 @@
             </tr>
             </tbody>
         </table>
-        <p><a th:href="@{/app/dashboard/{id}/notes/ajout(id=${patientId})}">✚ Ajouter une note</a></p>
-        <p><a th:href="@{/app/dashboard/{id}(id=${patientId})}">Retour à la fiche patient</a></p>
-        <p><a th:href="@{/app/dashboard}">Retout à la liste des patients</a></p>
+        <p><a th:href="@{/app/patients/{id}/notes/ajout(id=${patientId})}">✚ Ajouter une note</a></p>
+        <p><a th:href="@{/app/patients/{id}(id=${patientId})}">Retour à la fiche patient</a></p>
+        <p><a th:href="@{/app/patients/{id}/evaluation(id=${patientId})}">⚠️ Risque</a></p>
+        <p><a th:href="@{/app/patients}">Retour à la liste des patients</a></p>
     </div>
 </div>
 <div th:replace="~{fragments/footer :: footer}"></div>

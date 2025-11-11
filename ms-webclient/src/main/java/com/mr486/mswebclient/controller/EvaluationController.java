@@ -31,7 +31,7 @@ public class EvaluationController {
     this.errorResponseTools = errorResponseTools;
   }
 
-  @GetMapping("/dashboard/{patientId}/evaluation")
+  @GetMapping("/patients/{patientId}/evaluation")
   public String getEvaluation(Model model, @PathVariable Long patientId) {
     Risque evaluation = new Risque();
     try {
@@ -50,6 +50,6 @@ public class EvaluationController {
       model.addAttribute("errorMessage", errorMessage);
       model.addAttribute("patientId", patientId);
     }
-    return "evaluation";
+    return "evaluation/evaluation";
   }
 }

@@ -17,7 +17,7 @@
             </div>
         </div>
         <div th:if="${patient}">
-            <form method="post" th:action="@{/app/dashboard/{id}/update(id=${id})}">
+            <form method="post" th:action="@{/app/patients/{id}/update(id=${id})}">
                 <input name="id" th:value="${id}" type="hidden"/>
                 <label for="firstName">Prénom :</label>
                 <input id="firstName" name="firstName" th:value="${patient.firstName}" type="text"/>
@@ -46,10 +46,10 @@
                 <br/>
                 <button type="submit">Mettrte à jour</button>
             </form>
-            <p><a th:href="@{/app/dashboard/{id}(id=${id})}">Retour à la fiche patient</a></p>
+            <p><a th:href="@{/app/patients/{id}(id=${id})}">Retour à la fiche patient</a></p>
         </div>
         <div th:if="${patient == null}">
-            <p><a th:href="@{/app/dashboard}">Retour à la liste des patients</a></p>
+            <p><a th:href="@{/app/patients}">Retour à la liste des patients</a></p>
         </div>
     </div>
 </div>

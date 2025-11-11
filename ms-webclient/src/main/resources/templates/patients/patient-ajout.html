@@ -16,7 +16,7 @@
                 <span th:text="${errorMessage.message}"></span>
             </div>
         </div>
-        <form method="post" th:action="@{/app/dashboard/ajout}" th:object="${patient}">
+        <form method="post" th:action="@{/app/patients/ajout}" th:object="${patient}">
             <label for="firstName">Prénom :</label>
             <input id="firstName" th:field="*{firstName}" type="text"/>
             <br/>
@@ -41,7 +41,7 @@
             <br/>
             <button type="submit">Créer</button>
         </form>
-        <p><a th:href="@{/app/dashboard}">Retout à la liste des patients</a></p>
+        <p><a th:href="@{/app/patients}">Retour à la liste des patients</a></p>
     </div>
 </div>
 <div th:replace="~{fragments/footer :: footer}"></div>

@@ -35,7 +35,7 @@ public class NotesController {
     this.errorResponseTools = errorResponseTools;
   }
 
-  @GetMapping("/dashboard/{patientId}/notes")
+  @GetMapping("/patients/{patientId}/notes")
   public String getNotes(Model model, @PathVariable Long patientId) {
     List<Note> notes;
     try {
@@ -43,7 +43,7 @@ public class NotesController {
               gatewayBase + "/ms-notes/patients/" + patientId + "/notes",
               HttpMethod.GET,
               null,
-              new ParameterizedTypeReference<List<Note>>() {
+              new ParameterizedTypeReference<>() {
               }
       );
       notes = response.getBody();
@@ -54,17 +54,17 @@ public class NotesController {
       model.addAttribute("errorMessage", errorMessage);
       model.addAttribute("patientId", patientId);
     }
-    return "notes";
+    return "notes/notes";
   }
 
-  @GetMapping("/dashboard/{patientId}/notes/ajout")
+  @GetMapping("/patients/{patientId}/notes/ajout")
   public String showCreateNoteForm(@PathVariable Long patientId, Model model) {
     model.addAttribute("patientId", patientId);
     model.addAttribute("note", new Note());
-    return "note-ajout";
+    return "notes/note-ajout";
   }
 
-  @PostMapping("/dashboard/{patientId}/notes")
+  @PostMapping("/patients/{patientId}/notes")
   public String ajoutNotePost(@PathVariable Long patientId, Note note, Model model) {
     HttpEntity<Note> requestEntity = new HttpEntity<>(note);
     try {
@@ -75,13 +75,13 @@ public class NotesController {
               new ParameterizedTypeReference<Note>() {
               }
       );
-      return "redirect:/app/dashboard/{patientId}/notes";
+      return "redirect:/app/patients/{patientId}/notes";
     } catch (Exception ex) {
       ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("patientId", patientId);
       model.addAttribute("note", note);
       model.addAttribute("errorMessage", errorMessage);
-      return "note-ajout";
+      return "notes/note-ajout";
     }
   }
 }

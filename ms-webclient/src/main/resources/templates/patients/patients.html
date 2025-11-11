@@ -11,6 +11,7 @@
 <div class="container">
     <div class="starter-template">
         <h5>Liste des patients</h5>
+        <p><a th:href="@{/app/patients/ajout}">✚ Ajouter patient</a></p>
         <div th:if="${errorMessage}">
             <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
                 <span th:text="${errorMessage.message}"></span>
@@ -37,15 +38,14 @@
                 <td th:text="${patient.postalAddress}"></td>
                 <td th:text="${patient.phoneNumber}"></td>
                 <td>
-                    <a th:href="@{'/app/dashboard/' + ${patient.id}}">🎫 Fiche</a> |
-                    <a th:href="@{'/app/dashboard/' + ${patient.id} +'/update' }">✍️ Modifier</a> |
-                    <a th:href="@{'/app/dashboard/' + ${patient.id} + '/notes'}">📝 Notes</a> |
-                    <a th:href="@{'/app/dashboard/' + ${patient.id} + '/evaluation'}">⚠️ Risque</a>
+                    <a th:href="@{'/app/patients/' + ${patient.id}}">🎫 Fiche</a> |
+                    <a th:href="@{'/app/patients/' + ${patient.id} +'/update' }">✍️ Modifier</a> |
+                    <a th:href="@{'/app/patients/' + ${patient.id} + '/notes'}">📝 Notes</a> |
+                    <a th:href="@{'/app/patients/' + ${patient.id} + '/evaluation'}">⚠️ Risque</a>
                 </td>
             </tr>
             </tbody>
         </table>
-        <a th:href="@{/app/dashboard/ajout}">✚ Ajouter patient</a>
     </div>
 </div>
 <div th:replace="~{fragments/footer :: footer}"></div>

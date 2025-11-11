@@ -35,7 +35,7 @@ public class SecurityConfiguration {
                     form -> form
                             .loginPage("/login")
                             .loginProcessingUrl("/login")
-                            .defaultSuccessUrl("/app/dashboard", true)
+                            .defaultSuccessUrl("/app/patients", true)
                             .permitAll()
             )
             .logout(

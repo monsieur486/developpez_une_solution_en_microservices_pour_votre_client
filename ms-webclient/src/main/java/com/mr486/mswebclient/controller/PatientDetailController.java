@@ -33,8 +33,8 @@ public class PatientDetailController {
     this.errorResponseTools = errorResponseTools;
   }
 
-  @GetMapping("/dashboard/{id}")
-  public String dashboard(@PathVariable Long id, Model model) {
+  @GetMapping("/patients/{id}")
+  public String patients(@PathVariable Long id, Model model) {
     try {
       ResponseEntity<Patient> response = restTemplate.exchange(
               gatewayBase + "/ms-patients/patients/" + id,
@@ -49,10 +49,10 @@ public class PatientDetailController {
       ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("errorMessage", errorMessage);
     }
-    return "patient-detail";
+    return "patients/patient-detail";
   }
 
-  @GetMapping("/dashboard/{id}/update")
+  @GetMapping("/patients/{id}/update")
   public String updatePatientForm(@PathVariable Long id, Model model) {
     try {
       ResponseEntity<Patient> response = restTemplate.exchange(
@@ -64,15 +64,16 @@ public class PatientDetailController {
       );
       Patient patient = response.getBody();
       model.addAttribute("patient", patient);
-      return "patient-update";
+      model.addAttribute("id", id);
     } catch (Exception ex) {
       ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
+      model.addAttribute("id", id);
       model.addAttribute("errorMessage", errorMessage);
-      return "patient-detail";
     }
+    return "patients/patient-update";
   }
 
-  @PostMapping("/dashboard/{id}/update")
+  @PostMapping("/patients/{id}/update")
   public String updatePatient(@PathVariable Long id, @ModelAttribute PatientForm patient, Model model) {
     HttpEntity<PatientForm> requestEntity = new HttpEntity<>(patient);
     try {
@@ -83,13 +84,13 @@ public class PatientDetailController {
               new ParameterizedTypeReference<>() {
               }
       );
-      return "redirect:/app/dashboard/" + id;
+      return "redirect:/app/patients/" + id;
     } catch (Exception ex) {
       ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), microserviceName);
       model.addAttribute("patient", patient);
       model.addAttribute("id", id);
       model.addAttribute("errorMessage", errorMessage);
-      return "patient-update";
+      return "patients/patient-update";
     }
   }
 
