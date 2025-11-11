@@ -12,9 +12,7 @@
     <div class="starter-template">
         <h5>Notes du patient</h5>
         <div th:if="${errorMessage}">
-            <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
-                <span th:text="${errorMessage.message}"></span>
-            </div>
+            <div th:replace="~{fragments/error-message :: error-message}"></div>
         </div>
         <table class="table table-striped">
             <thead>

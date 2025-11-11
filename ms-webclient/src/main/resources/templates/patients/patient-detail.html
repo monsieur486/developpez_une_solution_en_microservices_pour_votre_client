@@ -11,9 +11,7 @@
 <div class="container">
     <div class="starter-template">
         <div th:if="${errorMessage}">
-            <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
-                <span th:text="${errorMessage.message}"></span>
-            </div>
+            <div th:replace="~{fragments/error-message :: error-message}"></div>
         </div>
         <div th:if="${patient}">
             <h5>Fiche patient

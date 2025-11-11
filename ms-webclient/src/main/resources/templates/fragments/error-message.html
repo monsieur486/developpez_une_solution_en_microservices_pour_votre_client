@@ -1,0 +1,9 @@
+<html lang="fr"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="error-message">
+    <div role="alert" th:class="${errorMessage.critical} ? 'alert alert-danger' : 'alert alert-warning'">
+        <span th:text="|[${errorMessage.status}] ${errorMessage.message}|"></span>
+    </div>
+</div>
+</html>
