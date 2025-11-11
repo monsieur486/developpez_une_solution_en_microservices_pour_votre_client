@@ -31,7 +31,10 @@ management:
 
 eureka:
   client:
+    registryFetchIntervalSeconds: 5
     service-url:
       defaultZone: http://localhost:8761/eureka
     registerWithEureka: true
     fetchRegistry: true
+  instance:
+    leaseRenewalIntervalInSeconds: 5

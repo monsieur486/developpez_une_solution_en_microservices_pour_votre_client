@@ -63,6 +63,10 @@ public class DataBaseChangeLog {
                     .append("content", "Taille, Poids, Cholestérol, Vertige et Réaction")
                     .append("createdDate", toDate(now.plusSeconds(8)))
     );
+
+    // Ajoute le champ _class à chaque document avant insertion
+    notes.forEach(doc -> doc.append("_class", "com.mr486.msnotes.model.Note"));
+
     mongoTemplate.getCollection("notes").insertMany(notes);
   }
 

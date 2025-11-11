@@ -1,8 +1,8 @@
-# GATEWAY - application.yml
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: ms-gateway
-
   cloud:
     gateway:
       server:
@@ -45,3 +45,16 @@ springdoc:
       - name: ms-risque
         url: /ms-risque/v3/api-docs
     urlsPrimaryName: ms-patients
+
+management:
+  endpoints.web.exposure.include: health,info,gateway
+
+eureka:
+  client:
+    registryFetchIntervalSeconds: 5
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    registerWithEureka: true
+    fetchRegistry: true
+  instance:
+    leaseRenewalIntervalInSeconds: 5
