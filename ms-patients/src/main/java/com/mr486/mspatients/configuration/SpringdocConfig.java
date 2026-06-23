@@ -9,15 +9,30 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * Configuration de la documentation OpenAPI (Swagger) du microservice.
+ *
+ * <p><b>Exemple :</b> déclare le schéma de sécurité "basicAuth" et fixe le préfixe
+ * de serveur "/ms-patients".</p>
+ */
 @Configuration
 @SecurityScheme(
         type = SecuritySchemeType.HTTP,
         name = "basicAuth",
         scheme = "basic")
 public class SpringdocConfig {
-  @Bean
-  public OpenAPI api() {
-    return new OpenAPI()
-            .servers(List.of(new Server().url("/ms-patients")));
-  }
+
+    /**
+     * Construit la définition OpenAPI exposée par le microservice.
+     *
+     * <p><b>Exemple :</b> api() retourne une OpenAPI dont le serveur est
+     * "/ms-patients".</p>
+     *
+     * @return la définition OpenAPI
+     */
+    @Bean
+    public OpenAPI api() {
+        return new OpenAPI()
+                .servers(List.of(new Server().url("/ms-patients")));
+    }
 }
