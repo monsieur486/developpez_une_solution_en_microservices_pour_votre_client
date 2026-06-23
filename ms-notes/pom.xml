@@ -70,6 +70,21 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.mongock</groupId>
             <artifactId>mongock-springboot-v3</artifactId>
         </dependency>
@@ -135,6 +150,20 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                      docker-java cible par défaut l'API Docker 1.32, refusée par les démons
+                      récents (Docker >= 25 exige >= 1.40). On épingle 1.40 pour Testcontainers :
+                      valeur acceptée par Docker actuel et rétro-compatible jusqu'à Docker 19.03.
+                    -->
+                    <systemPropertyVariables>
+                        <api.version>1.40</api.version>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
