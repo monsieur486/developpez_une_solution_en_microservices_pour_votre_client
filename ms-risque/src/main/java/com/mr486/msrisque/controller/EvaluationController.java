@@ -25,7 +25,7 @@ EvaluationController {
   @Tag(name = "Évalue le risque de diabète d'un patient par son ID")
   @GetMapping(value = "/patients/{patientId}/evaluation")
   public ResponseEntity<Risque> evaluate(@PathVariable Long patientId) {
-    Risque risque = evaluationService.evaluationDuRisque(patientId);
+    Risque risque = evaluationService.evalueRisque(patientId);
     return ResponseEntity.ok(risque);
   }
 }
