@@ -8,8 +8,23 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
+/**
+ * Client Feign vers le microservice ms-notes.
+ *
+ * <p><b>Exemple :</b> getNotesByPatientId(7L) appelle GET /patients/7/notes et
+ * retourne les notes du patient 7.</p>
+ */
 @FeignClient(name = "ms-notes", configuration = FeignConfiguration.class)
 public interface NoteClient {
-  @GetMapping("/patients/{id}/notes")
-  List<Note> getNotesByPatientId(@PathVariable Long id);
+
+    /**
+     * Récupère les notes médicales d'un patient.
+     *
+     * <p><b>Exemple :</b> getNotesByPatientId(7L) retourne les notes du patient 7.</p>
+     *
+     * @param id identifiant du patient
+     * @return la liste des notes du patient
+     */
+    @GetMapping("/patients/{id}/notes")
+    List<Note> getNotesByPatientId(@PathVariable Long id);
 }

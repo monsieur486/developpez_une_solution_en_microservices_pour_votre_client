@@ -12,20 +12,33 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Expose l'API REST d'évaluation du risque de diabète d'un patient.
+ *
+ * <p><b>Exemple :</b> GET /patients/7/evaluation retourne le risque calculé
+ * pour le patient d'identifiant 7.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 @OpenAPIDefinition(info = @Info(title = "Gestion du risque de diabète d'un patient API", version = "v1"))
 @SecurityRequirement(name = "basicAuth")
-public class
+public class EvaluationController {
 
-EvaluationController {
+    private final EvaluationService evaluationService;
 
-  private final EvaluationService evaluationService;
-
-  @Tag(name = "Évalue le risque de diabète d'un patient par son ID")
-  @GetMapping(value = "/patients/{patientId}/evaluation")
-  public ResponseEntity<Risque> evaluate(@PathVariable Long patientId) {
-    Risque risque = evaluationService.evalueRisque(patientId);
-    return ResponseEntity.ok(risque);
-  }
+    /**
+     * Évalue le risque de diabète d'un patient à partir de son identifiant.
+     *
+     * <p><b>Exemple :</b> evaluate(7L) retourne une réponse 200 contenant le
+     * niveau de risque du patient 7.</p>
+     *
+     * @param patientId identifiant du patient à évaluer
+     * @return la réponse HTTP contenant le risque calculé
+     */
+    @Tag(name = "Évalue le risque de diabète d'un patient par son ID")
+    @GetMapping(value = "/patients/{patientId}/evaluation")
+    public ResponseEntity<Risque> evaluate(@PathVariable Long patientId) {
+        Risque risque = evaluationService.evalueRisque(patientId);
+        return ResponseEntity.ok(risque);
+    }
 }
