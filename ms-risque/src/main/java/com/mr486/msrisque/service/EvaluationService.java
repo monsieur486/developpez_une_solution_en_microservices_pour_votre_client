@@ -3,11 +3,13 @@ package com.mr486.msrisque.service;
 import com.mr486.msrisque.dto.Note;
 import com.mr486.msrisque.dto.Patient;
 import com.mr486.msrisque.dto.Risque;
+import com.mr486.msrisque.model.Genre;
 import com.mr486.msrisque.model.NiveauRisque;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
@@ -44,6 +46,7 @@ public class EvaluationService {
 
     private final PatientService patientService;
     private final NotesService notesService;
+    private final Clock clock;
 
     /**
      * Évalue le niveau de risque diabétique d'un patient.
@@ -71,8 +74,8 @@ public class EvaluationService {
 
     // Détermine le niveau de risque à partir de l'âge, du genre et du nombre de déclencheurs.
     private NiveauRisque determineNiveau(int age, String genre, int declencheursCount) {
-        boolean homme = "M".equalsIgnoreCase(genre);
-        boolean femme = "F".equalsIgnoreCase(genre);
+        boolean homme = Genre.HOMME.correspond(genre);
+        boolean femme = Genre.FEMME.correspond(genre);
         boolean jeune = age < AGE_PIVOT;
         boolean ageEleve = age > AGE_PIVOT;
 
@@ -125,8 +128,8 @@ public class EvaluationService {
         return declencheursCount;
     }
 
-    // Calcule l'âge révolu du patient à la date du jour.
+    // Calcule l'âge révolu du patient à la date du jour (horloge injectée).
     private int calculAge(LocalDate birthDate) {
-        return Period.between(birthDate, LocalDate.now()).getYears();
+        return Period.between(birthDate, LocalDate.now(clock)).getYears();
     }
 }

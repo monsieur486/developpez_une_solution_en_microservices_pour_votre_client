@@ -2,13 +2,15 @@ package com.mr486.msrisque.service;
 
 import com.mr486.msrisque.dto.Note;
 import com.mr486.msrisque.dto.Patient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,20 +20,28 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class EvaluationServiceTest {
 
+    // Date de référence figée : les âges sont calculés par rapport à elle.
+    private static final LocalDate REFERENCE = LocalDate.of(2025, 6, 15);
+
     @Mock
     private PatientService patientService;
 
     @Mock
     private NotesService notesService;
 
-    @InjectMocks
     private EvaluationService evaluationService;
+
+    @BeforeEach
+    void init() {
+        Clock horloge = Clock.fixed(REFERENCE.atStartOfDay(ZoneOffset.UTC).toInstant(), ZoneOffset.UTC);
+        evaluationService = new EvaluationService(patientService, notesService, horloge);
+    }
 
     // Construit un patient d'un genre et d'un âge donnés (date de naissance déduite).
     private Patient patient(String genre, int age) {
         return Patient.builder()
                 .gender(genre)
-                .birthDate(LocalDate.now().minusYears(age))
+                .birthDate(REFERENCE.minusYears(age))
                 .build();
     }
 
