@@ -123,6 +123,12 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.13</version>
+                <configuration>
+                    <!-- Le point d'entrée Spring Boot n'est pas testé unitairement. -->
+                    <excludes>
+                        <exclude>**/MsRisqueApplication.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
