@@ -11,42 +11,90 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Expose l'API REST de gestion des patients (CRUD partiel : lecture, création,
+ * mise à jour).
+ *
+ * <p><b>Exemple :</b> GET /patients/7 retourne le patient 7 ; POST /patients crée
+ * un patient à partir du corps JSON validé.</p>
+ */
 @RestController
 @RequiredArgsConstructor
 @OpenAPIDefinition(info = @Info(title = "Gestion des patients API", version = "v1"))
 @SecurityRequirement(name = "basicAuth")
 public class PatientController {
 
-  private final PatientService patientService;
+    private final PatientService patientService;
 
-  @Tag(name = "Récupère touts les patients")
-  @GetMapping(value = "/patients", produces = "application/json")
-  public ResponseEntity<List<Patient>> getPatients() {
-    return ResponseEntity.ok(patientService.findAll());
-  }
+    /**
+     * Retourne tous les patients.
+     *
+     * <p><b>Exemple :</b> getPatients() retourne une réponse 200 avec la liste
+     * des patients.</p>
+     *
+     * @return la réponse HTTP contenant la liste des patients
+     */
+    @Tag(name = "Récupère tous les patients")
+    @GetMapping(value = "/patients", produces = "application/json")
+    public ResponseEntity<List<Patient>> getPatients() {
+        return ResponseEntity.ok(patientService.findAll());
+    }
 
-  @Tag(name = "Récupère un patient par son ID")
-  @GetMapping(value = "/patients/{id}", produces = "application/json")
-  public ResponseEntity<Patient> getPatient(@PathVariable Long id) {
-    Patient patient = patientService.findById(id);
-    return ResponseEntity.ok(patient);
-  }
+    /**
+     * Retourne un patient par son identifiant.
+     *
+     * <p><b>Exemple :</b> getPatient(7L) retourne une réponse 200 avec le patient
+     * 7 ; un id inexistant donne une réponse 404.</p>
+     *
+     * @param id identifiant du patient
+     * @return la réponse HTTP contenant le patient
+     */
+    @Tag(name = "Récupère un patient par son ID")
+    @GetMapping(value = "/patients/{id}", produces = "application/json")
+    public ResponseEntity<Patient> getPatient(@PathVariable Long id) {
+        Patient patient = patientService.findById(id);
+        return ResponseEntity.ok(patient);
+    }
 
-  @Tag(name = "Crée un nouveau patient")
-  @PostMapping(value = "/patients", consumes = "application/json", produces = "application/json")
-  public ResponseEntity<Patient> createPatient(@Valid @RequestBody PatientForm patientForm) {
-    Patient savedPatient = patientService.savePatient(patientForm);
-    return ResponseEntity.status(HttpStatus.CREATED).body(savedPatient);
-  }
+    /**
+     * Crée un nouveau patient.
+     *
+     * <p><b>Exemple :</b> createPatient(form) retourne une réponse 201 avec le
+     * patient créé ; un formulaire invalide donne une réponse 400.</p>
+     *
+     * @param patientForm les données du patient à créer
+     * @return la réponse HTTP 201 contenant le patient créé
+     */
+    @Tag(name = "Crée un nouveau patient")
+    @PostMapping(value = "/patients", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<Patient> createPatient(@Valid @RequestBody PatientForm patientForm) {
+        Patient savedPatient = patientService.savePatient(patientForm);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedPatient);
+    }
 
-  @Tag(name = "Met à jour un patient existant")
-  @PutMapping(value = "/patients/{id}", produces = "application/json")
-  public ResponseEntity<Patient> update(@PathVariable Long id, @Valid @RequestBody PatientForm form) {
-    Patient updated = patientService.updatePatient(id, form);
-    return ResponseEntity.ok(updated);
-  }
+    /**
+     * Met à jour un patient existant.
+     *
+     * <p><b>Exemple :</b> update(7L, form) retourne une réponse 200 avec le
+     * patient mis à jour ; un id inexistant donne une réponse 404.</p>
+     *
+     * @param id   identifiant du patient à mettre à jour
+     * @param form les nouvelles données du patient
+     * @return la réponse HTTP contenant le patient mis à jour
+     */
+    @Tag(name = "Met à jour un patient existant")
+    @PutMapping(value = "/patients/{id}", produces = "application/json")
+    public ResponseEntity<Patient> update(@PathVariable Long id, @Valid @RequestBody PatientForm form) {
+        Patient updated = patientService.updatePatient(id, form);
+        return ResponseEntity.ok(updated);
+    }
 }
