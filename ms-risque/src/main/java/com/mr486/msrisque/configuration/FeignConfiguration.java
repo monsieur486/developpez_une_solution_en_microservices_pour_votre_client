@@ -41,7 +41,7 @@ public class FeignConfiguration {
      * @return l'intercepteur de requêtes Feign
      */
     @Bean
-    public RequestInterceptor resourceBAuthInterceptor() {
+    public RequestInterceptor basicAuthInterceptor() {
         return template -> {
             String token = user + ":" + password;
             String base64 = Base64.getEncoder().encodeToString(token.getBytes(StandardCharsets.UTF_8));
@@ -67,17 +67,14 @@ public class FeignConfiguration {
                     Reader reader = response.body().asReader(StandardCharsets.UTF_8);
                     ErrorResponse errorResponse = mapper.readValue(reader, ErrorResponse.class);
                     String message = errorResponse.getMessage();
-                    return new RemoteServiceException(message, errorResponse.getStatus(), errorResponse) {
-                    };
+                    return new RemoteServiceException(message, errorResponse.getStatus(), errorResponse);
                 } catch (Exception e) {
                     String fallbackMessage = "Le service ne répond pas. Veuillez réessayer plus tard.";
                     ErrorResponse errorResponse = new ErrorResponse();
                     errorResponse.setStatus(response.status());
                     errorResponse.setMessage(Optional.ofNullable(e.getMessage())
                             .orElse("Erreur inconnue."));
-                    return new RemoteServiceException(fallbackMessage, response.status(),
-                            errorResponse) {
-                    };
+                    return new RemoteServiceException(fallbackMessage, response.status(), errorResponse);
                 }
             }
         };

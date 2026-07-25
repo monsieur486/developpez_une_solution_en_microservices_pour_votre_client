@@ -10,7 +10,7 @@ import lombok.Getter;
  * RemoteServiceException portant le statut 404 et le corps d'erreur décodé.</p>
  */
 @Getter
-public abstract class RemoteServiceException extends RuntimeException {
+public class RemoteServiceException extends RuntimeException {
 
     private final ErrorResponse error;
     private final int httpStatus;
@@ -25,7 +25,7 @@ public abstract class RemoteServiceException extends RuntimeException {
      * @param httpStatus le code HTTP retourné par le service distant
      * @param error      le corps d'erreur décodé
      */
-    protected RemoteServiceException(String message, int httpStatus, ErrorResponse error) {
+    public RemoteServiceException(String message, int httpStatus, ErrorResponse error) {
         super(message);
         this.httpStatus = httpStatus;
         this.error = error;

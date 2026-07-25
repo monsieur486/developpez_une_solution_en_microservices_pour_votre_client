@@ -42,7 +42,7 @@ class FeignConfigurationTest {
 
     @Test
     void interceptor_ajouteLAuthentificationBasic() {
-        RequestInterceptor interceptor = configuration.resourceBAuthInterceptor();
+        RequestInterceptor interceptor = configuration.basicAuthInterceptor();
         RequestTemplate template = new RequestTemplate();
 
         interceptor.apply(template);

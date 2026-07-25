@@ -14,17 +14,10 @@ class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
-    // Sous-classe concrète pour instancier l'exception distante abstraite.
-    private static final class ExceptionDistanteDeTest extends RemoteServiceException {
-        private ExceptionDistanteDeTest(String message, int httpStatus, ErrorResponse error) {
-            super(message, httpStatus, error);
-        }
-    }
-
     @Test
     void handleRemote_utiliseLeStatutDistant() {
         ErrorResponse corps = new ErrorResponse(404, "introuvable");
-        RemoteServiceException ex = new ExceptionDistanteDeTest("introuvable", 404, corps);
+        RemoteServiceException ex = new RemoteServiceException("introuvable", 404, corps);
 
         ResponseEntity<ErrorResponse> reponse = handler.handleRemote(ex);
 
