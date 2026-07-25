@@ -1,24 +1,35 @@
 spring:
   config:
+    # charge les variables d'environnement depuis .env s'il existe
     import: optional:file:.env[.properties]
   application:
+    # nom du service tel qu'affiché dans les logs et l'annuaire
     name: ms-eureka
 
 server:
+  # port d'écoute du serveur Eureka (port standard de l'annuaire)
   port: 8761
 
 eureka:
   instance:
+    # nom d'hôte annoncé par l'annuaire
     hostname: localhost
+    # identifiant unique de l'instance (hôte + port)
     instance-id: ${HOSTNAME}:${server.port}
+    # privilégie l'adresse IP au nom d'hôte pour l'enregistrement
     prefer-ip-address: true
   client:
+    # l'annuaire ne s'enregistre pas auprès de lui-même
     register-with-eureka: false
+    # l'annuaire n'a pas besoin de récupérer le registre
     fetch-registry: false
     service-url:
+      # URL de l'annuaire (lui-même)
       defaultZone: http://localhost:8761/eureka
   server:
+    # période de purge des instances expirées (en millisecondes)
     eviction-interval-timer-in-ms: 5000
 
 management:
+  # endpoints Actuator exposés (supervision)
   endpoints.web.exposure.include: health,info
