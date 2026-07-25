@@ -1,19 +1,27 @@
 spring:
   config:
+    # charge les variables d'environnement depuis .env s'il existe
     import: optional:file:.env[.properties]
   application:
+    # nom du service tel qu'affiché dans les logs
     name: ms-webclient
 
 app:
   gateway:
+    # URL de base de la passerelle par laquelle passent tous les appels REST
     base-url: http://localhost:9000
   auth:
+    # identifiant applicatif (connexion web et appels sortants vers la passerelle)
     username: ${APP_USERNAME:app_user}
+    # mot de passe applicatif associé
     password: ${APP_PASSWORD:app_password}
 
 server:
+  # port d'écoute du client web
   port: 8080
   error:
     whitelabel:
+      # désactive la page d'erreur par défaut de Spring Boot
       enabled: false
+    # route interne vers laquelle sont transférées les erreurs
     path: /error
