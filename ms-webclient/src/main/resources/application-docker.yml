@@ -12,8 +12,19 @@ app:
     password: ${APP_PASSWORD:app_password}
 
 server:
+  # port d'écoute du client web
   port: 8080
+  # honore les en-têtes X-Forwarded-* du proxy Apache (p09docker.mr486.com)
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        # protège le cookie de session derrière le proxy
+        http-only: true
+        same-site: lax
   error:
     whitelabel:
+      # désactive la page d'erreur par défaut de Spring Boot
       enabled: false
+    # route interne vers laquelle sont transférées les erreurs
     path: /error
