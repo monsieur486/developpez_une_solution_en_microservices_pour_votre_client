@@ -1,52 +1,62 @@
 package com.mr486.mswebclient.service;
 
 import com.mr486.mswebclient.dto.Note;
-import org.junit.jupiter.api.Test;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-
+import com.mr486.mswebclient.exception.GatewayException;
+import java.io.IOException;
 import java.util.List;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class NoteServiceTest {
 
-    private static final String BASE = "http://gateway";
+    private MockWebServer serveur;
+    private NoteService service;
 
-    private final RestTemplate restTemplate = mock(RestTemplate.class);
-    private final NoteService service = new NoteService(restTemplate, BASE);
+    @BeforeEach
+    void init() throws IOException {
+        serveur = new MockWebServer();
+        serveur.start();
+        service = new NoteService(WebClient.builder().baseUrl(serveur.url("/").toString()).build());
+    }
 
-    @Test
-    void getNotesByPatientId_appelleLaPasserelleEtRetourneLesNotes() {
-        List<Note> attendues = List.of(new Note("fumeur"));
-        when(restTemplate.exchange(eq(BASE + "/ms-notes/patients/7/notes"), eq(HttpMethod.GET),
-                isNull(), any(ParameterizedTypeReference.class)))
-                .thenReturn(ResponseEntity.ok(attendues));
-
-        List<Note> notes = service.getNotesByPatientId(7L);
-
-        assertThat(notes).isEqualTo(attendues);
+    @AfterEach
+    void arret() throws IOException {
+        serveur.shutdown();
     }
 
     @Test
-    void createNote_envoieLaNoteEnPost() {
-        Note note = new Note("fumeur");
-        when(restTemplate.exchange(eq(BASE + "/ms-notes/patients/7/notes"), eq(HttpMethod.POST),
-                any(HttpEntity.class), any(ParameterizedTypeReference.class)))
-                .thenReturn(ResponseEntity.ok().build());
+    void getNotesByPatientId_appelleLaPasserelleEtEmetLesNotes() throws InterruptedException {
+        serveur.enqueue(new MockResponse().setBody("[{\"content\":\"fumeur\"}]")
+                .addHeader("Content-Type", "application/json"));
 
-        service.createNote(7L, note);
+        List<Note> notes = service.getNotesByPatientId(7L).collectList().block();
 
-        verify(restTemplate).exchange(eq(BASE + "/ms-notes/patients/7/notes"), eq(HttpMethod.POST),
-                any(HttpEntity.class), any(ParameterizedTypeReference.class));
+        assertThat(notes).hasSize(1);
+        assertThat(serveur.takeRequest().getPath()).isEqualTo("/ms-notes/patients/7/notes");
+    }
+
+    @Test
+    void createNote_envoieLaNoteEnPost() throws InterruptedException {
+        serveur.enqueue(new MockResponse().setResponseCode(200));
+
+        service.createNote(7L, new Note("fumeur")).block();
+
+        assertThat(serveur.takeRequest().getMethod()).isEqualTo("POST");
+    }
+
+    @Test
+    void getNotesByPatientId_replieSurUnMessageNominatifQuandLaPasserelleEstInjoignable() throws IOException {
+        serveur.shutdown();
+
+        assertThatThrownBy(() -> service.getNotesByPatientId(7L).collectList().block())
+                .isInstanceOf(GatewayException.class)
+                .hasMessage("ms-notes ne répond pas.");
     }
 }

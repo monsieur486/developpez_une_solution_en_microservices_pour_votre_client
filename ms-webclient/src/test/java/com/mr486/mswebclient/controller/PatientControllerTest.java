@@ -3,35 +3,36 @@ package com.mr486.mswebclient.controller;
 import com.mr486.mswebclient.dto.ErrorMessage;
 import com.mr486.mswebclient.dto.Patient;
 import com.mr486.mswebclient.dto.PatientForm;
+import com.mr486.mswebclient.exception.GatewayException;
 import com.mr486.mswebclient.service.PatientService;
-import com.mr486.mswebclient.tools.ErrorResponseTools;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class PatientControllerTest {
 
+    private static final GatewayException PANNE =
+            new GatewayException(new ErrorMessage(503, "ms-patients ne répond pas."));
+
     private final PatientService patientService = mock(PatientService.class);
-    private final ErrorResponseTools errorResponseTools = mock(ErrorResponseTools.class);
-    private final PatientController controller = new PatientController(patientService, errorResponseTools);
+    private final PatientController controller = new PatientController(patientService);
 
     private final Model model = new ExtendedModelMap();
 
     @Test
     void patients_remplitLeModeleEtRetourneLaListe() {
         List<Patient> attendus = List.of(new Patient());
-        when(patientService.getPatients()).thenReturn(attendus);
+        when(patientService.getPatients()).thenReturn(Flux.fromIterable(attendus));
 
-        String vue = controller.patients(model);
+        String vue = controller.patients(model).block();
 
         assertThat(vue).isEqualTo("patients/patients");
         assertThat(model.getAttribute("patients")).isEqualTo(attendus);
@@ -39,14 +40,12 @@ class PatientControllerTest {
 
     @Test
     void patients_afficheLErreurQuandLeServiceEchoue() {
-        when(patientService.getPatients()).thenThrow(new RuntimeException("boom"));
-        ErrorMessage erreur = new ErrorMessage(503, "ms-patients ne répond pas.");
-        when(errorResponseTools.getErrorMessage(anyString(), anyString())).thenReturn(erreur);
+        when(patientService.getPatients()).thenReturn(Flux.error(PANNE));
 
-        String vue = controller.patients(model);
+        String vue = controller.patients(model).block();
 
         assertThat(vue).isEqualTo("patients/patients");
-        assertThat(model.getAttribute("errorMessage")).isEqualTo(erreur);
+        assertThat(model.getAttribute("errorMessage")).isEqualTo(PANNE.getErrorMessage());
     }
 
     @Test
@@ -59,7 +58,9 @@ class PatientControllerTest {
 
     @Test
     void ajoutPatientPost_redirigeVersLaListeApresCreation() {
-        String vue = controller.ajoutPatientPost(new PatientForm(), model);
+        when(patientService.createPatient(any(PatientForm.class))).thenReturn(Mono.empty());
+
+        String vue = controller.ajoutPatientPost(new PatientForm(), model).block();
 
         assertThat(vue).isEqualTo("redirect:/app/patients");
     }
@@ -67,14 +68,12 @@ class PatientControllerTest {
     @Test
     void ajoutPatientPost_reafficheLeFormulaireQuandLaCreationEchoue() {
         PatientForm form = new PatientForm();
-        doThrow(new RuntimeException("boom")).when(patientService).createPatient(any(PatientForm.class));
-        ErrorMessage erreur = new ErrorMessage(503, "ms-patients ne répond pas.");
-        when(errorResponseTools.getErrorMessage(anyString(), anyString())).thenReturn(erreur);
+        when(patientService.createPatient(any(PatientForm.class))).thenReturn(Mono.error(PANNE));
 
-        String vue = controller.ajoutPatientPost(form, model);
+        String vue = controller.ajoutPatientPost(form, model).block();
 
         assertThat(vue).isEqualTo("patients/patient-ajout");
         assertThat(model.getAttribute("patient")).isEqualTo(form);
-        assertThat(model.getAttribute("errorMessage")).isEqualTo(erreur);
+        assertThat(model.getAttribute("errorMessage")).isEqualTo(PANNE.getErrorMessage());
     }
 }

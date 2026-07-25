@@ -1,116 +1,120 @@
 package com.mr486.mswebclient.service;
 
+import com.mr486.mswebclient.dto.ErrorMessage;
 import com.mr486.mswebclient.dto.Patient;
 import com.mr486.mswebclient.dto.PatientForm;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import com.mr486.mswebclient.exception.GatewayException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
- * Accède aux patients exposés par ms-patients au travers de la passerelle.
+ * Accède aux patients exposés par ms-patients au travers de la passerelle,
+ * sans bloquer.
  *
- * <p><b>Exemple :</b> getPatients() retourne la liste des patients ;
+ * <p><b>Exemple :</b> getPatients() émet la liste des patients ;
  * createPatient(form) crée un nouveau patient.</p>
  */
 @Service
 public class PatientService {
 
-    private final RestTemplate restTemplate;
-    private final String gatewayBase;
+    /** Nom du microservice cité dans les messages d'erreur de repli. */
+    private static final String MICROSERVICE = "ms-patients";
+
+    private final WebClient gatewayWebClient;
 
     /**
-     * Construit le service avec le client REST et l'URL de la passerelle.
+     * Construit le service avec le client REST réactif de la passerelle.
      *
-     * <p><b>Exemple :</b> new PatientService(restTemplate, "http://localhost:9000")
-     * appellera http://localhost:9000/ms-patients/patients.</p>
+     * <p><b>Exemple :</b> new PatientService(gatewayWebClient) appellera
+     * /ms-patients/** au travers de la passerelle.</p>
      *
-     * @param restTemplate le client REST authentifié vers la passerelle
-     * @param gatewayBase  l'URL de base de la passerelle
+     * @param gatewayWebClient le client REST authentifié vers la passerelle
      */
-    public PatientService(RestTemplate restTemplate,
-                          @Value("${app.gateway.base-url}") String gatewayBase) {
-        this.restTemplate = restTemplate;
-        this.gatewayBase = gatewayBase;
+    public PatientService(WebClient gatewayWebClient) {
+        this.gatewayWebClient = gatewayWebClient;
     }
 
     /**
-     * Retourne la liste de tous les patients.
+     * Retourne la liste de tous les patients, sans bloquer.
      *
-     * <p><b>Exemple :</b> getPatients() retourne les patients enregistrés (liste
-     * vide si aucun).</p>
+     * <p><b>Exemple :</b> getPatients() émet les patients enregistrés (flux vide
+     * si aucun) ; une panne de la passerelle propage une
+     * {@link GatewayException}.</p>
      *
-     * @return la liste des patients
+     * @return un Flux émettant les patients
      */
-    public List<Patient> getPatients() {
-        ResponseEntity<List<Patient>> response = restTemplate.exchange(
-                gatewayBase + "/ms-patients/patients",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<>() {
-                }
-        );
-        return response.getBody();
+    public Flux<Patient> getPatients() {
+        return gatewayWebClient.get()
+                .uri("/ms-patients/patients")
+                .retrieve()
+                .bodyToFlux(Patient.class)
+                .onErrorMap(this::estUneErreurTechnique, e -> repli());
     }
 
     /**
-     * Retourne un patient par son identifiant.
+     * Retourne un patient par son identifiant, sans bloquer.
      *
-     * <p><b>Exemple :</b> getPatientById(7L) retourne le patient d'identifiant 7.</p>
+     * <p><b>Exemple :</b> getPatientById(7L) émet le patient d'identifiant 7.</p>
      *
      * @param id identifiant du patient
-     * @return le patient correspondant
+     * @return un Mono émettant le patient correspondant
      */
-    public Patient getPatientById(Long id) {
-        ResponseEntity<Patient> response = restTemplate.exchange(
-                gatewayBase + "/ms-patients/patients/" + id,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<>() {
-                }
-        );
-        return response.getBody();
+    public Mono<Patient> getPatientById(Long id) {
+        return gatewayWebClient.get()
+                .uri("/ms-patients/patients/{id}", id)
+                .retrieve()
+                .bodyToMono(Patient.class)
+                .onErrorMap(this::estUneErreurTechnique, e -> repli());
     }
 
     /**
-     * Crée un nouveau patient.
+     * Crée un nouveau patient, sans bloquer.
      *
      * <p><b>Exemple :</b> createPatient(form) envoie le formulaire à ms-patients
      * qui persiste le patient.</p>
      *
      * @param patient le formulaire du patient à créer
+     * @return un Mono complété quand la création est faite
      */
-    public void createPatient(PatientForm patient) {
-        restTemplate.exchange(
-                gatewayBase + "/ms-patients/patients",
-                HttpMethod.POST,
-                new HttpEntity<>(patient),
-                new ParameterizedTypeReference<>() {
-                }
-        );
+    public Mono<Void> createPatient(PatientForm patient) {
+        return gatewayWebClient.post()
+                .uri("/ms-patients/patients")
+                .bodyValue(patient)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .onErrorMap(this::estUneErreurTechnique, e -> repli());
     }
 
     /**
-     * Met à jour un patient existant.
+     * Met à jour un patient existant, sans bloquer.
      *
      * <p><b>Exemple :</b> updatePatient(7L, form) remplace les données du patient
      * 7 par celles du formulaire.</p>
      *
      * @param id      identifiant du patient à modifier
      * @param patient le formulaire portant les nouvelles données
+     * @return un Mono complété quand la mise à jour est faite
      */
-    public void updatePatient(Long id, PatientForm patient) {
-        restTemplate.exchange(
-                gatewayBase + "/ms-patients/patients/" + id,
-                HttpMethod.PUT,
-                new HttpEntity<>(patient),
-                new ParameterizedTypeReference<>() {
-                }
-        );
+    public Mono<Void> updatePatient(Long id, PatientForm patient) {
+        return gatewayWebClient.put()
+                .uri("/ms-patients/patients/{id}", id)
+                .bodyValue(patient)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .onErrorMap(this::estUneErreurTechnique, e -> repli());
+    }
+
+    // Vraie panne (connexion, délai…) : tout sauf une erreur distante déjà traduite.
+    private boolean estUneErreurTechnique(Throwable e) {
+        return !(e instanceof GatewayException);
+    }
+
+    // Message de repli nominatif affiché quand la passerelle est injoignable.
+    private GatewayException repli() {
+        return new GatewayException(
+                new ErrorMessage(HttpStatus.SERVICE_UNAVAILABLE.value(), MICROSERVICE + " ne répond pas."));
     }
 }

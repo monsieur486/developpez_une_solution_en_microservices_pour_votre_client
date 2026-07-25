@@ -2,78 +2,83 @@ package com.mr486.mswebclient.service;
 
 import com.mr486.mswebclient.dto.Patient;
 import com.mr486.mswebclient.dto.PatientForm;
-import org.junit.jupiter.api.Test;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
-
+import com.mr486.mswebclient.exception.GatewayException;
+import java.io.IOException;
 import java.util.List;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PatientServiceTest {
 
-    private static final String BASE = "http://gateway";
+    private MockWebServer serveur;
+    private PatientService service;
 
-    private final RestTemplate restTemplate = mock(RestTemplate.class);
-    private final PatientService service = new PatientService(restTemplate, BASE);
+    @BeforeEach
+    void init() throws IOException {
+        serveur = new MockWebServer();
+        serveur.start();
+        service = new PatientService(WebClient.builder().baseUrl(serveur.url("/").toString()).build());
+    }
 
-    @Test
-    void getPatients_appelleLaPasserelleEtRetourneLaListe() {
-        List<Patient> attendus = List.of(new Patient());
-        when(restTemplate.exchange(eq(BASE + "/ms-patients/patients"), eq(HttpMethod.GET),
-                isNull(), any(ParameterizedTypeReference.class)))
-                .thenReturn(ResponseEntity.ok(attendus));
-
-        List<Patient> patients = service.getPatients();
-
-        assertThat(patients).isEqualTo(attendus);
+    @AfterEach
+    void arret() throws IOException {
+        serveur.shutdown();
     }
 
     @Test
-    void getPatientById_appelleLaPasserelleEtRetourneLePatient() {
-        Patient attendu = new Patient();
-        attendu.setId(7L);
-        when(restTemplate.exchange(eq(BASE + "/ms-patients/patients/7"), eq(HttpMethod.GET),
-                isNull(), any(ParameterizedTypeReference.class)))
-                .thenReturn(ResponseEntity.ok(attendu));
+    void getPatients_appelleLaPasserelleEtEmetLaListe() throws InterruptedException {
+        serveur.enqueue(new MockResponse().setBody("[{\"id\":1},{\"id\":2}]")
+                .addHeader("Content-Type", "application/json"));
 
-        Patient patient = service.getPatientById(7L);
+        List<Patient> patients = service.getPatients().collectList().block();
 
+        assertThat(patients).hasSize(2);
+        assertThat(serveur.takeRequest().getPath()).isEqualTo("/ms-patients/patients");
+    }
+
+    @Test
+    void getPatientById_appelleLaPasserelleEtEmetLePatient() throws InterruptedException {
+        serveur.enqueue(new MockResponse().setBody("{\"id\":7}")
+                .addHeader("Content-Type", "application/json"));
+
+        Patient patient = service.getPatientById(7L).block();
+
+        assertThat(patient).isNotNull();
         assertThat(patient.getId()).isEqualTo(7L);
+        assertThat(serveur.takeRequest().getPath()).isEqualTo("/ms-patients/patients/7");
     }
 
     @Test
-    void createPatient_envoieLeFormulaireEnPost() {
-        PatientForm form = new PatientForm();
-        when(restTemplate.exchange(eq(BASE + "/ms-patients/patients"), eq(HttpMethod.POST),
-                any(HttpEntity.class), any(ParameterizedTypeReference.class)))
-                .thenReturn(ResponseEntity.ok().build());
+    void createPatient_envoieLeFormulaireEnPost() throws InterruptedException {
+        serveur.enqueue(new MockResponse().setResponseCode(200));
 
-        service.createPatient(form);
+        service.createPatient(new PatientForm()).block();
 
-        verify(restTemplate).exchange(eq(BASE + "/ms-patients/patients"), eq(HttpMethod.POST),
-                any(HttpEntity.class), any(ParameterizedTypeReference.class));
+        assertThat(serveur.takeRequest().getMethod()).isEqualTo("POST");
     }
 
     @Test
-    void updatePatient_envoieLeFormulaireEnPut() {
-        PatientForm form = new PatientForm();
-        when(restTemplate.exchange(eq(BASE + "/ms-patients/patients/7"), eq(HttpMethod.PUT),
-                any(HttpEntity.class), any(ParameterizedTypeReference.class)))
-                .thenReturn(ResponseEntity.ok().build());
+    void updatePatient_envoieLeFormulaireEnPut() throws InterruptedException {
+        serveur.enqueue(new MockResponse().setResponseCode(200));
 
-        service.updatePatient(7L, form);
+        service.updatePatient(7L, new PatientForm()).block();
 
-        verify(restTemplate).exchange(eq(BASE + "/ms-patients/patients/7"), eq(HttpMethod.PUT),
-                any(HttpEntity.class), any(ParameterizedTypeReference.class));
+        assertThat(serveur.takeRequest().getMethod()).isEqualTo("PUT");
+    }
+
+    @Test
+    void getPatients_replieSurUnMessageNominatifQuandLaPasserelleEstInjoignable() throws IOException {
+        serveur.shutdown();
+
+        assertThatThrownBy(() -> service.getPatients().collectList().block())
+                .isInstanceOf(GatewayException.class)
+                .hasMessage("ms-patients ne répond pas.");
     }
 }

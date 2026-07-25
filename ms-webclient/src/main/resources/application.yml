@@ -19,9 +19,14 @@ app:
 server:
   # port d'écoute du client web
   port: 8080
+  reactive:
+    session:
+      cookie:
+        # protège le cookie de session (non lisible en JavaScript)
+        http-only: true
+        # limite l'envoi du cookie aux navigations même site
+        same-site: lax
   error:
     whitelabel:
-      # désactive la page d'erreur par défaut de Spring Boot
+      # désactive la page d'erreur par défaut : les vues error/ prennent le relais
       enabled: false
-    # route interne vers laquelle sont transférées les erreurs
-    path: /error

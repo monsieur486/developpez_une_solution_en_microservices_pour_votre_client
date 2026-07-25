@@ -1,9 +1,7 @@
 package com.mr486.mswebclient.controller;
 
-import com.mr486.mswebclient.dto.ErrorMessage;
-import com.mr486.mswebclient.dto.Risque;
+import com.mr486.mswebclient.exception.GatewayException;
 import com.mr486.mswebclient.service.EvaluationService;
-import com.mr486.mswebclient.tools.ErrorResponseTools;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -11,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import reactor.core.publisher.Mono;
 
 /**
  * Page de l'évaluation du risque de diabète d'un patient.
@@ -25,34 +24,30 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Slf4j
 public class EvaluationController {
 
-    /** Nom du microservice cité dans les messages d'erreur. */
-    private static final String MICROSERVICE = "ms-risque";
-
     private final EvaluationService evaluationService;
-    private final ErrorResponseTools errorResponseTools;
 
     /**
-     * Affiche l'évaluation du risque de diabète d'un patient.
+     * Affiche l'évaluation du risque de diabète d'un patient, sans bloquer.
      *
-     * <p><b>Exemple :</b> GET /app/patients/7/evaluation retourne la vue
+     * <p><b>Exemple :</b> GET /app/patients/3/evaluation retourne la vue
      * "evaluation/evaluation" avec le niveau de risque dans le modèle.</p>
      *
      * @param model     le modèle de la vue
      * @param patientId identifiant du patient à évaluer
-     * @return le nom de la vue de l'évaluation
+     * @return un Mono émettant le nom de la vue de l'évaluation
      */
     @GetMapping("/patients/{patientId}/evaluation")
-    public String getEvaluation(Model model, @PathVariable Long patientId) {
-        try {
-            Risque evaluation = evaluationService.getEvaluationByPatientId(patientId);
-            model.addAttribute("evaluation", evaluation.getLevel());
-            model.addAttribute("patientId", patientId);
-        } catch (Exception ex) {
-            log.warn("échec de l'évaluation du patient {} : {}", patientId, ex.getMessage());
-            ErrorMessage errorMessage = errorResponseTools.getErrorMessage(ex.getMessage(), MICROSERVICE);
-            model.addAttribute("errorMessage", errorMessage);
-            model.addAttribute("patientId", patientId);
-        }
-        return "evaluation/evaluation";
+    public Mono<String> getEvaluation(Model model, @PathVariable Long patientId) {
+        model.addAttribute("patientId", patientId);
+        return evaluationService.getEvaluationByPatientId(patientId)
+                .map(evaluation -> {
+                    model.addAttribute("evaluation", evaluation.getLevel());
+                    return "evaluation/evaluation";
+                })
+                .onErrorResume(GatewayException.class, ex -> {
+                    log.warn("échec de l'évaluation du patient {} : {}", patientId, ex.getMessage());
+                    model.addAttribute("errorMessage", ex.getErrorMessage());
+                    return Mono.just("evaluation/evaluation");
+                });
     }
 }
