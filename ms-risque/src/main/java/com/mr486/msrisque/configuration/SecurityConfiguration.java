@@ -4,25 +4,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
 /**
- * Configuration de sécurité du microservice : authentification HTTP Basic et
- * ouverture des endpoints techniques (actuator, documentation OpenAPI).
+ * Configuration de sécurité réactive du microservice : authentification HTTP
+ * Basic et ouverture des endpoints techniques (actuator, documentation OpenAPI).
  *
  * <p><b>Exemple :</b> /actuator/** et /v3/api-docs/** sont accessibles sans
  * authentification ; toute autre route exige un utilisateur authentifié.</p>
  */
 @Configuration
-@EnableWebSecurity
+@EnableWebFluxSecurity
 public class SecurityConfiguration {
 
     @Value("${security.app-user.username}")
@@ -32,25 +30,24 @@ public class SecurityConfiguration {
     private String appPass;
 
     /**
-     * Définit la chaîne de filtres de sécurité.
+     * Définit la chaîne de filtres de sécurité réactive.
      *
      * <p><b>Exemple :</b> une requête sur /patients/7/evaluation sans
      * authentification est rejetée en 401.</p>
      *
-     * @param http le constructeur de configuration HTTP
+     * @param http le constructeur de configuration HTTP réactive
      * @return la chaîne de filtres de sécurité
-     * @throws Exception si la configuration échoue
      */
     @Bean
-    SecurityFilterChain filter(HttpSecurity http) throws Exception {
+    SecurityWebFilterChain filter(ServerHttpSecurity http) {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(reg -> reg
-                        .requestMatchers(
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(reg -> reg
+                        .pathMatchers(
                                 "/actuator/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        .anyRequest().authenticated()
+                        .anyExchange().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
         return http.build();
@@ -70,17 +67,17 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Déclare l'utilisateur applicatif en mémoire.
+     * Déclare l'utilisateur applicatif en mémoire (variante réactive).
      *
      * <p><b>Exemple :</b> users(enc) crée un utilisateur de rôle ADMIN à partir
      * des identifiants configurés.</p>
      *
      * @param enc l'encodeur de mots de passe utilisé pour hacher le mot de passe
-     * @return le gestionnaire d'utilisateurs en mémoire
+     * @return le gestionnaire réactif d'utilisateurs en mémoire
      */
     @Bean
-    UserDetailsService users(PasswordEncoder enc) {
-        return new InMemoryUserDetailsManager(
+    MapReactiveUserDetailsService users(PasswordEncoder enc) {
+        return new MapReactiveUserDetailsService(
                 User.withUsername(appUser).password(enc.encode(appPass)).roles("ADMIN").build()
         );
     }

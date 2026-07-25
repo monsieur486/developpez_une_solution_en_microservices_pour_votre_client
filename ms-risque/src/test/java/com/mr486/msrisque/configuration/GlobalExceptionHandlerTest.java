@@ -3,10 +3,9 @@ package com.mr486.msrisque.configuration;
 import com.mr486.msrisque.dto.ErrorResponse;
 import com.mr486.msrisque.exception.RemoteServiceException;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,10 +27,10 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleNoHandlerFound_retourne404() {
-        NoHandlerFoundException ex = new NoHandlerFoundException("GET", "/inconnu", new HttpHeaders());
+    void handleResponseStatus_respecteLeStatutPorte() {
+        ResponseStatusException ex = new ResponseStatusException(HttpStatus.NOT_FOUND, "introuvable");
 
-        ResponseEntity<ErrorResponse> reponse = handler.handleNoHandlerFoundException(ex);
+        ResponseEntity<ErrorResponse> reponse = handler.handleResponseStatus(ex);
 
         assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }

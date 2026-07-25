@@ -10,6 +10,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import reactor.core.publisher.Mono;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -24,10 +26,11 @@ class EvaluationControllerTest {
 
     @Test
     void evaluate_retourne200EtLeRisque() {
-        when(evaluationService.evalueRisque(7L)).thenReturn(new Risque("Borderline"));
+        when(evaluationService.evalueRisque(7L)).thenReturn(Mono.just(new Risque("Borderline")));
 
-        ResponseEntity<Risque> reponse = evaluationController.evaluate(7L);
+        ResponseEntity<Risque> reponse = evaluationController.evaluate(7L).block();
 
+        assertThat(reponse).isNotNull();
         assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(reponse.getBody()).isNotNull();
         assertThat(reponse.getBody().getLevel()).isEqualTo("Borderline");

@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Gestionnaire global des exceptions de l'API : traduit chaque erreur en
@@ -33,17 +33,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Traite les routes inconnues (aucun handler trouvé).
+     * Traite les exceptions à statut porté (route inconnue, requête invalide…).
      *
-     * <p><b>Exemple :</b> un appel sur une URL inexistante retourne une réponse
-     * HTTP 404.</p>
+     * <p><b>Exemple :</b> un appel sur une URL inexistante lève une
+     * ResponseStatusException 404 et retourne une réponse HTTP 404.</p>
      *
      * @param ex l'exception levée
-     * @return une réponse HTTP 404 avec le message d'erreur
+     * @return une réponse HTTP au statut porté par l'exception
      */
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex) {
-        return build(ex.getMessage(), HttpStatus.NOT_FOUND);
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatus(ResponseStatusException ex) {
+        return build(ex.getReason(), HttpStatus.valueOf(ex.getStatusCode().value()));
     }
 
     /**

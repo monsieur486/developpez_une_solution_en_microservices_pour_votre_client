@@ -8,6 +8,7 @@ import com.mr486.msrisque.model.NiveauRisque;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -50,7 +51,9 @@ public class EvaluationService {
     private final Clock clock;
 
     /**
-     * Évalue le niveau de risque diabétique d'un patient.
+     * Évalue le niveau de risque diabétique d'un patient, sans bloquer : le
+     * patient et ses notes sont récupérés en parallèle, puis le niveau est
+     * calculé à la réception des deux réponses.
      *
      * <p><b>Cas d'usage</b> (jeu de démonstration, décrit dans le README racine) :</p>
      *
@@ -64,16 +67,22 @@ public class EvaluationService {
      *       {@code "Early onset"} (patient 4, TestEarlyOnset).</li>
      * </ul>
      *
-     * <p><b>Exemple :</b> evalueRisque(3L) retourne un Risque de niveau
+     * <p><b>Exemple :</b> evalueRisque(3L) émet un Risque de niveau
      * {@code "In Danger"} pour le patient TestInDanger du jeu de démonstration.</p>
      *
      * @param patientId identifiant du patient à évaluer
-     * @return le risque calculé pour ce patient
+     * @return un Mono émettant le risque calculé pour ce patient
      */
-    public Risque evalueRisque(Long patientId) {
-        Patient patient = patientService.getPatientById(patientId);
-        List<Note> notes = notesService.getNotesByPatientId(patientId);
+    public Mono<Risque> evalueRisque(Long patientId) {
+        return Mono.zip(
+                        patientService.getPatientById(patientId),
+                        notesService.getNotesByPatientId(patientId).collectList()
+                )
+                .map(patientEtNotes -> calculeRisque(patientId, patientEtNotes.getT1(), patientEtNotes.getT2()));
+    }
 
+    // Calcule le risque à partir des données reçues (calcul synchrone : CPU pur, pas d'attente).
+    private Risque calculeRisque(Long patientId, Patient patient, List<Note> notes) {
         String genre = patient.getGender();
         int age = calculAge(patient.getBirthDate());
         int declencheursCount = compteDeclencheurs(notes);

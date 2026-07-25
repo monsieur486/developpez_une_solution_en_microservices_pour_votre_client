@@ -35,8 +35,9 @@ class PatientServiceTest {
                 .setBody("{\"id\":7,\"firstName\":\"Test\",\"lastName\":\"TestInDanger\",\"gender\":\"M\"}")
                 .addHeader("Content-Type", "application/json"));
 
-        Patient patient = patientService.getPatientById(7L);
+        Patient patient = patientService.getPatientById(7L).block();
 
+        assertThat(patient).isNotNull();
         assertThat(patient.getId()).isEqualTo(7L);
         assertThat(patient.getLastName()).isEqualTo("TestInDanger");
         assertThat(serveur.takeRequest().getPath()).isEqualTo("/patients/7");

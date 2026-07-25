@@ -36,7 +36,7 @@ class NotesServiceTest {
                 .setBody("[{\"content\":\"Le patient est fumeur\"},{\"content\":\"Taille anormale\"}]")
                 .addHeader("Content-Type", "application/json"));
 
-        List<Note> notes = notesService.getNotesByPatientId(7L);
+        List<Note> notes = notesService.getNotesByPatientId(7L).collectList().block();
 
         assertThat(notes).hasSize(2);
         assertThat(notes.get(0).getContent()).isEqualTo("Le patient est fumeur");
@@ -48,6 +48,6 @@ class NotesServiceTest {
         serveur.enqueue(new MockResponse().setBody("[]")
                 .addHeader("Content-Type", "application/json"));
 
-        assertThat(notesService.getNotesByPatientId(7L)).isEmpty();
+        assertThat(notesService.getNotesByPatientId(7L).collectList().block()).isEmpty();
     }
 }

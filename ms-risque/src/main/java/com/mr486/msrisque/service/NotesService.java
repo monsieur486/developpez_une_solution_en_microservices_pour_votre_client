@@ -1,16 +1,16 @@
 package com.mr486.msrisque.service;
 
 import com.mr486.msrisque.dto.Note;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 
 /**
  * Récupère les notes médicales d'un patient auprès du microservice ms-notes.
  *
- * <p><b>Exemple :</b> getNotesByPatientId(7L) retourne la liste des notes du
- * patient d'identifiant 7.</p>
+ * <p><b>Exemple :</b> getNotesByPatientId(7L) retourne un Flux émettant les
+ * notes du patient d'identifiant 7.</p>
  */
 @Service
 public class NotesService {
@@ -30,21 +30,19 @@ public class NotesService {
     }
 
     /**
-     * Récupère les notes médicales d'un patient.
+     * Récupère les notes médicales d'un patient, sans bloquer.
      *
      * <p><b>Exemple :</b> getNotesByPatientId(7L) appelle GET /patients/7/notes
-     * et retourne les notes du patient 7 (liste vide si aucune) ; une erreur
-     * distante lève {@link com.mr486.msrisque.exception.RemoteServiceException}.</p>
+     * et émet les notes du patient 7 (flux vide si aucune) ; une erreur distante
+     * propage {@link com.mr486.msrisque.exception.RemoteServiceException}.</p>
      *
      * @param patientId identifiant du patient
-     * @return la liste des notes du patient
+     * @return un Flux émettant les notes du patient
      */
-    public List<Note> getNotesByPatientId(Long patientId) {
+    public Flux<Note> getNotesByPatientId(Long patientId) {
         return notesWebClient.get()
                 .uri("/patients/{id}/notes", patientId)
                 .retrieve()
-                .bodyToFlux(Note.class)
-                .collectList()
-                .block();
+                .bodyToFlux(Note.class);
     }
 }

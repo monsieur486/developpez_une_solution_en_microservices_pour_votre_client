@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 /**
  * Expose l'API REST d'évaluation du risque de diabète d'un patient.
@@ -28,18 +29,19 @@ public class EvaluationController {
     private final EvaluationService evaluationService;
 
     /**
-     * Évalue le risque de diabète d'un patient à partir de son identifiant.
+     * Évalue le risque de diabète d'un patient à partir de son identifiant,
+     * sans bloquer.
      *
-     * <p><b>Exemple :</b> evaluate(3L) retourne une réponse 200 de niveau
+     * <p><b>Exemple :</b> evaluate(3L) émet une réponse 200 de niveau
      * {@code "In Danger"} (patient TestInDanger du jeu de démonstration).</p>
      *
      * @param patientId identifiant du patient à évaluer
-     * @return la réponse HTTP contenant le risque calculé
+     * @return un Mono émettant la réponse HTTP contenant le risque calculé
      */
     @Tag(name = "Évalue le risque de diabète d'un patient par son ID")
     @GetMapping(value = "/patients/{patientId}/evaluation")
-    public ResponseEntity<Risque> evaluate(@PathVariable Long patientId) {
-        Risque risque = evaluationService.evalueRisque(patientId);
-        return ResponseEntity.ok(risque);
+    public Mono<ResponseEntity<Risque>> evaluate(@PathVariable Long patientId) {
+        return evaluationService.evalueRisque(patientId)
+                .map(ResponseEntity::ok);
     }
 }

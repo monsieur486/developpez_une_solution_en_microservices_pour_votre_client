@@ -14,6 +14,9 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -54,9 +57,9 @@ class EvaluationServiceTest {
 
     // Configure les mocks pour le patient d'id 1 et son niveau évalué.
     private String niveau(Patient patient, List<Note> notes) {
-        when(patientService.getPatientById(1L)).thenReturn(patient);
-        when(notesService.getNotesByPatientId(1L)).thenReturn(notes);
-        return evaluationService.evalueRisque(1L).getLevel();
+        when(patientService.getPatientById(1L)).thenReturn(Mono.just(patient));
+        when(notesService.getNotesByPatientId(1L)).thenReturn(Flux.fromIterable(notes));
+        return evaluationService.evalueRisque(1L).block().getLevel();
     }
 
     @Test
