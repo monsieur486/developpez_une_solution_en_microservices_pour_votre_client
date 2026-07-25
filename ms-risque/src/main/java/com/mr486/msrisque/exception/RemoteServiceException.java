@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * Exception levée lorsqu'un microservice distant retourne une erreur.
  *
- * <p><b>Exemple :</b> un appel Feign recevant une réponse 404 déclenche une
+ * <p><b>Exemple :</b> un appel WebClient recevant une réponse 404 déclenche une
  * RemoteServiceException portant le statut 404 et le corps d'erreur décodé.</p>
  */
 @Getter

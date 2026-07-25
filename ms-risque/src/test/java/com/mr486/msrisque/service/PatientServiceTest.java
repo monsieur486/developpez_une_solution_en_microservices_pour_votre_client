@@ -1,30 +1,44 @@
 package com.mr486.msrisque.service;
 
-import com.mr486.msrisque.client.PatientClient;
 import com.mr486.msrisque.dto.Patient;
+import java.io.IOException;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class PatientServiceTest {
 
-    @Mock
-    private PatientClient patientClient;
-
-    @InjectMocks
+    private MockWebServer serveur;
     private PatientService patientService;
 
-    @Test
-    void getPatientById_delegueAuClient() {
-        Patient patient = Patient.builder().id(7L).build();
-        when(patientClient.findById(7L)).thenReturn(patient);
+    @BeforeEach
+    void init() throws IOException {
+        serveur = new MockWebServer();
+        serveur.start();
+        WebClient webClient = WebClient.builder().baseUrl(serveur.url("/").toString()).build();
+        patientService = new PatientService(webClient);
+    }
 
-        assertThat(patientService.getPatientById(7L)).isSameAs(patient);
+    @AfterEach
+    void arret() throws IOException {
+        serveur.shutdown();
+    }
+
+    @Test
+    void getPatientById_appelleMsPatientsEtRetourneLePatient() throws InterruptedException {
+        serveur.enqueue(new MockResponse()
+                .setBody("{\"id\":7,\"firstName\":\"Test\",\"lastName\":\"TestInDanger\",\"gender\":\"M\"}")
+                .addHeader("Content-Type", "application/json"));
+
+        Patient patient = patientService.getPatientById(7L);
+
+        assertThat(patient.getId()).isEqualTo(7L);
+        assertThat(patient.getLastName()).isEqualTo("TestInDanger");
+        assertThat(serveur.takeRequest().getPath()).isEqualTo("/patients/7");
     }
 }

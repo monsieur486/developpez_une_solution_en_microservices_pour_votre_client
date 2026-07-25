@@ -9,15 +9,6 @@ spring:
     resources:
       add-mappings: false   # évite que les ressources statiques interceptent les 404
 
-  cloud:
-    openfeign:
-      client:
-        config:
-          default:
-            logger-level: basic
-            connectTimeout: 2000
-            readTimeout: 2000
-
 security:
   app-user:
     username: ${APP_USERNAME:app_user}

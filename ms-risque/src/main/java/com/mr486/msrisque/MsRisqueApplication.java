@@ -2,16 +2,14 @@ package com.mr486.msrisque;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
  * Point d'entrée du microservice ms-risque.
  *
  * <p><b>Exemple :</b> lancer la méthode main démarre l'application Spring Boot
- * et active les clients Feign.</p>
+ * et ses clients WebClient vers ms-patients et ms-notes.</p>
  */
 @SpringBootApplication
-@EnableFeignClients
 public class MsRisqueApplication {
 
     /**
