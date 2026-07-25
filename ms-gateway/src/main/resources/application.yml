@@ -1,7 +1,9 @@
 spring:
   config:
+    # charge les variables d'environnement depuis .env s'il existe
     import: optional:file:.env[.properties]
   application:
+    # nom du service tel qu'enregistré dans Eureka
     name: ms-gateway
   cloud:
     gateway:
@@ -12,31 +14,44 @@ spring:
             add-to-simple-url-handler-mapping: true
             cors-configurations:
               '[/**]':
+                # origines autorisées à appeler la passerelle
                 allowedOrigins:
                   - "http://localhost:9000"
                   - "http://ms-gateway:9000"
+                # méthodes HTTP autorisées
                 allowedMethods: [ GET, POST, PUT, PATCH, DELETE, OPTIONS ]
+                # en-têtes acceptés dans les requêtes
                 allowedHeaders: [ "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With", "*" ]
+                # en-têtes exposés dans les réponses
                 exposedHeaders: [ "Authorization" ]
+                # autorise l'envoi des cookies et identifiants
                 allowCredentials: true
           discovery:
             locator:
+              # crée automatiquement une route par service découvert dans Eureka
               enabled: true
+              # les routes utilisent le nom de service en minuscules (/ms-patients/**)
               lower-case-service-id: true
               filters:
+                # retire le préfixe du nom de service avant de transmettre la requête
                 - name: StripPrefix
                   args:
                     parts: 1
 
 server:
+  # port d'écoute de la passerelle
   port: 9000
 
 springdoc:
   api-docs:
+    # active l'agrégation de la documentation OpenAPI
     enabled: true
+    # chemin de la définition OpenAPI
     path: /v3/api-docs
   swagger-ui:
+    # masque l'URL Petstore par défaut de Swagger UI
     disable-swagger-default-url: true
+    # documentation des microservices agrégée derrière la passerelle
     urls:
       - name: ms-patients
         url: /ms-patients/v3/api-docs
@@ -44,17 +59,24 @@ springdoc:
         url: /ms-notes/v3/api-docs
       - name: ms-risque
         url: /ms-risque/v3/api-docs
+    # documentation affichée par défaut dans Swagger UI
     urlsPrimaryName: ms-patients
 
 management:
+  # endpoints Actuator exposés (supervision + routes de la passerelle)
   endpoints.web.exposure.include: health,info,gateway
 
 eureka:
   client:
+    # période de rafraîchissement du registre (en secondes)
     registryFetchIntervalSeconds: 5
     service-url:
+      # URL de l'annuaire Eureka
       defaultZone: http://localhost:8761/eureka
+    # la passerelle s'enregistre dans l'annuaire
     registerWithEureka: true
+    # la passerelle récupère le registre des services
     fetchRegistry: true
   instance:
+    # période de renouvellement du bail auprès d'Eureka (en secondes)
     leaseRenewalIntervalInSeconds: 5
