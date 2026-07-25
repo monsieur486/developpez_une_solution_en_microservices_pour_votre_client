@@ -68,6 +68,16 @@ cd ms-eureka && ./mvnw spring-boot:run     # puis chaque microservice, dans l'or
 L'interface web est alors disponible sur <http://localhost:8080>
 (identifiants de dev : `app_user` / `app_password`, voir `dist.env`).
 
+## Déploiements de démonstration
+
+Deux déploiements sont publiés derrière des proxys Apache (serveur externe) :
+
+- <https://p09docker.mr486.com> — la pile docker-compose de ce dépôt ;
+- <https://p09kub.mr486.com> — une déclinaison **Kubernetes** (minikube) qui
+  démontre l'évolution de l'architecture : l'annuaire Eureka y est remplacé par
+  la découverte de services native du cluster (DNS + Services). Cette
+  déclinaison vit dans un répertoire local `kubernetes/` non versionné.
+
 ## Qualité
 
 Chaque module applique le même outillage : Checkstyle (bloquant), JaCoCo avec

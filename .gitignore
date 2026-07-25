@@ -1,2 +1,5 @@
 .env
 .idea
+
+# Déploiement minikube local (démonstration de l évolution vers Kubernetes, non versionné)
+kubernetes/
