@@ -7,12 +7,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 /**
- * Client Feign vers le microservice ms-patients.
+ * Client Feign vers le microservice ms-patients. La cible est résolue par
+ * l'annuaire Eureka, ou par l'URL fixe {@code clients.ms-patients.url} si elle
+ * est configurée (déploiement Kubernetes).
  *
  * <p><b>Exemple :</b> findById(7L) appelle GET /patients/7 et retourne le
  * patient 7.</p>
  */
-@FeignClient(name = "ms-patients", configuration = FeignConfiguration.class)
+@FeignClient(name = "ms-patients", url = "${clients.ms-patients.url:}", configuration = FeignConfiguration.class)
 public interface PatientClient {
 
     /**

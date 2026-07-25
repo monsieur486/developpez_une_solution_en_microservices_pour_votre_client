@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import java.util.List;
 
 /**
- * Client Feign vers le microservice ms-notes.
+ * Client Feign vers le microservice ms-notes. La cible est résolue par l'annuaire
+ * Eureka, ou par l'URL fixe {@code clients.ms-notes.url} si elle est configurée
+ * (déploiement Kubernetes).
  *
  * <p><b>Exemple :</b> getNotesByPatientId(7L) appelle GET /patients/7/notes et
  * retourne les notes du patient 7.</p>
  */
-@FeignClient(name = "ms-notes", configuration = FeignConfiguration.class)
+@FeignClient(name = "ms-notes", url = "${clients.ms-notes.url:}", configuration = FeignConfiguration.class)
 public interface NoteClient {
 
     /**
