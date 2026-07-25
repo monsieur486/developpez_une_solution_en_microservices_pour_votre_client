@@ -39,8 +39,9 @@ public class EvaluationService {
     /**
      * Retourne l'évaluation du risque de diabète d'un patient.
      *
-     * <p><b>Exemple :</b> getEvaluationByPatientId(7L) retourne un Risque dont le
-     * niveau vaut par exemple "Borderline".</p>
+     * <p><b>Exemple :</b> getEvaluationByPatientId(2L) retourne un Risque de niveau
+     * {@code "Borderline"} pour le patient TestBorderline du jeu de démonstration
+     * (décrit dans le README racine).</p>
      *
      * @param patientId identifiant du patient à évaluer
      * @return le risque calculé pour ce patient

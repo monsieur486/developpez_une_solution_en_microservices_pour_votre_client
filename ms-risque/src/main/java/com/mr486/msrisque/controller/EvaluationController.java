@@ -15,8 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Expose l'API REST d'évaluation du risque de diabète d'un patient.
  *
- * <p><b>Exemple :</b> GET /patients/7/evaluation retourne le risque calculé
- * pour le patient d'identifiant 7.</p>
+ * <p><b>Exemple :</b> GET /patients/3/evaluation retourne
+ * {@code {"level": "In Danger"}} pour le patient TestInDanger du jeu de
+ * démonstration (décrit dans le README racine).</p>
  */
 @RestController
 @RequiredArgsConstructor
@@ -29,8 +30,8 @@ public class EvaluationController {
     /**
      * Évalue le risque de diabète d'un patient à partir de son identifiant.
      *
-     * <p><b>Exemple :</b> evaluate(7L) retourne une réponse 200 contenant le
-     * niveau de risque du patient 7.</p>
+     * <p><b>Exemple :</b> evaluate(3L) retourne une réponse 200 de niveau
+     * {@code "In Danger"} (patient TestInDanger du jeu de démonstration).</p>
      *
      * @param patientId identifiant du patient à évaluer
      * @return la réponse HTTP contenant le risque calculé

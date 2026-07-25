@@ -19,6 +19,20 @@ PostgreSQL, MongoDB, Thymeleaf, Docker Compose.
 | `ms-risque` | Calcul du niveau de risque de diabète | 9300 |
 | `ms-webclient` | Interface web Thymeleaf | 8080 |
 
+## Jeu de démonstration
+
+Au premier démarrage, les bases sont amorcées avec le jeu de démonstration du
+projet : quatre patients (seed Liquibase de ms-patients) et leurs neuf notes
+médicales (seed Mongock de ms-notes). Les exemples de la Javadoc et de la
+collection Bruno s'appuient sur ce jeu :
+
+| Id | Patient | Évaluation attendue |
+|---|---|---|
+| 1 | TestNone | None |
+| 2 | TestBorderline | Borderline |
+| 3 | TestInDanger | In Danger |
+| 4 | TestEarlyOnset | Early onset |
+
 ## Prérequis
 
 - Java 17 (le wrapper Maven `./mvnw` est fourni dans chaque module)

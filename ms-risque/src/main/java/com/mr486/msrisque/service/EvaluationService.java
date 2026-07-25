@@ -18,8 +18,9 @@ import java.util.List;
  * Évalue le niveau de risque diabétique d'un patient à partir de ses données
  * démographiques et des termes déclencheurs présents dans ses notes médicales.
  *
- * <p><b>Exemple :</b> evalueRisque(7L) retourne un Risque dont le niveau vaut
- * "Borderline" pour un patient de plus de 30 ans présentant 3 déclencheurs.</p>
+ * <p><b>Exemple :</b> evalueRisque(2L) retourne un Risque de niveau
+ * {@code "Borderline"} pour le patient TestBorderline du jeu de démonstration
+ * (plus de 30 ans, 2 à 5 déclencheurs) — jeu décrit dans le README racine.</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -51,8 +52,20 @@ public class EvaluationService {
     /**
      * Évalue le niveau de risque diabétique d'un patient.
      *
-     * <p><b>Exemple :</b> evalueRisque(7L) retourne un Risque de niveau "In Danger"
-     * pour un homme de moins de 30 ans présentant 3 déclencheurs.</p>
+     * <p><b>Cas d'usage</b> (jeu de démonstration, décrit dans le README racine) :</p>
+     *
+     * <ul>
+     *   <li>aucun déclencheur → {@code "None"} (patient 1, TestNone) ;</li>
+     *   <li>2 à 5 déclencheurs après 30 ans → {@code "Borderline"} (patient 2,
+     *       TestBorderline) ;</li>
+     *   <li>3 déclencheurs pour un homme de moins de 30 ans → {@code "In Danger"}
+     *       (patient 3, TestInDanger) ;</li>
+     *   <li>7 déclencheurs ou plus pour une femme de moins de 30 ans →
+     *       {@code "Early onset"} (patient 4, TestEarlyOnset).</li>
+     * </ul>
+     *
+     * <p><b>Exemple :</b> evalueRisque(3L) retourne un Risque de niveau
+     * {@code "In Danger"} pour le patient TestInDanger du jeu de démonstration.</p>
      *
      * @param patientId identifiant du patient à évaluer
      * @return le risque calculé pour ce patient

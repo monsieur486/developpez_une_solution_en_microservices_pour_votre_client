@@ -15,8 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 /**
  * Page de l'évaluation du risque de diabète d'un patient.
  *
- * <p><b>Exemple :</b> GET /app/patients/7/evaluation affiche le niveau de
- * risque calculé pour le patient 7.</p>
+ * <p><b>Exemple :</b> GET /app/patients/3/evaluation affiche {@code "In Danger"}
+ * pour le patient TestInDanger du jeu de démonstration (décrit dans le README
+ * racine).</p>
  */
 @Controller
 @RequestMapping("/app")
