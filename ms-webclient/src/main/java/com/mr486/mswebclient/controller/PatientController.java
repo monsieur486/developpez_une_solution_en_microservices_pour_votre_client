@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import reactor.core.publisher.Mono;
 
 /**
@@ -28,20 +29,20 @@ public class PatientController {
     private final PatientService patientService;
 
     /**
-     * Affiche la liste des patients, sans bloquer.
+     * Affiche une page de la liste des patients (20 par page), sans bloquer.
      *
      * <p><b>Exemple :</b> GET /app/patients retourne la vue "patients/patients"
-     * avec la liste des patients dans le modèle.</p>
+     * avec la première page ; GET /app/patients?page=1 affiche la suivante.</p>
      *
+     * @param page  numéro de la page demandée (à partir de 0)
      * @param model le modèle de la vue
      * @return un Mono émettant le nom de la vue de la liste des patients
      */
     @GetMapping("/patients")
-    public Mono<String> patients(Model model) {
-        return patientService.getPatients()
-                .collectList()
-                .map(patients -> {
-                    model.addAttribute("patients", patients);
+    public Mono<String> patients(@RequestParam(defaultValue = "0") int page, Model model) {
+        return patientService.getPatients(page)
+                .map(pagePatients -> {
+                    model.addAttribute("page", pagePatients);
                     return "patients/patients";
                 })
                 .onErrorResume(GatewayException.class, ex -> {

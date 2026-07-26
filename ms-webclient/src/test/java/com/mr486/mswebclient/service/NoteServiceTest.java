@@ -1,9 +1,9 @@
 package com.mr486.mswebclient.service;
 
 import com.mr486.mswebclient.dto.Note;
+import com.mr486.mswebclient.dto.PageReponse;
 import com.mr486.mswebclient.exception.GatewayException;
 import java.io.IOException;
-import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -32,14 +32,17 @@ class NoteServiceTest {
     }
 
     @Test
-    void getNotesByPatientId_appelleLaPasserelleEtEmetLesNotes() throws InterruptedException {
-        serveur.enqueue(new MockResponse().setBody("[{\"content\":\"fumeur\"}]")
+    void getNotesPagines_appelleLaPasserelleEtEmetLaPage() throws InterruptedException {
+        serveur.enqueue(new MockResponse()
+                .setBody("{\"content\":[{\"content\":\"fumeur\"}],\"page\":0,\"totalPages\":1,\"totalElements\":1}")
                 .addHeader("Content-Type", "application/json"));
 
-        List<Note> notes = service.getNotesByPatientId(7L).collectList().block();
+        PageReponse<Note> page = service.getNotesPagines(7L, 0).block();
 
-        assertThat(notes).hasSize(1);
-        assertThat(serveur.takeRequest().getPath()).isEqualTo("/ms-notes/patients/7/notes");
+        assertThat(page).isNotNull();
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.aPlusieursPages()).isFalse();
+        assertThat(serveur.takeRequest().getPath()).isEqualTo("/ms-notes/patients/7/notes/pagines?page=0");
     }
 
     @Test
@@ -52,10 +55,10 @@ class NoteServiceTest {
     }
 
     @Test
-    void getNotesByPatientId_replieSurUnMessageNominatifQuandLaPasserelleEstInjoignable() throws IOException {
+    void getNotesPagines_replieSurUnMessageNominatifQuandLaPasserelleEstInjoignable() throws IOException {
         serveur.shutdown();
 
-        assertThatThrownBy(() -> service.getNotesByPatientId(7L).collectList().block())
+        assertThatThrownBy(() -> service.getNotesPagines(7L, 0).block())
                 .isInstanceOf(GatewayException.class)
                 .hasMessage("ms-notes ne répond pas.");
     }

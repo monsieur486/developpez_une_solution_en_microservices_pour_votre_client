@@ -1,20 +1,21 @@
 package com.mr486.mswebclient.service;
 
 import com.mr486.mswebclient.dto.ErrorMessage;
+import com.mr486.mswebclient.dto.PageReponse;
 import com.mr486.mswebclient.dto.Patient;
 import com.mr486.mswebclient.dto.PatientForm;
 import com.mr486.mswebclient.exception.GatewayException;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
  * Accède aux patients exposés par ms-patients au travers de la passerelle,
  * sans bloquer.
  *
- * <p><b>Exemple :</b> getPatients() émet la liste des patients ;
+ * <p><b>Exemple :</b> getPatients(0) émet la première page de patients ;
  * createPatient(form) crée un nouveau patient.</p>
  */
 @Service
@@ -38,19 +39,21 @@ public class PatientService {
     }
 
     /**
-     * Retourne la liste de tous les patients, sans bloquer.
+     * Retourne une page de patients (20 par page), sans bloquer.
      *
-     * <p><b>Exemple :</b> getPatients() émet les patients enregistrés (flux vide
-     * si aucun) ; une panne de la passerelle propage une
+     * <p><b>Exemple :</b> getPatients(0) émet la première page de patients avec
+     * ses informations de navigation ; une panne de la passerelle propage une
      * {@link GatewayException}.</p>
      *
-     * @return un Flux émettant les patients
+     * @param page numéro de la page demandée (à partir de 0)
+     * @return un Mono émettant la page de patients
      */
-    public Flux<Patient> getPatients() {
+    public Mono<PageReponse<Patient>> getPatients(int page) {
         return gatewayWebClient.get()
-                .uri("/ms-patients/patients")
+                .uri("/ms-patients/patients?page={page}", page)
                 .retrieve()
-                .bodyToFlux(Patient.class)
+                .bodyToMono(new ParameterizedTypeReference<PageReponse<Patient>>() {
+                })
                 .onErrorMap(this::estUneErreurTechnique, e -> repli());
     }
 

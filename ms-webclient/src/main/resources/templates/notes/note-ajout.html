@@ -21,7 +21,7 @@
                       th:field="*{content}"></textarea>
             <button type="submit">Créer</button>
         </form>
-        <p><a th:href="@{'/app/patients/' + ${patientId} + '/notes'}">Retour à la liste des notes</a></p>
+        <p><a th:href="@{'/app/patients/' + ${patientId}}">Retour à la fiche patient</a></p>
     </div>
 </div>
 <div th:replace="~{fragments/footer :: footer}"></div>

@@ -1,10 +1,10 @@
 package com.mr486.mswebclient.service;
 
+import com.mr486.mswebclient.dto.PageReponse;
 import com.mr486.mswebclient.dto.Patient;
 import com.mr486.mswebclient.dto.PatientForm;
 import com.mr486.mswebclient.exception.GatewayException;
 import java.io.IOException;
-import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
@@ -33,14 +33,18 @@ class PatientServiceTest {
     }
 
     @Test
-    void getPatients_appelleLaPasserelleEtEmetLaListe() throws InterruptedException {
-        serveur.enqueue(new MockResponse().setBody("[{\"id\":1},{\"id\":2}]")
+    void getPatients_appelleLaPasserelleEtEmetLaPage() throws InterruptedException {
+        serveur.enqueue(new MockResponse()
+                .setBody("{\"content\":[{\"id\":1},{\"id\":2}],\"page\":0,\"totalPages\":3,\"totalElements\":45}")
                 .addHeader("Content-Type", "application/json"));
 
-        List<Patient> patients = service.getPatients().collectList().block();
+        PageReponse<Patient> page = service.getPatients(0).block();
 
-        assertThat(patients).hasSize(2);
-        assertThat(serveur.takeRequest().getPath()).isEqualTo("/ms-patients/patients");
+        assertThat(page).isNotNull();
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getTotalPages()).isEqualTo(3);
+        assertThat(page.aPlusieursPages()).isTrue();
+        assertThat(serveur.takeRequest().getPath()).isEqualTo("/ms-patients/patients?page=0");
     }
 
     @Test
@@ -77,7 +81,7 @@ class PatientServiceTest {
     void getPatients_replieSurUnMessageNominatifQuandLaPasserelleEstInjoignable() throws IOException {
         serveur.shutdown();
 
-        assertThatThrownBy(() -> service.getPatients().collectList().block())
+        assertThatThrownBy(() -> service.getPatients(0).block())
                 .isInstanceOf(GatewayException.class)
                 .hasMessage("ms-patients ne répond pas.");
     }

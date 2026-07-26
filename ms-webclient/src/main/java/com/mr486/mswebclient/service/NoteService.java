@@ -2,19 +2,20 @@ package com.mr486.mswebclient.service;
 
 import com.mr486.mswebclient.dto.ErrorMessage;
 import com.mr486.mswebclient.dto.Note;
+import com.mr486.mswebclient.dto.PageReponse;
 import com.mr486.mswebclient.exception.GatewayException;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
  * Accède aux notes médicales exposées par ms-notes au travers de la passerelle,
  * sans bloquer.
  *
- * <p><b>Exemple :</b> getNotesByPatientId(7L) émet les notes du patient 7 ;
- * createNote(7L, note) en ajoute une nouvelle.</p>
+ * <p><b>Exemple :</b> getNotesPagines(7L, 0) émet les 5 dernières notes du
+ * patient 7 ; createNote(7L, note) en ajoute une nouvelle.</p>
  */
 @Service
 public class NoteService {
@@ -37,20 +38,23 @@ public class NoteService {
     }
 
     /**
-     * Retourne les notes médicales d'un patient, sans bloquer.
+     * Retourne une page des notes d'un patient (les 5 dernières, de la plus
+     * récente à la plus ancienne), sans bloquer.
      *
-     * <p><b>Exemple :</b> getNotesByPatientId(7L) émet les notes du patient 7
-     * (flux vide si aucune) ; une panne de la passerelle propage une
-     * {@link GatewayException}.</p>
+     * <p><b>Exemple :</b> getNotesPagines(7L, 0) émet les 5 dernières notes du
+     * patient 7 avec les informations de navigation ; une panne de la passerelle
+     * propage une {@link GatewayException}.</p>
      *
      * @param patientId identifiant du patient
-     * @return un Flux émettant les notes du patient
+     * @param page      numéro de la page demandée (à partir de 0)
+     * @return un Mono émettant la page de notes
      */
-    public Flux<Note> getNotesByPatientId(Long patientId) {
+    public Mono<PageReponse<Note>> getNotesPagines(Long patientId, int page) {
         return gatewayWebClient.get()
-                .uri("/ms-notes/patients/{id}/notes", patientId)
+                .uri("/ms-notes/patients/{id}/notes/pagines?page={page}", patientId, page)
                 .retrieve()
-                .bodyToFlux(Note.class)
+                .bodyToMono(new ParameterizedTypeReference<PageReponse<Note>>() {
+                })
                 .onErrorMap(this::estUneErreurTechnique, e -> repli());
     }
 

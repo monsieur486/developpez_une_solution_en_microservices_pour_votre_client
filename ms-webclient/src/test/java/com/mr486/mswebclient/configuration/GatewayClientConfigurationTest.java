@@ -71,6 +71,18 @@ class GatewayClientConfigurationTest {
     }
 
     @Test
+    void gatewayWebClient_replieSurUnMessageParDefautQuandLeCorpsDecodeNaPasDeMessage() {
+        serveur.enqueue(new MockResponse().setResponseCode(503)
+                .setBody("{\"path\":\"/x\",\"status\":503,\"error\":\"Service Unavailable\"}")
+                .addHeader("Content-Type", "application/json"));
+
+        assertThatThrownBy(() -> client.get().uri("/ms-risque/patients/3/evaluation").retrieve()
+                .bodyToMono(Patient.class).block())
+                .isInstanceOf(GatewayException.class)
+                .hasMessageContaining("Le service ne répond pas");
+    }
+
+    @Test
     void gatewayWebClient_replieSurUnMessageParDefautQuandCorpsVide() {
         serveur.enqueue(new MockResponse().setResponseCode(500));
 

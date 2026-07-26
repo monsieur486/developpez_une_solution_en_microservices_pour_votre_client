@@ -5,8 +5,8 @@ type 2, découpée en microservices Spring Boot : les praticiens consultent les
 patients, ajoutent des notes médicales et obtiennent une évaluation du risque
 calculée à partir des termes déclencheurs présents dans les notes.
 
-Stack : Java 17, Spring Boot / Spring Cloud (Eureka, Gateway, OpenFeign),
-PostgreSQL, MongoDB, Thymeleaf, Docker Compose.
+Stack : Java 17, Spring Boot / Spring Cloud (Eureka, Gateway), WebFlux de bout
+en bout (WebClient), PostgreSQL, MongoDB, Thymeleaf, Docker Compose.
 
 ## Architecture
 
@@ -97,11 +97,12 @@ collection [Bruno](https://www.usebruno.com/) est fournie dans `Bruno-Api/`.
 
 | Méthode | URL | Rôle |
 |---|---|---|
-| GET | `/ms-patients/patients` | Liste des patients |
+| GET | `/ms-patients/patients?page=0` | Patients par pages de 20 |
 | GET | `/ms-patients/patients/{id}` | Détail d'un patient |
 | POST | `/ms-patients/patients` | Création d'un patient |
 | PUT | `/ms-patients/patients/{id}` | Modification d'un patient |
-| GET | `/ms-notes/patients/{id}/notes` | Notes médicales d'un patient |
+| GET | `/ms-notes/patients/{id}/notes` | Toutes les notes d'un patient (pour le calcul du risque) |
+| GET | `/ms-notes/patients/{id}/notes/pagines?page=0` | Notes par pages de 5 (plus récentes d'abord) |
 | POST | `/ms-notes/patients/{id}/notes` | Ajout d'une note |
 | GET | `/ms-risque/patients/{id}/evaluation` | Évaluation du risque de diabète |
 

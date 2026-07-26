@@ -14,10 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import reactor.core.publisher.Mono;
 
 /**
- * Pages des notes médicales d'un patient et de l'ajout d'une note.
+ * Ajout d'une note médicale à un patient (la consultation des notes se fait sur
+ * la fiche patient).
  *
- * <p><b>Exemple :</b> GET /app/patients/7/notes affiche les notes du patient 7 ;
- * POST /app/patients/7/notes en ajoute une nouvelle.</p>
+ * <p><b>Exemple :</b> GET /app/patients/7/notes/ajout affiche le formulaire ;
+ * POST /app/patients/7/notes crée la note puis redirige vers la fiche.</p>
  */
 @Controller
 @RequestMapping("/app")
@@ -26,32 +27,6 @@ import reactor.core.publisher.Mono;
 public class NotesController {
 
     private final NoteService noteService;
-
-    /**
-     * Affiche les notes médicales d'un patient, sans bloquer.
-     *
-     * <p><b>Exemple :</b> GET /app/patients/7/notes retourne la vue "notes/notes"
-     * avec les notes du patient 7 dans le modèle.</p>
-     *
-     * @param model     le modèle de la vue
-     * @param patientId identifiant du patient
-     * @return un Mono émettant le nom de la vue de la liste des notes
-     */
-    @GetMapping("/patients/{patientId}/notes")
-    public Mono<String> getNotes(Model model, @PathVariable Long patientId) {
-        model.addAttribute("patientId", patientId);
-        return noteService.getNotesByPatientId(patientId)
-                .collectList()
-                .map(notes -> {
-                    model.addAttribute("notes", notes);
-                    return "notes/notes";
-                })
-                .onErrorResume(GatewayException.class, ex -> {
-                    log.warn("échec de récupération des notes du patient {} : {}", patientId, ex.getMessage());
-                    model.addAttribute("errorMessage", ex.getErrorMessage());
-                    return Mono.just("notes/notes");
-                });
-    }
 
     /**
      * Affiche le formulaire d'ajout d'une note.
@@ -74,7 +49,7 @@ public class NotesController {
      * Crée une note pour un patient à partir du formulaire soumis, sans bloquer.
      *
      * <p><b>Exemple :</b> POST /app/patients/7/notes crée la note puis redirige
-     * vers la liste des notes ; en cas d'échec, réaffiche le formulaire avec le
+     * vers la fiche du patient ; en cas d'échec, réaffiche le formulaire avec le
      * message d'erreur.</p>
      *
      * @param patientId identifiant du patient concerné
@@ -86,7 +61,7 @@ public class NotesController {
     public Mono<String> ajoutNotePost(@PathVariable Long patientId, Note note, Model model) {
         return noteService.createNote(patientId, note)
                 .doOnSuccess(v -> log.info("note créée pour le patient {}", patientId))
-                .thenReturn("redirect:/app/patients/" + patientId + "/notes")
+                .thenReturn("redirect:/app/patients/" + patientId)
                 .onErrorResume(GatewayException.class, ex -> {
                     log.warn("échec de création d'une note pour le patient {} : {}", patientId, ex.getMessage());
                     model.addAttribute("patientId", patientId);

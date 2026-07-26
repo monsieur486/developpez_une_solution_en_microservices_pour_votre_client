@@ -14,17 +14,63 @@
             <div th:replace="~{fragments/error-message :: error-message}"></div>
         </div>
         <div th:if="${patient}">
-            <h5>Fiche patient
-                <a th:href="@{/app/patients/{id}/update(id=${patient.id})}">✍️ modifier</a>
-            </h5>
+            <div class="d-flex justify-content-between align-items-start">
+                <h5>Fiche patient
+                    <a th:href="@{/app/patients/{id}/update(id=${patient.id})}">✍️ modifier</a>
+                </h5>
+                <div class="text-end">
+                    <span th:if="${evaluation}" class="badge fs-6"
+                          th:classappend="${evaluation == 'None'} ? 'text-bg-success'
+                              : (${evaluation == 'Borderline'} ? 'text-bg-warning' : 'text-bg-danger')"
+                          th:text="|⚠️ Risque : ${evaluation}|"></span>
+                    <div th:if="${erreurEvaluation}" role="alert" class="alert alert-warning py-1 px-2 mb-0">
+                        <span th:text="|⚠️ Risque indisponible : ${erreurEvaluation.message}|"></span>
+                    </div>
+                </div>
+            </div>
             <p>Prénom : <span th:text="${patient.firstName}"></span></p>
             <p>Nom : <span th:text="${patient.lastName}"></span></p>
             <p>Date de naissance : <span th:text="${#temporals.format(patient.birthDate, 'dd/MM/yyyy')}"></span></p>
             <p>Genre : <span th:text="${patient.gender}"></span></p>
             <p>Adresse : <span th:text="${patient.postalAddress}"></span></p>
             <p>Téléphone : <span th:text="${patient.phoneNumber}"></span></p>
-            <p><a th:href="@{/app/patients/{id}/notes(id=${patient.id})}">📝 Notes</a></p>
-            <p><a th:href="@{/app/patients/{id}/evaluation(id=${patient.id})}">⚠️ Risque</a></p>
+
+            <h6>📝 Notes
+                <a th:href="@{/app/patients/{id}/notes/ajout(id=${patient.id})}">✚ ajouter une note</a>
+            </h6>
+            <div th:if="${erreurNotes}" role="alert" class="alert alert-warning">
+                <span th:text="|Notes indisponibles : ${erreurNotes.message}|"></span>
+            </div>
+            <div th:if="${notesPage}">
+                <p th:if="${notesPage.content.isEmpty()}">Aucune note pour ce patient.</p>
+                <table class="table table-striped" th:unless="${notesPage.content.isEmpty()}">
+                    <tbody>
+                    <tr th:each="note : ${notesPage.content}">
+                        <td th:text="${note.content}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <nav th:if="${notesPage.aPlusieursPages()}" aria-label="Navigation des pages de notes">
+                    <ul class="pagination pagination-sm">
+                        <li class="page-item" th:classappend="${notesPage.page == 0} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/app/patients/{id}(id=${patient.id}, notesPage=${notesPage.page - 1})}">
+                                ← Plus récentes</a>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link"
+                                  th:text="|Page ${notesPage.page + 1} sur ${notesPage.totalPages} (${notesPage.totalElements} notes)|"></span>
+                        </li>
+                        <li class="page-item"
+                            th:classappend="${notesPage.page + 1 >= notesPage.totalPages} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/app/patients/{id}(id=${patient.id}, notesPage=${notesPage.page + 1})}">
+                                Plus anciennes →</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
             <p><a th:href="@{/app/patients}">Retour à la liste des patients</a></p>
         </div>
         <div th:if="${patient == null}">

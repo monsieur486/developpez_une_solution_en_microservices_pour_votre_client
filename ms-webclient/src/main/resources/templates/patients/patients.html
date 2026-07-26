@@ -15,7 +15,7 @@
         <div th:if="${errorMessage}">
             <div th:replace="~{fragments/error-message :: error-message}"></div>
         </div>
-        <table class="table table-striped">
+        <table class="table table-striped" th:if="${page}">
             <thead>
             <tr>
                 <th>Prénom</th>
@@ -28,7 +28,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="patient : ${patients}">
+            <tr th:each="patient : ${page.content}">
                 <td th:text="${patient.firstName}"></td>
                 <td th:text="${patient.lastName}"></td>
                 <td th:text="${#temporals.format(patient.birthDate, 'dd/MM/yyyy')}"></td>
@@ -37,13 +37,25 @@
                 <td th:text="${patient.phoneNumber}"></td>
                 <td>
                     <a th:href="@{'/app/patients/' + ${patient.id}}">🎫 Fiche</a> |
-                    <a th:href="@{'/app/patients/' + ${patient.id} +'/update' }">✍️ Modifier</a> |
-                    <a th:href="@{'/app/patients/' + ${patient.id} + '/notes'}">📝 Notes</a> |
-                    <a th:href="@{'/app/patients/' + ${patient.id} + '/evaluation'}">⚠️ Risque</a>
+                    <a th:href="@{'/app/patients/' + ${patient.id} +'/update' }">✍️ Modifier</a>
                 </td>
             </tr>
             </tbody>
         </table>
+        <nav th:if="${page != null && page.aPlusieursPages()}" aria-label="Navigation des pages de patients">
+            <ul class="pagination">
+                <li class="page-item" th:classappend="${page.page == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/app/patients(page=${page.page - 1})}">← Précédente</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link"
+                          th:text="|Page ${page.page + 1} sur ${page.totalPages} (${page.totalElements} patients)|"></span>
+                </li>
+                <li class="page-item" th:classappend="${page.page + 1 >= page.totalPages} ? 'disabled'">
+                    <a class="page-link" th:href="@{/app/patients(page=${page.page + 1})}">Suivante →</a>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>
 <div th:replace="~{fragments/footer :: footer}"></div>

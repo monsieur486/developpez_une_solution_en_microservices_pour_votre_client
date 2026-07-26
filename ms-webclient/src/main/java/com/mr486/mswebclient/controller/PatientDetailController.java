@@ -2,6 +2,8 @@ package com.mr486.mswebclient.controller;
 
 import com.mr486.mswebclient.dto.PatientForm;
 import com.mr486.mswebclient.exception.GatewayException;
+import com.mr486.mswebclient.service.EvaluationService;
+import com.mr486.mswebclient.service.NoteService;
 import com.mr486.mswebclient.service.PatientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,13 +14,16 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import reactor.core.publisher.Mono;
 
 /**
- * Pages du détail d'un patient et de sa modification.
+ * Fiche patient : informations du patient, niveau de risque et notes médicales
+ * paginées sur une même page, et modification du patient.
  *
- * <p><b>Exemple :</b> GET /app/patients/7 affiche la fiche du patient 7 ;
- * POST /app/patients/7/update enregistre ses nouvelles données.</p>
+ * <p><b>Exemple :</b> GET /app/patients/3 affiche la fiche du patient 3 avec son
+ * risque et ses 5 dernières notes ; GET /app/patients/3?notesPage=1 affiche la
+ * page suivante des notes.</p>
  */
 @Controller
 @RequestMapping("/app")
@@ -27,24 +32,34 @@ import reactor.core.publisher.Mono;
 public class PatientDetailController {
 
     private final PatientService patientService;
+    private final NoteService noteService;
+    private final EvaluationService evaluationService;
 
     /**
-     * Affiche la fiche détaillée d'un patient, sans bloquer.
+     * Affiche la fiche complète d'un patient, sans bloquer : les informations du
+     * patient, son niveau de risque et une page de ses notes sont récupérés en
+     * parallèle. Si ms-risque ou ms-notes ne répond pas, la fiche s'affiche
+     * quand même avec un message d'erreur dans la section concernée.
      *
-     * <p><b>Exemple :</b> GET /app/patients/7 retourne la vue
-     * "patients/patient-detail" avec le patient 7 dans le modèle.</p>
+     * <p><b>Exemple :</b> GET /app/patients/3 retourne la vue
+     * "patients/patient-detail" avec le patient, {@code "In Danger"} et les 5
+     * dernières notes ; si ms-notes est en panne, la section notes affiche
+     * « ms-notes ne répond pas. ».</p>
      *
-     * @param id    identifiant du patient
-     * @param model le modèle de la vue
-     * @return un Mono émettant le nom de la vue du détail du patient
+     * @param id        identifiant du patient
+     * @param notesPage numéro de la page de notes demandée (à partir de 0)
+     * @param model     le modèle de la vue
+     * @return un Mono émettant le nom de la vue de la fiche patient
      */
     @GetMapping("/patients/{id}")
-    public Mono<String> patientDetail(@PathVariable Long id, Model model) {
+    public Mono<String> patientDetail(@PathVariable Long id,
+                                      @RequestParam(defaultValue = "0") int notesPage, Model model) {
         return patientService.getPatientById(id)
-                .map(patient -> {
+                .flatMap(patient -> {
                     model.addAttribute("patient", patient);
-                    return "patients/patient-detail";
+                    return Mono.zip(chargeEvaluation(id, model), chargeNotes(id, notesPage, model));
                 })
+                .thenReturn("patients/patient-detail")
                 .onErrorResume(GatewayException.class, ex -> {
                     log.warn("échec de récupération du patient {} : {}", id, ex.getMessage());
                     model.addAttribute("errorMessage", ex.getErrorMessage());
@@ -100,6 +115,34 @@ public class PatientDetailController {
                     model.addAttribute("id", id);
                     model.addAttribute("errorMessage", ex.getErrorMessage());
                     return Mono.just("patients/patient-update");
+                });
+    }
+
+    // Charge le niveau de risque ; en cas de panne, pose un message d'erreur de section.
+    private Mono<Boolean> chargeEvaluation(Long id, Model model) {
+        return evaluationService.getEvaluationByPatientId(id)
+                .map(risque -> {
+                    model.addAttribute("evaluation", risque.getLevel());
+                    return true;
+                })
+                .onErrorResume(GatewayException.class, ex -> {
+                    log.warn("échec de l'évaluation du patient {} : {}", id, ex.getMessage());
+                    model.addAttribute("erreurEvaluation", ex.getErrorMessage());
+                    return Mono.just(false);
+                });
+    }
+
+    // Charge une page de notes ; en cas de panne, pose un message d'erreur de section.
+    private Mono<Boolean> chargeNotes(Long id, int notesPage, Model model) {
+        return noteService.getNotesPagines(id, notesPage)
+                .map(notes -> {
+                    model.addAttribute("notesPage", notes);
+                    return true;
+                })
+                .onErrorResume(GatewayException.class, ex -> {
+                    log.warn("échec de récupération des notes du patient {} : {}", id, ex.getMessage());
+                    model.addAttribute("erreurNotes", ex.getErrorMessage());
+                    return Mono.just(false);
                 });
     }
 

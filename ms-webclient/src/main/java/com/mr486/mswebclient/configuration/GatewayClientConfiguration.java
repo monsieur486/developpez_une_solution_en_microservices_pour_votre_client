@@ -77,9 +77,12 @@ public class GatewayClientConfiguration {
         });
     }
 
-    // Construit l'exception à partir du corps d'erreur décodé.
+    // Construit l'exception à partir du corps d'erreur décodé (repli si champs absents).
     private GatewayException exceptionDistante(ErrorMessage corps, ClientResponse response) {
         corps.setStatus(Optional.ofNullable(corps.getStatus()).orElse(response.statusCode().value()));
+        if (corps.getMessage() == null || corps.getMessage().isBlank()) {
+            corps.setMessage(MESSAGE_REPLI);
+        }
         return new GatewayException(corps);
     }
 

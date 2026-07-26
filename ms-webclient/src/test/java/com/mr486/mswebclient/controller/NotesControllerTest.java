@@ -4,11 +4,9 @@ import com.mr486.mswebclient.dto.ErrorMessage;
 import com.mr486.mswebclient.dto.Note;
 import com.mr486.mswebclient.exception.GatewayException;
 import com.mr486.mswebclient.service.NoteService;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,29 +26,6 @@ class NotesControllerTest {
     private final Model model = new ExtendedModelMap();
 
     @Test
-    void getNotes_remplitLeModeleEtRetourneLaListe() {
-        List<Note> attendues = List.of(new Note("fumeur"));
-        when(noteService.getNotesByPatientId(7L)).thenReturn(Flux.fromIterable(attendues));
-
-        String vue = controller.getNotes(model, 7L).block();
-
-        assertThat(vue).isEqualTo("notes/notes");
-        assertThat(model.getAttribute("notes")).isEqualTo(attendues);
-        assertThat(model.getAttribute("patientId")).isEqualTo(7L);
-    }
-
-    @Test
-    void getNotes_afficheLErreurQuandLeServiceEchoue() {
-        when(noteService.getNotesByPatientId(7L)).thenReturn(Flux.error(PANNE));
-
-        String vue = controller.getNotes(model, 7L).block();
-
-        assertThat(vue).isEqualTo("notes/notes");
-        assertThat(model.getAttribute("errorMessage")).isEqualTo(PANNE.getErrorMessage());
-        assertThat(model.getAttribute("patientId")).isEqualTo(7L);
-    }
-
-    @Test
     void showCreateNoteForm_prepareUneNoteVierge() {
         String vue = controller.showCreateNoteForm(7L, model);
 
@@ -60,12 +35,12 @@ class NotesControllerTest {
     }
 
     @Test
-    void ajoutNotePost_redirigeVersLesNotesApresCreation() {
+    void ajoutNotePost_redirigeVersLaFichePatientApresCreation() {
         when(noteService.createNote(eq(7L), any(Note.class))).thenReturn(Mono.empty());
 
         String vue = controller.ajoutNotePost(7L, new Note("fumeur"), model).block();
 
-        assertThat(vue).isEqualTo("redirect:/app/patients/7/notes");
+        assertThat(vue).isEqualTo("redirect:/app/patients/7");
     }
 
     @Test
