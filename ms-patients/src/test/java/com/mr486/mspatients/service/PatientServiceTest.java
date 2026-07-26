@@ -9,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -41,10 +43,11 @@ class PatientServiceTest {
     }
 
     @Test
-    void findAll_retourneTousLesPatients() {
-        when(patientRepository.findAll()).thenReturn(List.of(new Patient(), new Patient()));
+    void findAll_retourneUnePageDePatients() {
+        when(patientRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(new Patient(), new Patient())));
 
-        assertThat(patientService.findAll()).hasSize(2);
+        assertThat(patientService.findAll(0).getContent()).hasSize(2);
     }
 
     @Test

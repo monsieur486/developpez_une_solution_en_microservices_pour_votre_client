@@ -1,5 +1,6 @@
 package com.mr486.mspatients.controller;
 
+import com.mr486.mspatients.dto.PageReponse;
 import com.mr486.mspatients.dto.PatientForm;
 import com.mr486.mspatients.model.Patient;
 import com.mr486.mspatients.service.PatientService;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -39,13 +41,15 @@ class PatientControllerTest {
     }
 
     @Test
-    void getPatients_retourne200EtLaListe() {
-        when(patientService.findAll()).thenReturn(List.of(new Patient()));
+    void getPatients_retourne200EtLaPage() {
+        when(patientService.findAll(0)).thenReturn(new PageImpl<>(List.of(new Patient())));
 
-        ResponseEntity<List<Patient>> reponse = patientController.getPatients();
+        ResponseEntity<PageReponse<Patient>> reponse = patientController.getPatients(0);
 
         assertThat(reponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(reponse.getBody()).hasSize(1);
+        assertThat(reponse.getBody()).isNotNull();
+        assertThat(reponse.getBody().getContent()).hasSize(1);
+        assertThat(reponse.getBody().getTotalElements()).isEqualTo(1);
     }
 
     @Test

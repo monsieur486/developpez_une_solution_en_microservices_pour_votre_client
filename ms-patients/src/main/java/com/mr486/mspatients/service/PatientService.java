@@ -1,13 +1,15 @@
 package com.mr486.mspatients.service;
 
+import com.mr486.mspatients.configuration.ConstantesApplication;
 import com.mr486.mspatients.dto.PatientForm;
 import com.mr486.mspatients.exception.NotFoundException;
 import com.mr486.mspatients.model.Patient;
 import com.mr486.mspatients.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * Gère les patients : lecture, création et mise à jour.
@@ -22,15 +24,17 @@ public class PatientService {
     private final PatientRepository patientRepository;
 
     /**
-     * Retourne tous les patients.
+     * Retourne une page de patients, triés par identifiant.
      *
-     * <p><b>Exemple :</b> findAll() retourne la liste complète (vide si aucun
-     * patient).</p>
+     * <p><b>Exemple :</b> findAll(0) retourne les 20 premiers patients ; avec 45
+     * patients en base, la page porte totalPages=3.</p>
      *
-     * @return la liste de tous les patients
+     * @param page numéro de la page demandée (à partir de 0)
+     * @return la page de patients correspondante
      */
-    public List<Patient> findAll() {
-        return patientRepository.findAll();
+    public Page<Patient> findAll(int page) {
+        return patientRepository.findAll(
+                PageRequest.of(page, ConstantesApplication.TAILLE_PAGE_PATIENTS, Sort.by("id")));
     }
 
     /**

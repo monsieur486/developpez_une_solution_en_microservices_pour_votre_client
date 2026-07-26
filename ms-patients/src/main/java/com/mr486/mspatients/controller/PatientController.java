@@ -1,5 +1,6 @@
 package com.mr486.mspatients.controller;
 
+import com.mr486.mspatients.dto.PageReponse;
 import com.mr486.mspatients.dto.PatientForm;
 import com.mr486.mspatients.model.Patient;
 import com.mr486.mspatients.service.PatientService;
@@ -16,9 +17,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * Expose l'API REST de gestion des patients (CRUD partiel : lecture, création,
@@ -36,17 +36,18 @@ public class PatientController {
     private final PatientService patientService;
 
     /**
-     * Retourne tous les patients.
+     * Retourne une page de patients (20 par page, triés par identifiant).
      *
-     * <p><b>Exemple :</b> getPatients() retourne une réponse 200 avec la liste
-     * des patients.</p>
+     * <p><b>Exemple :</b> GET /patients?page=0 retourne une réponse 200 avec les
+     * 20 premiers patients et les informations de navigation.</p>
      *
-     * @return la réponse HTTP contenant la liste des patients
+     * @param page numéro de la page demandée (à partir de 0)
+     * @return la réponse HTTP contenant la page de patients
      */
-    @Tag(name = "Récupère tous les patients")
+    @Tag(name = "Récupère les patients par page")
     @GetMapping(value = "/patients", produces = "application/json")
-    public ResponseEntity<List<Patient>> getPatients() {
-        return ResponseEntity.ok(patientService.findAll());
+    public ResponseEntity<PageReponse<Patient>> getPatients(@RequestParam(defaultValue = "0") int page) {
+        return ResponseEntity.ok(PageReponse.depuis(patientService.findAll(page)));
     }
 
     /**
