@@ -19,6 +19,16 @@ en bout (WebClient), PostgreSQL, MongoDB, Thymeleaf, Docker Compose.
 | `ms-risque` | Calcul du niveau de risque de diabète | 9300 |
 | `ms-webclient` | Interface web Thymeleaf | 8080 |
 
+### Décision : pas de Redis (pour l'instant)
+
+Redis a été étudié puis **écarté** : le cache de données est contre-indiqué
+(une note ajoutée doit changer l'évaluation du risque immédiatement), les
+sessions du client web restent locales tant qu'il tourne en réplica unique, et
+la pile réactive (WebFlux) couvre la charge cible par instance. Il ne
+deviendrait pertinent que pour répliquer ms-webclient (sessions partagées via
+Spring Session Data Redis) — décision cohérente avec la démarche de sobriété
+de la section Green Code.
+
 ## Jeu de démonstration
 
 Au premier démarrage, les bases sont amorcées avec le jeu de démonstration du
