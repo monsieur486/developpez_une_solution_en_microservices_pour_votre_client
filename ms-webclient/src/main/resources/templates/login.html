@@ -19,8 +19,9 @@
                 <input name="password" type="password"/>
             </label></div>
             <button type="submit">Se connecter</button>
-            <div th:if="${param.error}">Identifiants invalides.</div>
-            <div th:if="${param.logout}">Déconnecté.</div>
+            <!-- en WebFlux, un paramètre absent est une liste vide (pas null) : tester la vacuité -->
+            <div th:unless="${#lists.isEmpty(param.error)}">Identifiants invalides.</div>
+            <div th:unless="${#lists.isEmpty(param.logout)}">Déconnecté.</div>
         </form>
     </div>
 </div>
