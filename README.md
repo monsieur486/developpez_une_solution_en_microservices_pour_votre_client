@@ -78,6 +78,55 @@ Deux déploiements sont publiés derrière des proxys Apache (serveur externe) :
   la découverte de services native du cluster (DNS + Services). Cette
   déclinaison vit dans un répertoire local `kubernetes/` non versionné.
 
+## Green Code — pistes d'écoconception
+
+Dans le cadre de la politique de protection de l'environnement, ce projet
+s'appuie sur les référentiels d'écoconception numérique : le
+[RGESN v2](https://ecoresponsable.numerique.gouv.fr/publications/referentiel-general-ecoconception/)
+(78 critères, 9 thématiques), les
+[115 bonnes pratiques GreenIT](https://github.com/cnumr/best-practices) et le
+[GR491](https://gr491.isit-europe.org/). Principe directeur : la sobriété
+d'abord (ne pas produire/transférer ce qui n'est pas utile), puis mesurer,
+puis optimiser.
+
+**Déjà en place dans le projet :**
+
+- **Pagination côté API** (patients par 20, notes par 5) : on ne transfère et
+  n'affiche que le nécessaire.
+- **Réactif de bout en bout** (WebFlux/Netty) : moins de threads et de mémoire
+  par requête, appels parallèles (patient + notes) qui réduisent la latence.
+- **Dimensionnement au besoin réel** : réplicas différenciés (3 uniquement pour
+  ms-risque), limites mémoire par conteneur, heap JVM borné.
+- **Extinction des environnements** inutilisés (`dev-stop.sh`, `prod-stop.sh`,
+  `k8s-stop.sh`) et builds Docker multi-étapes.
+
+**Actions suggérées :**
+
+1. **Mesurer avant d'optimiser** : suivre CPU/RAM réels via Actuator +
+   Micrometer ; intégrer les règles d'écoconception Java de
+   [Creedengo](https://creedengo.org/) (ex-ecoCode, plugin SonarQube) à
+   l'outillage qualité ; scorer l'interface web avec
+   [EcoIndex](https://www.ecoindex.fr/).
+2. **Alléger les images Docker** : baser l'exécution sur `eclipse-temurin:17-jre`
+   (voire un runtime `jlink` sur mesure) au lieu du JDK complet — environ
+   deux fois moins de stockage et de transfert par déploiement.
+3. **Réduire le temps et le coût de démarrage des JVM** : activer AppCDS, ou
+   étudier une compilation native (GraalVM) pour les services les plus
+   sollicités — moins de RAM et de CPU au repos.
+4. **Sobriété du front** : servir Bootstrap localement plutôt que depuis un CDN,
+   activer la compression et les en-têtes de cache HTTP, limiter polices et
+   images.
+5. **Éviter le sur-transfert de données** : exposer des projections (champs
+   réellement utilisés par l'écran) plutôt que des entités complètes ;
+   ms-risque pourrait compter les déclencheurs côté ms-notes pour ne pas
+   transférer le contenu intégral des notes.
+6. **Adapter la puissance à la demande** : autoscaling (HPA Kubernetes) plutôt
+   que des réplicas fixes, extinction planifiée des environnements de
+   démonstration hors des heures d'usage.
+7. **Sobriété fonctionnelle** : questionner chaque nouvelle fonctionnalité
+   (« ce besoin justifie-t-il son coût environnemental ? ») — c'est le premier
+   critère du RGESN.
+
 ## Qualité
 
 Chaque module applique le même outillage : Checkstyle (bloquant), JaCoCo avec
