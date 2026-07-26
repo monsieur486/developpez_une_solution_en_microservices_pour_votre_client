@@ -105,8 +105,9 @@ puis optimiser.
 1. **Mesurer avant d'optimiser** : suivre CPU/RAM réels via Actuator +
    Micrometer ; intégrer les règles d'écoconception Java de
    [Creedengo](https://creedengo.org/) (ex-ecoCode, plugin SonarQube) à
-   l'outillage qualité ; scorer l'interface web avec
-   [EcoIndex](https://www.ecoindex.fr/).
+   l'outillage qualité — voir [creedengo.md](creedengo.md) pour un exemple
+   réel mené sur ms-risque (46 détections analysées) ; scorer l'interface web
+   avec [EcoIndex](https://www.ecoindex.fr/).
 2. **Alléger les images Docker** : baser l'exécution sur `eclipse-temurin:17-jre`
    (voire un runtime `jlink` sur mesure) au lieu du JDK complet — environ
    deux fois moins de stockage et de transfert par déploiement.
