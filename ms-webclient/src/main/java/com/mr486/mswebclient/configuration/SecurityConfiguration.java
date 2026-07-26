@@ -4,6 +4,7 @@ import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
@@ -44,6 +45,10 @@ public class SecurityConfiguration {
     @Bean
     SecurityWebFilterChain filter(ServerHttpSecurity http) {
         http
+                // contrairement au servlet, WebFlux n'active pas l'authentification anonyme
+                // par défaut ; sans elle, le menu (sec:authorize="isAnonymous()") ne peut
+                // pas afficher le lien de connexion aux visiteurs non identifiés
+                .anonymous(Customizer.withDefaults())
                 .authorizeExchange(auth -> auth
                         .pathMatchers(
                                 "/",
