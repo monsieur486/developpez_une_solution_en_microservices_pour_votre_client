@@ -445,7 +445,7 @@ propre et testée, et les **4 cas officiels donnent le bon niveau**. Mais ils le
 détecté, et le format renvoyé diffère du PDF du Sprint 3. Côté intégration, le module n'est pas
 encore dans le pom parent, Docker et les scripts.
 
-Mesures : `ms-risque` 23 tests verts, PMD 1, SpotBugs 0, Checkstyle 48 (Javadoc absente) ;
+Mesures : `ms-risque` 23 tests verts, PMD 1, SpotBugs 0, Checkstyle 24 (Javadoc absente) ;
 `ms-webclient` 43 tests verts, Checkstyle 2 (Javadoc de `EvaluationApiService`).
 
 ## Points forts
@@ -505,8 +505,7 @@ Mesures : `ms-risque` 23 tests verts, PMD 1, SpotBugs 0, Checkstyle 48 (Javadoc 
 - Pas de test du contrôleur (401 sans identifiants, 404 patient inconnu, `text/plain`).
 
 ## Phase 5 — Intégration, Javadoc, configuration   ❌ manquant
-- `ms-risque` **absent des `<modules>`** du pom parent : `./mvnw clean verify` ne le construit pas
-  (ce qui explique le build vert global).
+- ✅ `ms-risque` ajouté aux `<modules>` : `./mvnw clean verify` le construit (8 modules verts, 106 tests). Conséquence vérifiée : `docker build` d'`ms-eureka` échoue (« Child module /build/ms-risque does not exist »)
 - Seul le Dockerfile du webclient copie `ms-risque/pom.xml` : les 4 autres (eureka, gateway,
   patients, notes) échoueront dès que le module sera déclaré.
 - `docker-compose.yml`, `prod-start.sh`, `dev-start.sh`, README : rien pour `ms-risque`.
@@ -535,7 +534,7 @@ Mesures : `ms-risque` 23 tests verts, PMD 1, SpotBugs 0, Checkstyle 48 (Javadoc 
 - [ ] (code propre) Tests MVC du contrôleur : 401, 404, `text/plain`
 
 ### Phase 5 — Intégration, Javadoc, configuration
-- [ ] (architecture) Ajouter `ms-risque` aux `<modules>` du pom parent
+- [x] (architecture) Ajouter `ms-risque` aux `<modules>` du pom parent
 - [ ] (architecture) `COPY ms-risque/pom.xml` dans les 4 Dockerfiles restants
 - [ ] (architecture) Service `ms-risque` dans `docker-compose.yml`, `prod-start.sh`, `dev-start.sh`
 - [ ] (code propre) Supprimer `mvnw*`, `HELP.md`, `.gitignore`, `.gitattributes` du module
