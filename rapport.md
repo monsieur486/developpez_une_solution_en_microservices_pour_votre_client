@@ -730,4 +730,17 @@ vérifie toute la javadoc manquante puis commit ».*
 
 ### Suivi — captures
 - [x] (présentation) 18 captures des erreurs en fin de README (interface web, API, pannes)
-- [ ] (architecture) Corriger la négociation de contenu des erreurs de `ms-risque`, puis refaire les captures 15, 19 et 21
+- [x] (architecture) Corriger la négociation de contenu des erreurs de `ms-risque`, puis refaire les captures 15, 19 et 21
+
+### Correctif du 2026-10-21 (autorisé) — l'évaluation passe en JSON
+*Écrit par l'IA à la demande : « corrige le défaut avec un DTO JSON et refais les captures ».*
+
+- ✅ `EvaluationDto` dans `ms-commun` (`patientId`, `niveau`) ; `GET /evaluation/{id}` produit du
+  JSON, comme ses erreurs. Le webclient lit `niveau` : fiche et badge inchangés.
+- ✅ Tests d'abord, vus rouges sur le 406 du défaut : résultat en JSON, et 404 JSON pour un
+  client qui demande `application/json`. Adaptation du test du webclient (vu rouge, puis vert).
+- ✅ Vérifié sur la pile : 200 et 404 en JSON avec `*/*` comme avec `application/json` ; un client
+  qui exige `text/plain` reçoit un 406 explicite au lieu d'un 500 vide. Les 4 fiches gardent leur badge.
+- ✅ Captures 15 (404), 19 (503) et 21 (502) refaites et ajoutées au README ; 17 refaite (en-tête
+  `accept` à jour). Données intactes, pile restaurée.
+- Mesures : `./mvnw clean verify` vert, 121 tests ; Checkstyle, PMD et SpotBugs à 0.
