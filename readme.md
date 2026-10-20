@@ -4,18 +4,19 @@ Application en microservices qui aide les praticiens d'une clinique à repérer 
 exposés au diabète de type 2. Projet 9 du parcours *Développeur d'application Java*
 (OpenClassrooms).
 
-> **Étape 3 — évaluation du risque.** La fiche du patient affiche désormais son risque de
-> diabète : `None`, `Borderline`, `In Danger` ou `Early onset`. Le module `ms-risque` n'a pas de
-> base : il croise l'âge et le genre du patient (`ms-patients`) avec les termes déclencheurs
-> relevés dans ses notes (`ms-notes`). Si `ms-risque` ou `ms-notes` est indisponible, la fiche
-> reste consultable : un avertissement remplace le risque ou l'historique.
+> **Étape 4 — documentation des API.** Sans rien changer au métier, chaque service publie
+> son contrat OpenAPI, et les trois sont réunis dans une interface Swagger unique servie par
+> la gateway.
+>
+> Le code hérité des étapes 1 à 3 est documenté ; le code ajouté à cette étape est livré **brut,
+> sans Javadoc**, pour ne montrer que la structure : il est documenté à l'étape 5.
 
 | Étape | Besoin | État |
 |---|---|---|
 | 1 | Consulter, ajouter et mettre à jour les informations personnelles des patients | ✅ livré |
 | 2 | Consulter l'historique des notes d'un patient et y ajouter une note (MongoDB) | ✅ livré |
 | 3 | Évaluer le risque de diabète d'un patient | ✅ livré |
-| 4 | Documenter les API (OpenAPI, Swagger) | ⏳ à venir |
+| 4 | Documenter les API (OpenAPI, Swagger) | ✅ livré |
 | 5 | Documenter le code (Javadoc, configuration commentée) | ⏳ à venir |
 
 ## Architecture
@@ -57,16 +58,16 @@ PostgreSQL :5432  MongoDB :27017         └──► ms-patients, ms-notes
 
 | Module | Port | Rôle |
 |---|---|---|
-| `ms-commun` | — | Bibliothèque partagée : DTO échangés, exceptions communes, sécurité HTTP Basic et gestionnaire d'erreurs uniforme (activés par `@Import`) |
+| `ms-commun` | — | Bibliothèque partagée : DTO échangés, exceptions communes, sécurité HTTP Basic et gestionnaire d'erreurs uniforme, socle de la documentation OpenAPI (activés par `@Import`) |
 | `ms-eureka` | 8761 | Registre des services (Spring Cloud Netflix Eureka) |
-| `ms-gateway` | 9000 | Point d'entrée unique des API (Spring Cloud Gateway) |
+| `ms-gateway` | 9000 | Point d'entrée unique des API (Spring Cloud Gateway), interface Swagger agrégée |
 | `ms-patients` | 9100 | API REST des fiches patients, sur PostgreSQL, avec un schéma géré par Liquibase |
 | `ms-notes` | 9200 | API REST des notes des praticiens, sur MongoDB, amorcée par Mongock |
 | `ms-risque` | 9300 | Évaluation du risque de diabète, sans base : interroge `ms-patients` et `ms-notes` (OpenFeign) |
 | `ms-webclient` | 8080 | Interface web des praticiens (Spring MVC, Thymeleaf, Bootstrap) |
 
 **Stack** : Java 17, Spring Boot 3.5, Spring Cloud 2025.0, Maven multi-modules, Lombok,
-PostgreSQL 16, Liquibase, MongoDB 8, Mongock, Docker Compose.
+PostgreSQL 16, Liquibase, MongoDB 8, Mongock, springdoc-openapi, Docker Compose.
 
 ## Prérequis
 
@@ -146,6 +147,7 @@ passe resteraient non résolus et les bases refuseraient la connexion.
 | Interface web | http://localhost:8080 | `APP_USERNAME` / `APP_PASSWORD` |
 | Gateway | http://localhost:9000 | idem, en HTTP Basic |
 | Registre Eureka | http://localhost:8761 | — |
+| Interface Swagger | http://localhost:9000/swagger-ui/index.html | bouton **Authorize** : `APP_USERNAME` / `APP_PASSWORD` |
 
 ## API
 
@@ -224,6 +226,30 @@ Choix d'interprétation, chacun couvert par un test :
 - **Âge** en années révolues, calculé à la date du jour (horloge injectable, figée dans les tests).
 - **Libellés** : ceux du résumé des besoins fonctionnels, espaces compris (`In Danger`,
   `Early onset`), plutôt que l'écriture sans espace du tableau des résultats attendus.
+
+## Documentation des API
+
+Une seule interface Swagger, servie par la gateway, donne accès aux contrats des trois
+microservices ; le sélecteur en haut de page bascule de l'un à l'autre.
+
+| Ressource | URL |
+|---|---|
+| Interface Swagger | http://localhost:9000/swagger-ui/index.html |
+| Contrat de `ms-patients` | http://localhost:9000/ms-patients/v3/api-docs |
+| Contrat de `ms-notes` | http://localhost:9000/ms-notes/v3/api-docs |
+| Contrat de `ms-risque` | http://localhost:9000/ms-risque/v3/api-docs |
+
+| Où | Quoi |
+|---|---|
+| `pom.xml` des services | dépendance `springdoc-openapi-starter-webmvc-api` ; la gateway prend la variante `webflux-ui`, qui sert l'interface |
+| `ms-commun` — `DocumentationApiConfiguration` | déclare le schéma de sécurité `basicAuth` et le serveur du contrat |
+| `ms-commun` — `SecuriteApiConfiguration` | ouvre `/v3/api-docs/**` : un contrat protégé laisserait le sélecteur vide |
+| chaque contrôleur | `@OpenAPIDefinition` et `@SecurityRequirement` sur la classe, `@Tag` sur chaque opération |
+| `ms-gateway` — `application.yml` | liste les contrats présentés dans le sélecteur |
+
+Chaque service déclare son propre nom comme serveur du contrat, lu depuis
+`spring.application.name` : les appels d'essai passent ainsi par la gateway, qui retire ce
+préfixe avant de transmettre, au lieu de viser le service en direct.
 
 ## Données de démonstration
 
