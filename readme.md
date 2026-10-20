@@ -5,12 +5,10 @@ exposés au diabète de type 2. Projet 9 du parcours *Développeur d'application
 (OpenClassrooms).
 
 > **Étape 2 — ajout des notes.** Les notes rédigées par les praticiens enrichissent le
-> dossier du patient : la fiche présente ses notes, de la plus récente à la plus ancienne,
-> avec un formulaire d'ajout. Le module `ms-notes` est adossé à MongoDB, le format libre d'une
-> note se prêtant mal à un schéma relationnel.
->
-> Le code hérité de l'étape 1 est documenté ; le code ajouté depuis est livré **brut, sans
-> Javadoc**, pour ne montrer que la structure : il est documenté à l'étape 5.
+> dossier du patient : la fiche présente ses notes datées, de la plus récente à la plus
+> ancienne, avec un formulaire d'ajout. Le module `ms-notes` est adossé à MongoDB, le format
+> libre d'une note se prêtant mal à un schéma relationnel. Si `ms-notes` est indisponible, la
+> fiche reste consultable : un avertissement remplace l'historique.
 
 | Étape | Besoin | État |
 |---|---|---|
@@ -124,6 +122,10 @@ Lancer ensuite, dans cet ordre, `MsEurekaApplication`, `MsGatewayApplication`, `
 ./mvnw -pl ms-patients spring-boot:run      # sans -am : spring-boot:run échouerait sur le pom parent
 ```
 
+`spring-boot:run` lance chaque module **depuis la racine du dépôt** (réglage du pom parent), là
+où se trouve `.env`. Lancé depuis le dossier du module, il ne trouverait pas `.env` : les mots de
+passe resteraient non résolus et les bases refuseraient la connexion.
+
 > **Arrêter les applications de l'IDE avant de lancer la pile Docker** : elles occupent les
 > mêmes ports. Un conteneur créé pendant que son port était pris peut rester bloqué
 > (« Created », voire sans réseau). On le recrée alors avec
@@ -148,7 +150,7 @@ Toutes les routes passent par la gateway et exigent l'authentification HTTP Basi
 | `POST` | `/ms-patients/patients` | 201, fiche créée · 400 si invalide · 409 si le patient existe déjà |
 | `PUT` | `/ms-patients/patients/{id}` | 200, fiche mise à jour · 400 · 404 · 409 |
 | `GET` | `/ms-notes/patients/{id}/notes` | 200, notes du patient, de la plus récente à la plus ancienne (liste vide s'il n'en a pas) |
-| `POST` | `/ms-notes/patients/{id}/notes` | 201, note créée · 400 si le contenu est vide |
+| `POST` | `/ms-notes/patients/{id}/notes` | 201, note créée et datée · 400 si le contenu est vide ou dépasse 5000 caractères |
 
 Exemple :
 
@@ -156,8 +158,10 @@ Exemple :
 curl -u "$APP_USERNAME:$APP_PASSWORD" http://localhost:9000/ms-patients/patients/1
 ```
 
-Une note ne transporte que son contenu (`{"content": "…"}`) : l'identifiant technique, le
-patient rattaché et la date d'enregistrement restent internes au service.
+Une note se saisit par son seul contenu (`{"content":"…"}`) et se restitue avec sa date
+d'enregistrement, attribuée par `ms-notes` (`{"content":"…","createdDate":"2026-10-20T16:13:39Z"}`).
+L'identifiant technique et le patient rattaché restent internes au service. Le texte est
+conservé tel quel, casse comprise : l'évaluation du risque y recherchera des termes déclencheurs.
 
 Les erreurs ont toutes le même format :
 
@@ -191,7 +195,8 @@ Avec `LIQUIBASE_CONTEXTS=demo`, la base reçoit les 4 patients des cas de test :
 | TestEarlyOnset | Test | 2002-06-28 | F | 4 Valley Dr | 400-555-6666 |
 
 Avec `MONGOCK_PROFILES=demo`, une migration Mongock insère au démarrage de `ms-notes` 9 notes
-de démonstration rattachées à ces 4 patients, si la collection est vide. Sans ce réglage
+de démonstration rattachées à ces 4 patients (identifiants 1 à 4, dans l'ordre du tableau), si
+la collection est vide. Sans ce réglage
 (défaut `prod`), la migration est écartée sans être inscrite au journal de Mongock : elle
 s'appliquera si `demo` est activé plus tard.
 
@@ -210,6 +215,10 @@ Pour repartir de bases vierges : `docker compose down -v` (supprime les volumes 
   `RestTemplate` de production.
 - **Intégration** : Testcontainers sur un vrai PostgreSQL et un vrai MongoDB. Docker doit
   tourner pendant les tests.
+- **Tests déterministes** : la date des notes vient d'un `Clock` injecté, figé dans les tests
+  (`Clock.fixed`).
+- **Tranches légères** : Mongock est activé dans une classe `@Configuration` dédiée, et non sur
+  la classe principale, pour que `@WebMvcTest` et `@DataMongoTest` n'exigent pas de base complète.
 - La couverture JaCoCo est un **repère**, pas un objectif : on teste le comportement métier,
   pas les délégations.
 - Les règles de style et d'analyse sont dans `config/` (Checkstyle, PMD, exclusions SpotBugs).
