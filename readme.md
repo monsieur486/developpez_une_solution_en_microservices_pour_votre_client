@@ -159,7 +159,7 @@ Toutes les routes passent par la gateway et exigent l'authentification HTTP Basi
 | `PUT` | `/ms-patients/patients/{id}` | 200, fiche mise à jour · 400 · 404 · 409 |
 | `GET` | `/ms-notes/patients/{id}/notes` | 200, notes du patient, de la plus récente à la plus ancienne (liste vide s'il n'en a pas) |
 | `POST` | `/ms-notes/patients/{id}/notes` | 201, note créée et datée · 400 si le contenu est vide ou dépasse 5000 caractères |
-| `GET` | `/ms-risque/evaluation/{id}` | 200, niveau de risque en texte brut (`text/plain`) · 404 si le patient est inconnu · 503 si `ms-patients` ou `ms-notes` est injoignable |
+| `GET` | `/ms-risque/evaluation/{id}` | 200, niveau de risque en texte brut (`text/plain`) · 404 si le patient est inconnu · 503 si `ms-patients` ou `ms-notes` est injoignable · 502 s'il refuse l'appel |
 
 Exemple :
 
@@ -181,7 +181,13 @@ Les erreurs ont toutes le même format :
 
 Les statuts distinguent la responsabilité : **4xx**, la demande est en cause et le message
 explique quoi corriger ; **5xx**, le service est en cause et seul un message générique est
-renvoyé (`503` pour un microservice injoignable), la cause restant dans les journaux.
+renvoyé, la cause restant dans les journaux :
+
+- `503` : un microservice appelé est injoignable, ou la gateway ne lui connaît aucune instance ;
+- `502` : un microservice appelé a refusé la requête (identifiants techniques erronés, droits
+  insuffisants). Le défaut vient de l'appel émis par le service, pas de la demande du client :
+  un 4xx l'accuserait à tort ;
+- `500` : toute autre erreur non anticipée.
 
 ### Règles de saisie d'un patient
 
