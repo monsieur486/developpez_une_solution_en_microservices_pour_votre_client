@@ -12,6 +12,7 @@ import com.mr486.commun.exception.ResourceNotFoundException;
 import com.mr486.commun.exception.ServiceIndisponibleException;
 import com.mr486.mswebclient.configuration.SecurityConfiguration;
 import com.mr486.mswebclient.mapper.PatientFormMapper;
+import com.mr486.mswebclient.service.EvaluationApiService;
 import com.mr486.mswebclient.service.NoteApiService;
 import com.mr486.mswebclient.service.PatientApiService;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,9 @@ class GestionnaireErreursWebMvcTest {
 
     @MockitoBean
     private PatientApiService patientApiService;
+
+    @MockitoBean
+    private EvaluationApiService evaluationApiService;
 
     @MockitoBean
     private NoteApiService noteApiService;
