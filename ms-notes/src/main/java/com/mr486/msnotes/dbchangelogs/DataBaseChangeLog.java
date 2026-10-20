@@ -11,6 +11,17 @@ import org.bson.Document;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+/**
+ * Migration Mongock qui insère les 9 notes de démonstration des cas de test.
+ *
+ * <p>Elle ne s'exécute qu'avec le profil {@code demo} ({@code MONGOCK_PROFILES=demo}). Les notes
+ * visent les patients 1 à 4, c'est-à-dire les identifiants qu'attribue PostgreSQL aux 4 patients
+ * de démonstration de {@code ms-patients}, insérés dans cet ordre. Une collection déjà remplie
+ * n'est pas touchée.</p>
+ *
+ * <p><b>Exemple :</b> sur une base vierge avec le profil {@code demo}, le patient 4
+ * ({@code TestEarlyOnset}) reçoit 4 notes ; avec le profil {@code prod}, aucune note n'est insérée.</p>
+ */
 @ChangeUnit(id = "seed-demo-notes", order = "001", author = "mr486")
 @Profile("demo")
 @Slf4j
@@ -65,10 +76,23 @@ public class DataBaseChangeLog {
 
     private final MongoTemplate mongoTemplate;
 
+    /**
+     * Construit la migration avec l'accès à MongoDB fourni par Mongock.
+     *
+     * <p><b>Exemple :</b> Mongock l'instancie lui-même au démarrage ; aucun appel direct n'est prévu.</p>
+     *
+     * @param mongoTemplate accès à la base des notes
+     */
     public DataBaseChangeLog(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 
+    /**
+     * Insère les notes de démonstration si la collection est vide.
+     *
+     * <p><b>Exemple :</b> au premier démarrage avec {@code demo}, 9 notes sont insérées, à une seconde
+     * d'écart pour garder l'ordre des cas de test.</p>
+     */
     @Execution
     public void seedDemoNotesIfEmpty() {
         if (mongoTemplate.getCollection(COLLECTION).countDocuments() > 0) {
@@ -81,12 +105,19 @@ public class DataBaseChangeLog {
         log.info("{} notes de démonstration insérées", notes.size());
     }
 
+    /**
+     * Annule la migration en vidant la collection, si l'insertion a échoué.
+     *
+     * <p><b>Exemple :</b> Mongock l'appelle lui-même lorsque {@link #seedDemoNotesIfEmpty()} lève
+     * une exception ; elle n'efface rien sinon.</p>
+     */
     @RollbackExecution
     public void rollback() {
         mongoTemplate.getCollection(COLLECTION).deleteMany(new Document());
         log.warn("notes de démonstration supprimées par annulation de la migration");
     }
 
+    // Construit les 9 documents de démonstration, datés à une seconde d'écart.
     private List<Document> construitLesNotesDeDemonstration() {
         Instant maintenant = Instant.now();
         List<Document> notes = new ArrayList<>();
@@ -99,6 +130,7 @@ public class DataBaseChangeLog {
         return notes;
     }
 
+    // Patient visé et texte d'une note de démonstration.
     private record NoteDeDemonstration(long patientId, String contenu) {
     }
 }

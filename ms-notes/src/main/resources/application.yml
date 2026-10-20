@@ -1,43 +1,60 @@
 spring:
   config:
+    # Secrets locaux lus depuis .env (copie de dist.env), s'il existe dans le dossier de lancement.
     import: optional:file:.env[.properties]
 
   application:
+    # Nom d'inscription dans Eureka, repris aussi dans les réponses d'erreur.
     name: ms-notes
 
   profiles:
+    # Profils ajoutés : « demo » active la migration Mongock des 9 notes de test. Le défaut « prod »
+    # n'en active aucune.
     include: ${MONGOCK_PROFILES:prod}
 
   data:
     mongodb:
+      # Base des notes, sur le poste en développement.
       host: localhost
       port: 27017
+      # Compte MongoDB de l'application : celui créé par le conteneur à sa première initialisation.
       username: ${MONGO_INITDB_ROOT_USERNAME:notes_user}
+      # Mot de passe MongoDB, sans valeur par défaut : à fournir par l'environnement.
       password: ${MONGO_INITDB_ROOT_PASSWORD}
+      # Base qui contient les notes.
       database: notesdb
+      # Le compte root du conteneur est déclaré dans la base admin.
       authentication-database: admin
 
 mongock:
+  # Package des migrations appliquées au démarrage.
   migration-scan-package:
     - com.mr486.msnotes.dbchangelogs
 
 security:
   app-user:
+    # Utilisateur technique autorisé à appeler l'API en HTTP Basic.
     username: ${APP_USERNAME:app_user}
+    # Son mot de passe, sans valeur par défaut : à fournir par l'environnement.
     password: ${APP_PASSWORD}
 
 server:
+  # Port HTTP du microservice.
   port: 9200
 
 management:
   endpoints:
     web:
       exposure:
+        # Seuls la santé et les informations sont exposées par l'actuator.
         include: health,info
 
 eureka:
   client:
     service-url:
+      # Adresse du registre Eureka, sur le poste en développement.
       defaultZone: http://localhost:8761/eureka
+    # Inscrit le service dans le registre, pour que la gateway le trouve.
     registerWithEureka: true
+    # Récupère le registre (utile dès qu'il appellera d'autres services).
     fetchRegistry: true

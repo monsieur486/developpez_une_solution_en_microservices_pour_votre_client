@@ -14,6 +14,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Pages d'ajout d'une note au dossier d'un patient.
+ *
+ * <p>L'historique, lui, s'affiche sur la fiche du patient ({@link PatientDetailController}).</p>
+ *
+ * <p><b>Exemple :</b> {@code GET /app/patients/3/notes/ajout} ouvre le formulaire ; l'envoi ramène
+ * sur la fiche du patient 3 avec « Note ajoutée au dossier. ».</p>
+ */
 @Controller
 @RequestMapping("/app")
 @RequiredArgsConstructor
@@ -24,6 +32,15 @@ public class NotesController {
 
     private final NoteApiService noteApiService;
 
+    /**
+     * Affiche le formulaire d'ajout, vide.
+     *
+     * <p><b>Exemple :</b> le formulaire du patient 3 s'ouvre avec un champ de texte vide.</p>
+     *
+     * @param patientId identifiant du patient
+     * @param model     modèle de la page
+     * @return la vue {@code note-ajout}
+     */
     @GetMapping("/patients/{patientId}/notes/ajout")
     public String showCreateNoteForm(@PathVariable Long patientId, Model model) {
         model.addAttribute("note", new NoteForm());
@@ -31,6 +48,21 @@ public class NotesController {
         return VUE_AJOUT;
     }
 
+    /**
+     * Enregistre la note saisie.
+     *
+     * <p>Une note vide ou trop longue réaffiche le formulaire avec son erreur ; sinon, retour à la
+     * fiche avec un message de confirmation.</p>
+     *
+     * <p><b>Exemple :</b> « Poids en hausse » redirige vers {@code /app/patients/3}.</p>
+     *
+     * @param patientId         identifiant du patient
+     * @param note              note saisie
+     * @param resultatDeLiaison erreurs de validation du formulaire
+     * @param model             modèle, pour réafficher le formulaire
+     * @param redirection       attributs transmis à la page suivante
+     * @return la vue du formulaire, ou la redirection vers la fiche
+     */
     @PostMapping("/patients/{patientId}/notes")
     public String ajoutNoteSubmit(
             @PathVariable Long patientId,
