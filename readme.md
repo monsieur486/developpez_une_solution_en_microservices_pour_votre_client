@@ -4,17 +4,17 @@ Application en microservices qui aide les praticiens d'une clinique à repérer 
 exposés au diabète de type 2. Projet 9 du parcours *Développeur d'application Java*
 (OpenClassrooms).
 
-> **Étape 2 — ajout des notes.** Les notes rédigées par les praticiens enrichissent le
-> dossier du patient : la fiche présente ses notes datées, de la plus récente à la plus
-> ancienne, avec un formulaire d'ajout. Le module `ms-notes` est adossé à MongoDB, le format
-> libre d'une note se prêtant mal à un schéma relationnel. Si `ms-notes` est indisponible, la
-> fiche reste consultable : un avertissement remplace l'historique.
+> **Étape 3 — évaluation du risque.** La fiche du patient affiche désormais son risque de
+> diabète : `None`, `Borderline`, `In Danger` ou `Early onset`. Le module `ms-risque` n'a pas de
+> base : il croise l'âge et le genre du patient (`ms-patients`) avec les termes déclencheurs
+> relevés dans ses notes (`ms-notes`). Si `ms-risque` ou `ms-notes` est indisponible, la fiche
+> reste consultable : un avertissement remplace le risque ou l'historique.
 
 | Étape | Besoin | État |
 |---|---|---|
 | 1 | Consulter, ajouter et mettre à jour les informations personnelles des patients | ✅ livré |
 | 2 | Consulter l'historique des notes d'un patient et y ajouter une note (MongoDB) | ✅ livré |
-| 3 | Évaluer le risque de diabète d'un patient | ⏳ à venir |
+| 3 | Évaluer le risque de diabète d'un patient | ✅ livré |
 | 4 | Documenter les API (OpenAPI, Swagger) | ⏳ à venir |
 | 5 | Documenter le code (Javadoc, configuration commentée) | ⏳ à venir |
 
@@ -32,20 +32,26 @@ exposés au diabète de type 2. Projet 9 du parcours *Développeur d'application
                 ┌───────────────┐          ┌─────────────┐
                 │  ms-gateway   │  :9000 ◄─┤  ms-eureka  │ :8761  registre des services
                 └───────┬───────┘          └─────────────┘
-               ┌────────┴──────────┐  routage par découverte
-               ▼                   ▼
-       ┌───────────────┐   ┌───────────────┐
-       │  ms-patients  │   │   ms-notes    │
-       │ :9100      ×2 │   │ :9200      ×2 │
-       └───────┬───────┘   └───────┬───────┘
-               ▼                   ▼
-        PostgreSQL :5432     MongoDB :27017
+       ┌────────────────┼────────────────┐   routes explicites lb://
+       ▼                ▼                ▼
+┌─────────────┐  ┌─────────────┐  ┌─────────────┐
+│ ms-patients │  │  ms-notes   │  │  ms-risque  │
+│ :9100    ×2 │  │ :9200    ×2 │  │ :9300    ×2 │
+└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
+       ▼                ▼                │ Feign + Eureka, HTTP Basic
+PostgreSQL :5432  MongoDB :27017         └──► ms-patients, ms-notes
 ```
 
 - **Le front ne parle qu'à la gateway.** Il ne connaît ni Eureka ni l'adresse des
   microservices back.
-- **La gateway route par découverte** : toute application inscrite dans Eureka sous le nom
-  `ms-xxx` devient joignable sous `/ms-xxx/**`, sans configuration de route à écrire.
+- **La gateway déclare une route par microservice** (`/ms-patients/**`, `/ms-notes/**`,
+  `/ms-risque/**`), vers une adresse `lb://` résolue dans Eureka et répartie entre les instances.
+  Une route créée par découverte disparaîtrait dès que son service quitte le registre : la
+  gateway répondrait alors 404, que le front prendrait pour un patient introuvable. Une route
+  explicite reste en place, et sans instance disponible la gateway répond **503**, qui signale
+  bien une panne.
+- **`ms-risque` appelle `ms-patients` et `ms-notes` directement**, par des clients Feign
+  résolus dans Eureka, sans repasser par la gateway : c'est un appel interne entre services.
 - **Les API back exigent une authentification HTTP Basic**, avec un utilisateur technique.
   Le front, lui, connecte le praticien par un formulaire.
 
@@ -56,6 +62,7 @@ exposés au diabète de type 2. Projet 9 du parcours *Développeur d'application
 | `ms-gateway` | 9000 | Point d'entrée unique des API (Spring Cloud Gateway) |
 | `ms-patients` | 9100 | API REST des fiches patients, sur PostgreSQL, avec un schéma géré par Liquibase |
 | `ms-notes` | 9200 | API REST des notes des praticiens, sur MongoDB, amorcée par Mongock |
+| `ms-risque` | 9300 | Évaluation du risque de diabète, sans base : interroge `ms-patients` et `ms-notes` (OpenFeign) |
 | `ms-webclient` | 8080 | Interface web des praticiens (Spring MVC, Thymeleaf, Bootstrap) |
 
 **Stack** : Java 17, Spring Boot 3.5, Spring Cloud 2025.0, Maven multi-modules, Lombok,
@@ -83,7 +90,7 @@ cp dist.env .env
 | `APP_USERNAME`, `APP_PASSWORD` | Utilisateur technique des API, qui sert aussi d'identifiant de connexion au front |
 | `LIQUIBASE_CONTEXTS` | `demo` insère les 4 patients de test ; le défaut `prod` n'en insère aucun |
 | `MONGOCK_PROFILES` | `demo` insère les 9 notes de test ; le défaut `prod` n'en insère aucune |
-| `REPLICA_MS_PATIENTS`, `REPLICA_MS_NOTES`, `PORT_WEBCLIENT` | Optionnels : nombre d'instances de chaque microservice métier (2 par défaut), port du front (8080 par défaut) |
+| `REPLICA_MS_PATIENTS`, `REPLICA_MS_NOTES`, `REPLICA_MS_RISQUE`, `PORT_WEBCLIENT` | Optionnels : nombre d'instances de chaque microservice métier (2 par défaut), port du front (8080 par défaut) |
 
 Sans `POSTGRES_PASSWORD`, `MONGO_INITDB_ROOT_PASSWORD` ou `APP_PASSWORD`, `docker compose`
 refuse de démarrer et indique la variable manquante.
@@ -105,7 +112,8 @@ seule fois**. Les instances de `ms-patients` ne démarrent qu'une fois cette mig
 
 `prod-start.sh` n'annonce la pile **prête** qu'une fois la gateway capable de router vers
 chaque microservice : les services doivent d'abord se déclarer auprès du registre, puis la
-gateway rafraîchir son catalogue, et toutes les routes répondent 404 en attendant. Le script
+gateway rafraîchir son cache des instances. En attendant, une route répond 503 (aucune
+instance connue) ; dès qu'elle atteint son service, elle répond 401 faute d'identifiants. Le script
 patiente 60 s, puis vérifie toutes les 10 s, pendant 5 minutes au plus ; au-delà, il nomme
 les routes manquantes et s'arrête en erreur.
 
@@ -115,7 +123,7 @@ les routes manquantes et s'arrête en erreur.
 ./dev-start.sh         # démarre seulement PostgreSQL et MongoDB
 ```
 
-Lancer ensuite, dans cet ordre, `MsEurekaApplication`, `MsGatewayApplication`, `MsPatientsApplication`, `MsNotesApplication`, `MsWebclientApplication`, depuis l'IDE ou avec Maven :
+Lancer ensuite, dans cet ordre, `MsEurekaApplication`, `MsGatewayApplication`, `MsPatientsApplication`, `MsNotesApplication`, `MsRisqueApplication`, `MsWebclientApplication`, depuis l'IDE ou avec Maven :
 
 ```bash
 ./mvnw -pl ms-commun install -DskipTests    # à refaire après chaque modification de ms-commun
@@ -151,6 +159,7 @@ Toutes les routes passent par la gateway et exigent l'authentification HTTP Basi
 | `PUT` | `/ms-patients/patients/{id}` | 200, fiche mise à jour · 400 · 404 · 409 |
 | `GET` | `/ms-notes/patients/{id}/notes` | 200, notes du patient, de la plus récente à la plus ancienne (liste vide s'il n'en a pas) |
 | `POST` | `/ms-notes/patients/{id}/notes` | 201, note créée et datée · 400 si le contenu est vide ou dépasse 5000 caractères |
+| `GET` | `/ms-risque/evaluation/{id}` | 200, niveau de risque en texte brut (`text/plain`) · 404 si le patient est inconnu · 503 si `ms-patients` ou `ms-notes` est injoignable |
 
 Exemple :
 
@@ -161,7 +170,7 @@ curl -u "$APP_USERNAME:$APP_PASSWORD" http://localhost:9000/ms-patients/patients
 Une note se saisit par son seul contenu (`{"content":"…"}`) et se restitue avec sa date
 d'enregistrement, attribuée par `ms-notes` (`{"content":"…","createdDate":"2026-10-20T16:13:39Z"}`).
 L'identifiant technique et le patient rattaché restent internes au service. Le texte est
-conservé tel quel, casse comprise : l'évaluation du risque y recherchera des termes déclencheurs.
+conservé tel quel, casse comprise : l'évaluation du risque y recherche les termes déclencheurs.
 
 Les erreurs ont toutes le même format :
 
@@ -183,6 +192,33 @@ renvoyé (`503` pour un microservice injoignable), la cause restant dans les jou
 - **Unicité** : deux patients ne peuvent pas avoir les mêmes nom, prénom, date de naissance et
   genre.
 
+### Règles de l'évaluation du risque
+
+Le niveau dépend de l'âge du patient, de son genre et du **nombre de termes déclencheurs
+distincts** cités dans l'ensemble de ses notes :
+
+| Niveau | 30 ans ou plus | Homme de moins de 30 ans | Femme de moins de 30 ans |
+|---|---|---|---|
+| `None` | 0 ou 1 terme | 0 à 2 termes | 0 à 3 termes |
+| `Borderline` | 2 à 5 termes | — | — |
+| `In Danger` | 6 ou 7 termes | 3 ou 4 termes | 4 à 6 termes |
+| `Early onset` | 8 termes ou plus | 5 termes ou plus | 7 termes ou plus |
+
+Termes déclencheurs : Hémoglobine A1C, Microalbumine, Taille, Poids, Fumeur/Fumeuse, Anormal,
+Cholestérol, Vertiges, Rechute, Réaction, Anticorps.
+
+Choix d'interprétation, chacun couvert par un test :
+
+- **Termes distincts** : un terme cité dans plusieurs notes, ou plusieurs fois dans la même,
+  compte une seule fois. Fumeur et Fumeuse sont deux graphies d'un **même** terme.
+- **Casse ignorée, recherche par sous-chaîne** : « vertige » reconnaît « Vertiges » comme
+  « Vertige », « anormal » reconnaît « anormales ». « fume » ou « fumer » ne comptent pas.
+- **Cas que le cahier des charges ne couvre pas** : un patient de 30 ans pile suit les règles des
+  30 ans ou plus ; un seul terme après 30 ans, ou trop peu de termes avant, donne `None`.
+- **Âge** en années révolues, calculé à la date du jour (horloge injectable, figée dans les tests).
+- **Libellés** : ceux du résumé des besoins fonctionnels, espaces compris (`In Danger`,
+  `Early onset`), plutôt que l'écriture sans espace du tableau des résultats attendus.
+
 ## Données de démonstration
 
 Avec `LIQUIBASE_CONTEXTS=demo`, la base reçoit les 4 patients des cas de test :
@@ -193,6 +229,10 @@ Avec `LIQUIBASE_CONTEXTS=demo`, la base reçoit les 4 patients des cas de test :
 | TestBorderline | Test | 1945-06-24 | M | 2 High St | 200-333-4444 |
 | TestInDanger | Test | 2004-06-18 | M | 3 Club Road | 300-444-5555 |
 | TestEarlyOnset | Test | 2002-06-28 | F | 4 Valley Dr | 400-555-6666 |
+
+Résultats attendus de l'évaluation, vérifiés par un test paramétré et sur la pile Docker :
+`TestNone` → `None`, `TestBorderline` → `Borderline`, `TestInDanger` → `In Danger`,
+`TestEarlyOnset` → `Early onset`.
 
 Avec `MONGOCK_PROFILES=demo`, une migration Mongock insère au démarrage de `ms-notes` 9 notes
 de démonstration rattachées à ces 4 patients (identifiants 1 à 4, dans l'ordre du tableau), si
@@ -215,8 +255,12 @@ Pour repartir de bases vierges : `docker compose down -v` (supprime les volumes 
   `RestTemplate` de production.
 - **Intégration** : Testcontainers sur un vrai PostgreSQL et un vrai MongoDB. Docker doit
   tourner pendant les tests.
-- **Tests déterministes** : la date des notes vient d'un `Clock` injecté, figé dans les tests
-  (`Clock.fixed`).
+- **Tests déterministes** : la date des notes et l'âge des patients viennent d'un `Clock`
+  injecté, figé dans les tests (`Clock.fixed`).
+- **Algorithme du risque** : tests paramétrés (`@CsvSource`, `@MethodSource`) sur chaque seuil,
+  chaque choix d'interprétation et les 4 cas officiels avec le texte exact de leurs notes.
+- **Routes de la gateway** : `@SpringBootTest` sans Eureka, qui vérifie qu'un service sans
+  instance répond 503 et non 404.
 - **Tranches légères** : Mongock est activé dans une classe `@Configuration` dédiée, et non sur
   la classe principale, pour que `@WebMvcTest` et `@DataMongoTest` n'exigent pas de base complète.
 - La couverture JaCoCo est un **repère**, pas un objectif : on teste le comportement métier,
