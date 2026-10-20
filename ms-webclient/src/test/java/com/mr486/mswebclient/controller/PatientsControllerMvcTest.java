@@ -95,4 +95,25 @@ class PatientsControllerMvcTest {
         assertThat(envoye.getValue().getBirthDate()).isEqualTo(LocalDate.of(1966, 12, 31));
         assertThat(envoye.getValue().getGender()).isEqualTo("F");
     }
+
+    // Un navigateur envoie les champs vides en "" : ils doivent arriver null à l'API.
+    @Test
+    @WithMockUser
+    @DisplayName("les champs optionnels laissés vides sont transmis à null, les textes sans espaces")
+    void champsVides_sontTransmisANull() throws Exception {
+        mockMvc.perform(post("/app/patients/ajout").with(csrf())
+                        .param("firstName", " Test ")
+                        .param("lastName", "TestNone")
+                        .param("birthDate", "1966-12-31")
+                        .param("gender", "F")
+                        .param("postalAddress", "")
+                        .param("phoneNumber", "   "))
+                .andExpect(redirectedUrl("/app/patients"));
+
+        ArgumentCaptor<PatientForm> envoye = ArgumentCaptor.forClass(PatientForm.class);
+        verify(patientApiService).creeLePatient(envoye.capture());
+        assertThat(envoye.getValue().getFirstName()).isEqualTo("Test");
+        assertThat(envoye.getValue().getPostalAddress()).isNull();
+        assertThat(envoye.getValue().getPhoneNumber()).isNull();
+    }
 }
