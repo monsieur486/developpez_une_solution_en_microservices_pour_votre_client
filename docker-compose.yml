@@ -60,7 +60,7 @@ services:
     ports:
       - "127.0.0.1:27017:27017"
     volumes:
-      - database-data:/data/db
+      - notes_data:/data/db
 
   ms-patients-migration:
     build:
@@ -146,4 +146,4 @@ services:
 
 volumes:
   db_data:
-  database-data:
+  notes_data:
