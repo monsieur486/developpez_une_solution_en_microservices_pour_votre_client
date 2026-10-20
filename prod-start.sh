@@ -3,17 +3,19 @@
 set -euo pipefail
 
 # Délai laissé aux services pour s'inscrire auprès du registre, puis à la passerelle pour
-# rafraîchir son catalogue : en deçà, toutes les routes répondent 404.
+# rafraîchir son cache des instances : en deçà, les routes répondent 503.
 ATTENTE_INITIALE=60
 # Ensuite, nouvelle vérification toutes les 10 secondes, pendant 5 minutes au plus.
 INTERVALLE=10
 TENTATIVES_MAX=30
 
-# Une route par microservice métier. Inconnue de la passerelle, elle répond 404 ; connue, elle
-# atteint le service, qui répond 401 faute d'identifiants : aucun secret n'est donc nécessaire.
+# Une route par microservice métier. Tant qu'aucune instance n'est connue, la passerelle répond
+# 503 ; dès qu'elle atteint le service, celui-ci répond 401 faute d'identifiants : aucun secret
+# n'est donc nécessaire, et seul un 401 prouve que la route est prête.
 ROUTES=(
     "ms-patients/patients"
     "ms-notes/patients/1/notes"
+    "ms-risque/evaluation/1"
 )
 
 docker compose --profile fullstack up -d --build
@@ -25,7 +27,7 @@ routes_absentes() {
     local route code
     for route in "${ROUTES[@]}"; do
         code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://localhost:9000/${route}" || true)
-        if [[ "${code}" == "404" || "${code}" == "000" ]]; then
+        if [[ "${code}" != "401" ]]; then
             echo "${route}"
         fi
     done

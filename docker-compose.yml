@@ -128,6 +128,27 @@ services:
       APP_USERNAME: ${APP_USERNAME:-app_user}
       APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
 
+  ms-risque:
+    build:
+      context: .
+      dockerfile: ms-risque/Dockerfile
+    profiles: ["fullstack"]
+    deploy:
+      replicas: ${REPLICA_MS_RISQUE:-2}
+    # Sans base propre : il interroge ms-patients et ms-notes, qui doivent donc être lancés.
+    # Pas de dépendance à la gateway : il appelle les deux services directement, via Eureka.
+    depends_on:
+      ms-eureka:
+        condition: service_started
+      ms-patients:
+        condition: service_started
+      ms-notes:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
+
   ms-webclient:
     build:
       context: .
@@ -137,6 +158,7 @@ services:
     depends_on:
       - ms-patients
       - ms-notes
+      - ms-risque
     environment:
       SPRING_PROFILES_ACTIVE: docker
       APP_USERNAME: ${APP_USERNAME:-app_user}
