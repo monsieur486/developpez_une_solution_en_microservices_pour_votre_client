@@ -39,6 +39,16 @@
     <exclude name="LoosePackageCoupling"/>
 
     <exclude name="TooManyMethods"/>
+    <exclude name="UseUtilityClass"/>
+  </rule>
+
+  <!-- Faux positif sur les classes de démarrage : Spring doit pouvoir instancier une classe
+       @SpringBootApplication, elle ne peut donc pas recevoir de constructeur privé. -->
+  <rule ref="category/java/design.xml/UseUtilityClass">
+    <properties>
+      <property name="violationSuppressXPath"
+                value="ancestor-or-self::ClassDeclaration[pmd-java:hasAnnotation('org.springframework.boot.autoconfigure.SpringBootApplication')]"/>
+    </properties>
   </rule>
 
   <rule ref="category/java/design.xml/TooManyMethods">
