@@ -41,17 +41,33 @@ class EvaluationControllerTest {
         verifyNoInteractions(evaluationService);
     }
 
-    // Le front lit le corps tel quel : un libellé entouré de guillemets JSON s'afficherait mal.
+    // Même format que les autres API : le niveau voyage dans un objet JSON, avec le patient évalué.
     @Test
     @WithMockUser
-    @DisplayName("le niveau est renvoyé en texte brut, espaces compris")
-    void evaluation_renvoieLeLibelleEnTexteBrut() throws Exception {
+    @DisplayName("le niveau est renvoyé en JSON avec l'identifiant du patient, espaces compris")
+    void evaluation_renvoieLePatientEtSonNiveauEnJson() throws Exception {
         when(evaluationService.evaluationDuRisque(PATIENT_EN_DANGER)).thenReturn("In Danger");
 
-        mockMvc.perform(get("/evaluation/{id}", PATIENT_EN_DANGER))
+        mockMvc.perform(get("/evaluation/{id}", PATIENT_EN_DANGER).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
-                .andExpect(content().string("In Danger"));
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.patientId").value(PATIENT_EN_DANGER))
+                .andExpect(jsonPath("$.niveau").value("In Danger"));
+    }
+
+    // Non-régression : quand le résultat était en texte brut, un client qui demandait du JSON
+    // recevait 406 au lieu de l'erreur, et un client qui demandait du texte, 500 sans corps.
+    @Test
+    @WithMockUser
+    @DisplayName("un client qui demande du JSON reçoit bien l'erreur 404, et non 406")
+    void evaluation_patientInconnuDemandeEnJson_renvoie404Json() throws Exception {
+        when(evaluationService.evaluationDuRisque(99L))
+                .thenThrow(new PatientIntrouvableException(99L, new IllegalStateException("404")));
+
+        mockMvc.perform(get("/evaluation/{id}", 99L).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.messages[0]").value("Aucun patient avec l'id: 99"));
     }
 
     @Test

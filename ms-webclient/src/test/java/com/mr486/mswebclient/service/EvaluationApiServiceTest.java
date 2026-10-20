@@ -24,7 +24,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.client.MockRestServiceServer;
 
 // Le RestTemplate est le vrai, construit par Spring Boot comme en production : seule la gateway
-// est simulée. On vérifie ainsi l'URL appelée, l'en-tête Basic et la lecture du niveau en texte brut.
+// est simulée. On vérifie ainsi l'URL appelée, l'en-tête Basic et la lecture du niveau dans le JSON.
 @RestClientTest(EvaluationApiService.class)
 @Import({GatewaySecurityConfiguration.class, ClientPasserelle.class})
 @TestPropertySource(properties = {
@@ -45,12 +45,12 @@ class EvaluationApiServiceTest {
     private EvaluationApiService evaluationApiService;
 
     @Test
-    @DisplayName("le niveau de risque est demandé en GET authentifié et lu en texte brut")
+    @DisplayName("le niveau de risque est demandé en GET authentifié et lu dans la réponse JSON")
     void evalueLeRisque_appelleLaGatewayEtRetourneLeNiveau() {
         gateway.expect(requestTo(EVALUATION_DU_PATIENT_2))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(HttpHeaders.AUTHORIZATION, BASIC_ATTENDU))
-                .andRespond(withSuccess("Borderline", MediaType.TEXT_PLAIN));
+                .andRespond(withSuccess("{\"patientId\":2,\"niveau\":\"Borderline\"}", MediaType.APPLICATION_JSON));
 
         String niveau = evaluationApiService.evalueLeRisque(2L);
 

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * Niveaux de risque de diabète définis par le cahier des charges, du plus faible au plus élevé.
  *
- * <p>Le libellé est la valeur renvoyée par l'API, en texte brut. Il reprend l'écriture du résumé
+ * <p>Le libellé est la valeur renvoyée par l'API, dans le champ {@code niveau}. Il reprend l'écriture du résumé
  * des besoins fonctionnels, espaces compris : {@code In Danger} et {@code Early onset}.</p>
  *
  * <p><b>Exemple :</b> {@code NiveauRisque.IN_DANGER.getLibelle()} retourne {@code "In Danger"}.</p>

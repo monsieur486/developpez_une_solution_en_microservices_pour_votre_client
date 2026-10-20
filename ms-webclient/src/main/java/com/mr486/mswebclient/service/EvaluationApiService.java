@@ -1,5 +1,6 @@
 package com.mr486.mswebclient.service;
 
+import com.mr486.commun.dto.EvaluationDto;
 import com.mr486.mswebclient.configuration.ConstantesWebclient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
@@ -24,7 +25,8 @@ public class EvaluationApiService {
      * Retourne le niveau de risque d'un patient, tel que {@code ms-risque} l'écrit.
      *
      * <p><b>Exemple :</b> {@code evalueLeRisque(TEST_IN_DANGER)} appelle
-     * {@code GET /ms-risque/evaluation/3} et retourne {@code "In Danger"}.</p>
+     * {@code GET /ms-risque/evaluation/3}, qui répond {@code {"patientId":3,"niveau":"In Danger"}},
+     * et retourne {@code "In Danger"}.</p>
      *
      * @param patientId identifiant du patient
      * @return {@code None}, {@code Borderline}, {@code In Danger} ou {@code Early onset}
@@ -33,11 +35,12 @@ public class EvaluationApiService {
      * @throws com.mr486.commun.exception.ResourceNotFoundException si le patient est inconnu
      */
     public String evalueLeRisque(Long patientId) {
-        return clientPasserelle.echange(
+        EvaluationDto evaluation = clientPasserelle.echange(
                 HttpMethod.GET,
                 ConstantesWebclient.CHEMIN_EVALUATION + patientId,
                 null,
-                new ParameterizedTypeReference<String>() {},
+                new ParameterizedTypeReference<EvaluationDto>() {},
                 ConstantesWebclient.SERVICE_RISQUE);
+        return evaluation.getNiveau();
     }
 }
