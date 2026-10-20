@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.mr486.commun.dto.NoteDto;
 import com.mr486.commun.dto.PatientDto;
+import com.mr486.commun.exception.ServiceIndisponibleException;
 import com.mr486.mswebclient.configuration.SecurityConfiguration;
 import com.mr486.mswebclient.mapper.PatientFormMapper;
 import com.mr486.mswebclient.service.NoteApiService;
@@ -58,6 +59,23 @@ class PatientDetailControllerMvcTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(Matchers.containsString("20/10/2026")))
                 .andExpect(content().string(Matchers.containsString("fume depuis peu")));
+    }
+
+    // Isolement des pannes : sans ms-notes, le praticien doit encore pouvoir consulter le patient.
+    @Test
+    @WithMockUser
+    @DisplayName("une panne de ms-notes laisse la fiche s'afficher, avec un avertissement à la place des notes")
+    void fiche_notesIndisponibles_afficheLePatientEtUnAvertissement() throws Exception {
+        when(patientApiService.recupereLePatient(1L)).thenReturn(unPatient());
+        when(noteApiService.listeLesNotes(1L))
+                .thenThrow(new ServiceIndisponibleException("ms-notes", new IllegalStateException("arrêté")));
+
+        mockMvc.perform(get("/app/patients/1"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("notesIndisponibles", true))
+                .andExpect(content().string(Matchers.containsString("TestInDanger")))
+                .andExpect(content().string(Matchers.containsString("momentanément indisponibles")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("Ajouter une note"))));
     }
 
     @Test

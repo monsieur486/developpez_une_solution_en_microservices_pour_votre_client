@@ -54,10 +54,15 @@
             <span>Notes
                 <span class="badge text-bg-secondary" th:text="${notes.size()}">0</span>
             </span>
-            <a class="btn btn-sm btn-primary"
+            <a class="btn btn-sm btn-primary" th:unless="${notesIndisponibles}"
                th:href="@{/app/patients/{id}/notes/ajout(id=${patientId})}">Ajouter une note</a>
         </div>
-        <div class="card-body" th:if="${notes.isEmpty()}">
+        <div class="card-body" th:if="${notesIndisponibles}">
+            <div class="alert alert-danger mb-0">
+                Les notes sont momentanément indisponibles. Réessayez dans quelques instants.
+            </div>
+        </div>
+        <div class="card-body" th:if="${notes.isEmpty() and !notesIndisponibles}">
             <div class="alert alert-warning mb-0">Aucune note pour ce patient.</div>
         </div>
         <ul class="list-group list-group-flush" th:unless="${notes.isEmpty()}">
