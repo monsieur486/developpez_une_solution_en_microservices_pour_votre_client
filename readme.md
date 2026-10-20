@@ -161,7 +161,7 @@ Toutes les routes passent par la gateway et exigent l'authentification HTTP Basi
 | `PUT` | `/ms-patients/patients/{id}` | 200, fiche mise à jour · 400 · 404 · 409 |
 | `GET` | `/ms-notes/patients/{id}/notes` | 200, notes du patient, de la plus récente à la plus ancienne (liste vide s'il n'en a pas) |
 | `POST` | `/ms-notes/patients/{id}/notes` | 201, note créée et datée · 400 si le contenu est vide ou dépasse 5000 caractères |
-| `GET` | `/ms-risque/evaluation/{id}` | 200, niveau de risque en texte brut (`text/plain`) · 404 si le patient est inconnu · 503 si `ms-patients` ou `ms-notes` est injoignable · 502 s'il refuse l'appel |
+| `GET` | `/ms-risque/evaluation/{id}` | 200, patient et niveau de risque (`{"patientId":3,"niveau":"In Danger"}`) · 404 si le patient est inconnu · 503 si `ms-patients` ou `ms-notes` est injoignable · 502 s'il refuse l'appel |
 
 Exemple :
 
@@ -387,6 +387,11 @@ le corps sont ceux de l'API.
 
 ![400 note vide](docs/captures/14-api-400-note-vide.png)
 
+**404** : évaluation du risque d'un patient inconnu. Comme toutes les API, `ms-risque` répond en
+JSON, succès comme erreur.
+
+![404 évaluation d'un patient inconnu](docs/captures/15-api-404-risque-patient-inconnu.png)
+
 ### Interruptions de service
 
 **`ms-risque` arrêté** : la fiche reste consultable, un avertissement remplace le risque.
@@ -403,16 +408,22 @@ et le risque aussi, puisque `ms-risque` a besoin des notes pour l'évaluer.
 
 ![Fiche sans ms-notes](docs/captures/18-fiche-sans-ms-notes.png)
 
+**`ms-notes` arrêté, vu depuis l'API** : `ms-risque` ne peut pas lire les notes et répond 503, en
+nommant le service en cause.
+
+![503 de ms-risque sans ms-notes](docs/captures/19-api-503-risque-sans-ms-notes.png)
+
 **`ms-patients` arrêté** : sans fiche, rien ne peut s'afficher ; la page signale une interruption
 temporaire.
 
 ![Liste sans ms-patients](docs/captures/20-liste-sans-ms-patients.png)
 
+**Appel refusé en aval (502)** : `ms-risque` a été lancé avec un mot de passe factice. Il
+l'accepte en entrée, mais `ms-patients` refuse son appel. Le message reste générique, sans nommer
+le service ni le statut reçu, qui ne figurent que dans les journaux.
+
+![502 appel refusé](docs/captures/21-api-502-appel-refuse.png)
+
 ### Ce qui n'est pas encore capturé
 
-- **Les erreurs de `ms-risque` vues depuis Swagger** (404 patient inconnu, 503 si `ms-notes` est
-  injoignable, 502 si un service refuse l'appel). Swagger envoie `Accept: text/plain`, le type du
-  résultat, alors que les erreurs sont en JSON : Spring ne peut pas satisfaire la demande et
-  répond **500 sans corps**. Avec `Accept: */*`, comme le webclient ou `curl`, les bons statuts
-  sont renvoyés. Les captures seront ajoutées une fois ce défaut corrigé.
 - **La page d'erreur interne (500)** de l'interface web : aucune action normale ne la déclenche.
