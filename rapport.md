@@ -141,17 +141,19 @@ la validation des entrées.
 - [x] (code propre) Conteneur Testcontainers en `static final` *(IA, autorisé — voir journal)*
 - [x] (code propre) Exclure `*Application` de `UseUtilityClass` dans le ruleset PMD *(IA, autorisé — voir journal)*
 - [x] (code propre) `@SuppressWarnings` justifié sur `SecuriteApiConfiguration.filtreDeSecurite` *(IA, autorisé — voir journal)*
-- [ ] (architecture) `GlobalExceptionHandler` (9 méthodes) : justifier ou découper
+- [ ] (architecture) `GlobalExceptionHandler` (9 méthodes) : justifier ou découper — toujours signalé par PMD (le constructeur ajouté compte) : `@SuppressWarnings` justifié ou découpage
 - [x] (code propre) Retirer `@Repository` de `PatientRepository` *(IA, autorisé — voir journal)*
 - [x] (code propre) Contraindre les valeurs de `gender` *(IA, autorisé — voir journal)*
 
 ### Phase 5 — Validation, configuration, README
 - [x] (architecture) En-tête `--liquibase formatted sql` + `--changeset` sur `001` et `002` *(généré par l'IA à ma demande, voir journal)*
 - [x] (sécurité) `@Past` sur `birthDate`, `@Size(max = 255)` sur les chaînes de `PatientForm` *(IA, autorisé — voir journal)*
-- [ ] (architecture) Mettre à jour la description de `ms-commun` + justifier le partage des DTO
-- [ ] (architecture) Isoler les données de test (context Liquibase)
+- [x] (architecture) Mettre à jour la description de `ms-commun` + justifier le partage des DTO
+- [x] (architecture) Isoler les données de test (context Liquibase)
 - [ ] (sécurité) Retirer les mots de passe par défaut des `application*.yml` et du `docker-compose.yml`
-- [ ] (code propre) Réduire `application-docker.yml` aux seules différences avec `application.yml`
+- [ ] (sécurité) 🐞 **Régression Docker** : `ms-patients` et `ms-patients-migration` ne reçoivent pas `POSTGRES_PASSWORD` dans `docker-compose.yml` → le placeholder `${POSTGRES_PASSWORD}` part tel quel et PostgreSQL refuse (`password authentication failed`)
+- [ ] (sécurité) Aligner `ms-webclient` : `application*.yml` gardent `${APP_PASSWORD:app_password}`
+- [x] (code propre) Réduire `application-docker.yml` aux seules différences avec `application.yml`
 
 ---
 
@@ -240,8 +242,8 @@ un doublon refusé par l'API s'affiche comme « service indisponible ». Et il *
 - [x] (code propre) Remplacer le test par réflexion `doublon_repondConflit` par une vérification HTTP réelle (MockMvc)
 - [x] (code propre) PMD `LooseCoupling` (5, tests) : déclarer `Model` et `RedirectAttributes` plutôt que les implémentations
 - [x] (architecture) Décider et justifier le sort des autres 4xx (400, 401, 403), encore traduites en « service indisponible »
-- [ ] (code propre) Supprimer `ConstantesToast.NIVEAU_ERREUR` (jamais utilisée) ou l'employer
-- [ ] (code propre) Factoriser le `catch (DuplicateException)` dupliqué dans les deux contrôleurs (optionnel)
+- [x] (code propre) Supprimer `ConstantesToast.NIVEAU_ERREUR` (jamais utilisée) ou l'employer
+- [x] (code propre) Factoriser le `catch (DuplicateException)` dupliqué dans les deux contrôleurs (optionnel)
 - [x] (code propre) Sortir `versFormulaire` du contrôleur *(IA, autorisé — voir journal)*
 - [x] (code propre) Champs vides → `null` (`StringTrimmerEditor`) *(IA, autorisé — voir journal)*
 - [x] (architecture) `SecurityConfiguration` : identifiants en paramètres de méthode `@Bean`, `@SuppressWarnings` justifié *(IA, autorisé — voir journal)*
