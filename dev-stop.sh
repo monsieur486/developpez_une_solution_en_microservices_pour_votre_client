@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Arrête la base de développement en conservant ses données.
-# Pour repartir d'une base vierge, utiliser explicitement : docker compose down -v
+# Arrête les bases de développement en conservant leurs données.
+# Pour repartir de bases vierges, utiliser explicitement : docker compose down -v
 set -euo pipefail
 
 docker compose down
-echo "Base arrêtée. Le volume de données est conservé."
+echo "Bases arrêtées. Les volumes de données sont conservés."
