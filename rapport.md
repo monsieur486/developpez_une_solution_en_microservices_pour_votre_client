@@ -429,5 +429,5 @@ la gateway de l'IDE) : connexion, fiche datée, ajout d'une note, puis fiche con
 
 **Reste à toi** :
 - [ ] Relire les ajustements ci-dessus et remplir Décision / Vérification dans `utilisation-ia.md`
-- [ ] (optionnel) Supprimer l'ancien volume orphelin : `docker volume rm livrables_database-data`
+- [x] (optionnel) Supprimer l'ancien volume orphelin : `docker volume rm livrables_database-data`
 - [ ] (sécurité, optionnel) Compte MongoDB limité à `notesdb` plutôt que root
