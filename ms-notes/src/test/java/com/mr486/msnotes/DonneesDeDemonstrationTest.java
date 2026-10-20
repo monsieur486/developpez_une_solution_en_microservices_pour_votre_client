@@ -2,7 +2,11 @@ package com.mr486.msnotes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.mongodb.client.model.Filters;
+import java.time.Instant;
+import java.util.Date;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +39,15 @@ class DonneesDeDemonstrationTest {
     @DisplayName("le profil « demo » insère les neuf notes de démonstration")
     void profilDemo_insereLesNotesDeDemonstration() {
         assertThat(mongoTemplate.getCollection("notes").countDocuments()).isEqualTo(9);
+    }
+
+    // Non-régression : datées dans le futur, elles passaient devant une note saisie juste après le démarrage.
+    @Test
+    @DisplayName("les notes de démonstration sont toutes datées dans le passé")
+    void profilDemo_dateLesNotesDansLePasse() {
+        Bson dansLeFutur = Filters.gt("createdDate", Date.from(Instant.now()));
+
+        assertThat(mongoTemplate.getCollection("notes").countDocuments(dansLeFutur)).isZero();
     }
 
     // Contre-épreuve du test par défaut : prouve que le journal est bien lu au bon endroit.

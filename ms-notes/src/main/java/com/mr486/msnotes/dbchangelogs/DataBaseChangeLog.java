@@ -91,7 +91,7 @@ public class DataBaseChangeLog {
      * Insère les notes de démonstration si la collection est vide.
      *
      * <p><b>Exemple :</b> au premier démarrage avec {@code demo}, 9 notes sont insérées, à une seconde
-     * d'écart pour garder l'ordre des cas de test.</p>
+     * d'écart pour garder l'ordre des cas de test, la dernière une seconde avant le démarrage.</p>
      */
     @Execution
     public void seedDemoNotesIfEmpty() {
@@ -117,7 +117,8 @@ public class DataBaseChangeLog {
         log.warn("notes de démonstration supprimées par annulation de la migration");
     }
 
-    // Construit les 9 documents de démonstration, datés à une seconde d'écart.
+    // Construit les 9 documents de démonstration, à une seconde d'écart et tous dans le passé :
+    // une note saisie juste après le démarrage reste ainsi la plus récente de l'historique.
     private List<Document> construitLesNotesDeDemonstration() {
         Instant maintenant = Instant.now();
         List<Document> notes = new ArrayList<>();
@@ -125,7 +126,7 @@ public class DataBaseChangeLog {
             notes.add(new Document()
                     .append(CHAMP_PATIENT, modele.patientId())
                     .append(CHAMP_CONTENU, modele.contenu())
-                    .append(CHAMP_DATE, maintenant.plusSeconds(notes.size())));
+                    .append(CHAMP_DATE, maintenant.minusSeconds(MODELES.size() - notes.size())));
         }
         return notes;
     }
