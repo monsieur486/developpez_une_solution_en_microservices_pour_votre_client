@@ -43,7 +43,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-patientsdb}
       POSTGRES_USER: ${POSTGRES_USER:-patient_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-patient_pass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?à définir dans .env (voir dist.env)}
     # Lié à la boucle locale : la base n'est joignable que depuis le poste.
     ports:
       - "127.0.0.1:5432:5432"
@@ -61,8 +61,14 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_MAIN_WEB_APPLICATION_TYPE: none
       EUREKA_CLIENT_ENABLED: "false"
+      # Seule la migration a besoin du contexte : les répliques trouvent la base déjà à jour.
+      LIQUIBASE_CONTEXTS: ${LIQUIBASE_CONTEXTS:-prod}
+      # Accès à la base : sans valeur par défaut côté application, il doit être transmis ici.
+      POSTGRES_DB: ${POSTGRES_DB:-patientsdb}
+      POSTGRES_USER: ${POSTGRES_USER:-patient_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?à définir dans .env (voir dist.env)}
       APP_USERNAME: ${APP_USERNAME:-app_user}
-      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+      APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
     restart: "no"
 
   ms-patients:
@@ -81,8 +87,11 @@ services:
         condition: service_completed_successfully
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      POSTGRES_DB: ${POSTGRES_DB:-patientsdb}
+      POSTGRES_USER: ${POSTGRES_USER:-patient_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?à définir dans .env (voir dist.env)}
       APP_USERNAME: ${APP_USERNAME:-app_user}
-      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+      APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
 
   ms-webclient:
     build:
@@ -95,7 +104,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       APP_USERNAME: ${APP_USERNAME:-app_user}
-      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+      APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
     ports:
       - "${PORT_WEBCLIENT:-8080}:8080"
 

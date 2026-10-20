@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset monsieur486:002-insertion-patients-de-test
+--changeset monsieur486:002-insertion-patients-de-test context:demo
 INSERT INTO patients (first_name, last_name, birth_date, gender, postal_address, phone_number)
 VALUES
 ('Test', 'TestNone', '1966-12-31', 'F', '1 Brookside St', '100-222-3333'),
