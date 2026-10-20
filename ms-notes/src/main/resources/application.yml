@@ -26,6 +26,11 @@ spring:
       # Le compte root du conteneur est déclaré dans la base admin.
       authentication-database: admin
 
+  web:
+    resources:
+      # API pure : aucun fichier statique servi, une URL inconnue donne un 404 JSON.
+      add-mappings: false
+
 mongock:
   # Package des migrations appliquées au démarrage.
   migration-scan-package:
