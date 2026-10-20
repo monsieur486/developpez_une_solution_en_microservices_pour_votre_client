@@ -51,8 +51,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final String MESSAGE_ERREUR_INTERNE = "Une erreur interne est survenue.";
 
     /** Nom du microservice, repris dans chaque réponse pour situer l'erreur. */
-    @Value("${spring.application.name:application}")
-    private String nomDuMicroservice;
+    private final String nomDuMicroservice;
+
+    /**
+     * Construit le gestionnaire pour le microservice qui l'importe.
+     *
+     * <p><b>Exemple :</b> importé par {@code ms-patients}, il signe chaque réponse d'erreur
+     * {@code "microserviceName": "ms-patients"}.</p>
+     *
+     * @param nomDuMicroservice valeur de {@code spring.application.name}, {@code application} à défaut
+     */
+    public GlobalExceptionHandler(
+            @Value("${spring.application.name:application}") String nomDuMicroservice) {
+        this.nomDuMicroservice = nomDuMicroservice;
+    }
 
     /**
      * Traduit une ressource introuvable en réponse 404.
@@ -145,7 +157,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR, List.of(MESSAGE_ERREUR_INTERNE), requete, ex);
     }
 
-    /** Traduit les erreurs de validation d'un corps de requête annoté {@code @Valid} en 400. */
+    /**
+     * Traduit les erreurs de validation d'un corps de requête annoté {@code @Valid} en réponse 400.
+     *
+     * <p>Chaque champ refusé donne un message « champ: motif » ; les règles portant sur l'objet
+     * entier donnent « objet: motif ».</p>
+     *
+     * <p><b>Exemple :</b> un patient envoyé sans nom retourne un statut 400 et le message
+     * « lastName: Le nom de famille est obligatoire ».</p>
+     *
+     * @param ex         exception portant le résultat de la validation
+     * @param enTetes    en-têtes prévus par Spring pour la réponse (non repris)
+     * @param statut     statut prévu par Spring (non repris : toujours 400)
+     * @param webRequest requête à l'origine de l'erreur
+     * @return la réponse 400 normalisée
+     */
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders enTetes,
@@ -161,7 +187,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return erreurClient(HttpStatus.BAD_REQUEST, messages, requeteDe(webRequest));
     }
 
-    /** Traduit l'absence de route correspondant à l'URL appelée en 404. */
+    /**
+     * Traduit l'absence de route correspondant à l'URL appelée en réponse 404.
+     *
+     * <p><b>Exemple :</b> {@code GET /inconnue} retourne un statut 404 et le message
+     * « Route non trouvée: GET /inconnue ».</p>
+     *
+     * @param ex         exception portant la méthode et l'URL demandées
+     * @param enTetes    en-têtes prévus par Spring pour la réponse (non repris)
+     * @param statut     statut prévu par Spring (non repris : toujours 404)
+     * @param webRequest requête à l'origine de l'erreur
+     * @return la réponse 404 normalisée
+     */
     @Override
     protected ResponseEntity<Object> handleNoHandlerFoundException(
             NoHandlerFoundException ex, HttpHeaders enTetes, HttpStatusCode statut,

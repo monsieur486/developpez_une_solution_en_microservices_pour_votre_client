@@ -11,7 +11,7 @@
 
     <artifactId>ms-commun</artifactId>
     <name>ms-commun</name>
-    <description>Contrat d'API partagé : DTO, sécurité des API, exceptions communes et traitement uniforme des erreurs</description>
+    <description>Bibliothèque partagée par les microservices : DTO échangés, exceptions communes, et — activés par @Import côté API REST — sécurité HTTP Basic et gestionnaire d'erreurs uniforme</description>
 
     <dependencies>
 
