@@ -594,5 +594,5 @@ javadoc et corrige les points mineurs ». À relire pour savoir les expliquer.*
 - Mesures : `./mvnw clean verify` vert, 114 tests (115 avec le test du 502), Checkstyle/PMD/SpotBugs à 0 sur tous les modules.
 
 ### Reste ouvert
-- [x] (code propre) Fichiers d'initializr supprimés de `ms-notes` et `ms-gateway` (il en reste dans `ms-eureka`, `ms-patients` et `ms-webclient`, hors Sprint 3)
+- [x] (code propre) Fichiers d'initializr supprimés de `ms-notes` et `ms-gateway` puis de `ms-eureka`, `ms-patients` et `ms-webclient` : plus aucun module n'en porte
 - [x] (architecture) `AppelRefuseException` traduite en 502 au message générique (fait par toi, testé dans `EvaluationControllerTest`)
