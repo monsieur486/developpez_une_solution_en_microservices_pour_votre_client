@@ -705,3 +705,29 @@ vérifie toute la javadoc manquante puis commit ».*
   du YAML de la gateway commenté.
 - Mesures : `./mvnw clean verify` vert, 120 tests ; Checkstyle, PMD et SpotBugs à 0 partout ;
   `javadoc:javadoc` sans avertissement sur les 8 modules.
+
+### 🆕 Les erreurs de `ms-risque` sortent en 500 quand le client n'accepte que `text/plain`   ·   axe : architecture
+*Trouvé le 2026-10-21 en prenant les captures d'écran du README.*
+
+- **Constat** (reproduit avec `curl` sur la pile Docker) :
+
+  | `Accept` | `GET /ms-risque/evaluation/99` |
+  |---|---|
+  | `*/*` (webclient, `curl`) | 404 JSON ✅ |
+  | `text/plain` (Swagger, type du résultat) | **500 sans corps** |
+  | `application/json` | **406** |
+
+  Même chose pour le 503 (`ms-notes` arrêté) et le 502 (appel refusé). Le webclient n'est pas
+  touché, d'où un défaut invisible depuis le Sprint 3.
+- **Pourquoi** : `@GetMapping(produces = TEXT_PLAIN)` ne promet que du texte, alors que le
+  gestionnaire d'erreurs commun répond en JSON. Spring ne peut pas satisfaire `Accept: text/plain`
+  avec du JSON et lève `HttpMediaTypeNotAcceptableException`, visible dans les journaux de `ms-risque`.
+- **Pistes** (décision d'architecture, à toi de choisir) :
+  - renvoyer le niveau dans un petit DTO JSON, comme les autres API, pour un seul format partout ;
+  - ou garder le texte brut et rendre les erreurs de ce endpoint lisibles en `text/plain` ;
+  - dans les deux cas, un test MockMvc avec `.accept(MediaType.TEXT_PLAIN)` sur le 404.
+- **Conséquence** : les captures 15 (404), 19 (503) et 21 (502) sont écartées du README en attendant.
+
+### Suivi — captures
+- [x] (présentation) 18 captures des erreurs en fin de README (interface web, API, pannes)
+- [ ] (architecture) Corriger la négociation de contenu des erreurs de `ms-risque`, puis refaire les captures 15, 19 et 21
