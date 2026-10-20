@@ -45,3 +45,18 @@ spring:
 
 server:
   port: 9000
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    disable-swagger-default-url: true
+    urls:
+      - name: ms-patients
+        url: /ms-patients/v3/api-docs
+      - name: ms-notes
+        url: /ms-notes/v3/api-docs
+      - name: ms-risque
+        url: /ms-risque/v3/api-docs
+    urlsPrimaryName: ms-patients
