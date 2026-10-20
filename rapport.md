@@ -222,11 +222,18 @@ un doublon refusé par l'API s'affiche comme « service indisponible ». Et il *
 3. `@WebMvcTest` du formulaire d'ajout, puis la Javadoc.
 
 ## Suivi `ms-webclient` — à cocher au fil de l'eau
+
+> **Point du 2026-10-20 (2ᵉ passage)** : bug du 409 corrigé en TDD, 15 tests verts, Checkstyle 35 (Javadoc), PMD 6. 3 points réglés, 5 nouveaux.
+
 - [x] (architecture) `ClientPasserelleTest` : appel abouti, corps transmis, 404 → introuvable, injoignable → indisponible
-- [ ] (architecture) ⚠️ Réécrire `erreur4xxAutreQue404_leveServiceIndisponible` : il **fige le bug** (une 4xx n'est pas une panne). Remplacer par 409 → `DuplicateException`, rouge avant correction
-- [ ] (architecture) Traduire le 409 en `DuplicateException` au lieu de « service indisponible »
-- [ ] (code propre) Réafficher le formulaire avec un message en cas de doublon
-- [ ] (architecture) `@WebMvcTest` sur `PatientsController` et `PatientDetailController`
+- [x] (architecture) ⚠️ Réécrire `erreur4xxAutreQue404_leveServiceIndisponible` : il **fige le bug** (une 4xx n'est pas une panne). Remplacer par 409 → `DuplicateException`, rouge avant correction
+- [x] (architecture) Traduire le 409 en `DuplicateException` au lieu de « service indisponible »
+- [x] (code propre) Réafficher le formulaire avec un message en cas de doublon
+- [ ] (architecture) `@WebMvcTest` sur `PatientsController` et `PatientDetailController` (tests unitaires écrits ; manquent : formulaire invalide, route, redirection vers `/login` sans session)
+- [ ] (code propre) Remplacer le test par réflexion `doublon_repondConflit` par une vérification HTTP réelle (MockMvc)
+- [ ] (code propre) PMD `LooseCoupling` (5, tests) : déclarer `Model` et `RedirectAttributes` plutôt que les implémentations
+- [ ] (architecture) Décider et justifier le sort des autres 4xx (400, 401, 403), encore traduites en « service indisponible »
+- [ ] (code propre) Factoriser le `catch (DuplicateException)` dupliqué dans les deux contrôleurs (optionnel)
 - [ ] (code propre) Sortir `versFormulaire` du contrôleur
 - [ ] (code propre) Champs vides → `null` (`StringTrimmerEditor`)
 - [ ] (architecture) `SecurityConfiguration` : identifiants en paramètres de méthode `@Bean`, `@SuppressWarnings` justifié
