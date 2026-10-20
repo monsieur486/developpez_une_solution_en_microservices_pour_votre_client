@@ -595,4 +595,4 @@ javadoc et corrige les points mineurs ». À relire pour savoir les expliquer.*
 
 ### Reste ouvert
 - [ ] (code propre) `ms-notes` et `ms-gateway` gardent leurs fichiers d'initializr (`mvnw*`, `HELP.md`…)
-- [ ] (architecture) `AppelRefuseException` n'a pas de gestionnaire dédié : elle sort en 500 générique
+- [x] (architecture) `AppelRefuseException` traduite en 502 au message générique (fait par toi, testé dans `EvaluationControllerTest`)
