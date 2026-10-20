@@ -524,10 +524,10 @@ Mesures : `ms-risque` 23 tests verts, PMD 1, SpotBugs 0, Checkstyle 24 (Javadoc 
 ## Suivi `ms-risque` — à cocher au fil de l'eau
 
 ### Phase 3 — Algorithme et tests
-- [ ] (code propre) Compter les termes **distincts** du dossier, test rouge d'abord
-- [ ] (code propre) Détecter « Fumeuse », sans compter Fumeur + Fumeuse deux fois
+- [x] (code propre) Compter les termes **distincts** du dossier, test rouge d'abord
+- [x] (code propre) Détecter « Fumeuse », sans compter Fumeur + Fumeuse deux fois
 - [ ] (architecture) Trancher le format `InDanger` / `In Danger` et le documenter
-- [ ] (code propre) Test paramétré des 4 cas officiels avec les vrais textes des notes
+- [x] (code propre) Test paramétré des 4 cas officiels avec les vrais textes des notes
 - [ ] (code propre) Protéger le comptage contre un contenu de note `null`
 - [ ] (code propre) `@Getter` Lombok sur `NiveauRisque`
 - [ ] (architecture) Option : extraire l'algorithme dans une classe pure
@@ -535,9 +535,41 @@ Mesures : `ms-risque` 23 tests verts, PMD 1, SpotBugs 0, Checkstyle 24 (Javadoc 
 
 ### Phase 5 — Intégration, Javadoc, configuration
 - [x] (architecture) Ajouter `ms-risque` aux `<modules>` du pom parent
-- [ ] (architecture) `COPY ms-risque/pom.xml` dans les 4 Dockerfiles restants
-- [ ] (architecture) Service `ms-risque` dans `docker-compose.yml`, `prod-start.sh`, `dev-start.sh`
+- [x] (architecture) `COPY ms-risque/pom.xml` dans les 4 Dockerfiles restants
+- [x] (architecture) Service `ms-risque` dans `docker-compose.yml`, `prod-start.sh`, `dev-start.sh`
 - [ ] (code propre) Supprimer `mvnw*`, `HELP.md`, `.gitignore`, `.gitattributes` du module
-- [ ] (architecture) Fiche patient consultable quand `ms-risque` est arrêté, avec son test
+- [x] (architecture) Fiche patient consultable quand `ms-risque` est arrêté, avec son test
 - [ ] (présentation) Javadoc FR de `ms-risque` et de `EvaluationApiService`
 - [ ] (présentation) `application.yml` commenté, README complété
+
+### Point d'étape du 2026-10-20 (23 h) — algorithme corrigé, pile complète testée
+*Depuis la revue : 6 points réglés, 9 restants, 1 nouveau (important).*
+
+Mesures : `./mvnw clean verify` vert sur les 8 modules (`ms-risque` 30 tests, `ms-webclient` 44) ;
+7 images construites ; `./prod-start.sh` démarre la pile et valide la route `ms-risque`.
+
+- ✅ Comptage des termes **distincts** (graphies regroupées : `List<List<String>>`), Fumeuse
+  reconnue, test des doublons qui aurait rougi avec l'ancien code, test paramétré des 4 cas officiels.
+- ✅ Vérifié en vrai, via la gateway : patients 1 à 4 → None, Borderline, In Danger, Early onset
+  (`text/plain`), patient 99 → 404 JSON, sans identifiants → 401. Fiches du webclient : bon badge
+  et bonne couleur pour les 4.
+- ⚠️ Format toujours `In Danger` / `Early onset` : décision à écrire dans le README.
+
+### 🆕 Un service arrêté fait passer **toute la fiche** en « Page introuvable »   ·   axe : architecture
+- **Constat** (reproduit sur la pile Docker) : juste après l'arrêt de `ms-risque`, la fiche affiche
+  bien l'avertissement. Quelques secondes plus tard, elle renvoie **404 « Page introuvable »**.
+  Même chose en arrêtant `ms-notes` : le défaut date donc du Sprint 2, il n'avait pas été vu
+  parce qu'on avait testé juste après l'arrêt.
+- **Pourquoi** : la gateway route par découverte. Quand le service se désinscrit d'Eureka, sa
+  route **disparaît** et la gateway répond elle-même **404**. `ClientPasserelle` traduit tout 404
+  en `ResourceNotFoundException`, ce qui donne la page 404 au lieu de l'avertissement.
+- **Indice** : le 404 de la gateway n'a pas de champ `microserviceName`, celui d'un microservice si.
+- **À toi de jouer** : deux pistes, à choisir et à justifier.
+  - Côté gateway, déclarer des routes explicites `lb://ms-risque` : sans instance, le
+    load-balancer répond **503**, qui devient bien une indisponibilité. C'est aussi la « mise à
+    jour de la config Gateway » demandée par le guide.
+  - Côté webclient, ne traiter un 404 comme « introuvable » que s'il vient du microservice.
+  - Dans les deux cas, un test qui simule le 404 de la gateway.
+
+### Suivi — ajouts du 2026-10-20 (23 h)
+- [ ] (architecture) Un service arrêté ne doit plus transformer la fiche en 404 (risque **et** notes)
