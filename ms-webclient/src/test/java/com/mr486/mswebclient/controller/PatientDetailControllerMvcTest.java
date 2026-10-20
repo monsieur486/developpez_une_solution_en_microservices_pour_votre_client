@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.mr486.mswebclient.configuration.SecurityConfiguration;
 import com.mr486.mswebclient.mapper.PatientFormMapper;
+import com.mr486.mswebclient.service.NoteApiService;
 import com.mr486.mswebclient.service.PatientApiService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ class PatientDetailControllerMvcTest {
 
     @MockitoBean
     private PatientApiService patientApiService;
+
+    @MockitoBean
+    private NoteApiService noteApiService;
 
     @Test
     @WithMockUser

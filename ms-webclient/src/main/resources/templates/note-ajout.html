@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Nouvelle note</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body class="bg-body-tertiary">
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+
+<main class="container py-4">
+    <h1 class="h4 mb-3">Ajouter une note</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" th:action="@{/app/patients/{id}/notes(id=${patientId})}"
+                  th:object="${note}">
+                <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                    <ul class="mb-0">
+                        <li th:each="erreur : ${#fields.allErrors()}" th:text="${erreur}">Erreur</li>
+                    </ul>
+                </div>
+                <label class="form-label" for="content">Contenu de la note</label>
+                <textarea class="form-control" id="content" rows="6" th:field="*{content}"
+                          th:errorclass="is-invalid"></textarea>
+                <div class="mt-4">
+                    <button class="btn btn-primary" type="submit">Enregistrer</button>
+                    <a class="btn btn-outline-secondary"
+                       th:href="@{/app/patients/{id}(id=${patientId})}">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<div th:replace="~{fragments/header :: header-js}"></div>
+</body>
+</html>

@@ -3,6 +3,7 @@ package com.mr486.mswebclient.controller;
 import com.mr486.commun.dto.PatientForm;
 import com.mr486.commun.exception.DuplicateException;
 import com.mr486.mswebclient.mapper.PatientFormMapper;
+import com.mr486.mswebclient.service.NoteApiService;
 import com.mr486.mswebclient.service.PatientApiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class PatientDetailController {
     private static final String ATTRIBUT_ID = "patientId";
 
     private final PatientApiService patientApiService;
+    private final NoteApiService noteApiService;
     private final PatientFormMapper patientFormMapper;
 
     /**
@@ -45,6 +47,7 @@ public class PatientDetailController {
     @GetMapping("/patients/{id}")
     public String detail(@PathVariable Long id, Model model) {
         model.addAttribute("patient", patientApiService.recupereLePatient(id));
+        model.addAttribute("notes", noteApiService.listeLesNotes(id));
         model.addAttribute(ATTRIBUT_ID, id);
         return "patient-detail";
     }
