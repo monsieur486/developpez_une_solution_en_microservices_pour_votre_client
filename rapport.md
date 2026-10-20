@@ -591,7 +591,7 @@ javadoc et corrige les points mineurs ». À relire pour savoir les expliquer.*
   404, 503).
 - ✅ Javadoc FR de `ms-risque` et du webclient, YAML commentés, `add-mappings: false` dans
   `ms-risque` **et** `ms-notes`, fichiers de l'initializr supprimés, `depends_on` de la gateway retiré.
-- Mesures : `./mvnw clean verify` vert, 118 tests, Checkstyle/PMD/SpotBugs à 0 sur tous les modules.
+- Mesures : `./mvnw clean verify` vert, 114 tests (115 avec le test du 502), Checkstyle/PMD/SpotBugs à 0 sur tous les modules.
 
 ### Reste ouvert
 - [ ] (code propre) `ms-notes` et `ms-gateway` gardent leurs fichiers d'initializr (`mvnw*`, `HELP.md`…)
