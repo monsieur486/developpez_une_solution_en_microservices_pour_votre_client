@@ -526,21 +526,21 @@ Mesures : `ms-risque` 23 tests verts, PMD 1, SpotBugs 0, Checkstyle 24 (Javadoc 
 ### Phase 3 — Algorithme et tests
 - [x] (code propre) Compter les termes **distincts** du dossier, test rouge d'abord
 - [x] (code propre) Détecter « Fumeuse », sans compter Fumeur + Fumeuse deux fois
-- [ ] (architecture) Trancher le format `InDanger` / `In Danger` et le documenter
+- [x] (architecture) Trancher le format `InDanger` / `In Danger` et le documenter
 - [x] (code propre) Test paramétré des 4 cas officiels avec les vrais textes des notes
-- [ ] (code propre) Protéger le comptage contre un contenu de note `null`
-- [ ] (code propre) `@Getter` Lombok sur `NiveauRisque`
+- [x] (code propre) Protéger le comptage contre un contenu de note `null`
+- [x] (code propre) `@Getter` Lombok sur `NiveauRisque`
 - [ ] (architecture) Option : extraire l'algorithme dans une classe pure
-- [ ] (code propre) Tests MVC du contrôleur : 401, 404, `text/plain`
+- [x] (code propre) Tests MVC du contrôleur : 401, 404, `text/plain`
 
 ### Phase 5 — Intégration, Javadoc, configuration
 - [x] (architecture) Ajouter `ms-risque` aux `<modules>` du pom parent
 - [x] (architecture) `COPY ms-risque/pom.xml` dans les 4 Dockerfiles restants
 - [x] (architecture) Service `ms-risque` dans `docker-compose.yml`, `prod-start.sh`, `dev-start.sh`
-- [ ] (code propre) Supprimer `mvnw*`, `HELP.md`, `.gitignore`, `.gitattributes` du module
+- [x] (code propre) Supprimer `mvnw*`, `HELP.md`, `.gitignore`, `.gitattributes` du module
 - [x] (architecture) Fiche patient consultable quand `ms-risque` est arrêté, avec son test
-- [ ] (présentation) Javadoc FR de `ms-risque` et de `EvaluationApiService`
-- [ ] (présentation) `application.yml` commenté, README complété
+- [x] (présentation) Javadoc FR de `ms-risque` et de `EvaluationApiService`
+- [x] (présentation) `application.yml` commenté, README complété
 
 ### Point d'étape du 2026-10-20 (23 h) — algorithme corrigé, pile complète testée
 *Depuis la revue : 6 points réglés, 9 restants, 1 nouveau (important).*
@@ -572,4 +572,27 @@ Mesures : `./mvnw clean verify` vert sur les 8 modules (`ms-risque` 30 tests, `m
   - Dans les deux cas, un test qui simule le 404 de la gateway.
 
 ### Suivi — ajouts du 2026-10-20 (23 h)
-- [ ] (architecture) Un service arrêté ne doit plus transformer la fiche en 404 (risque **et** notes)
+- [x] (architecture) Un service arrêté ne doit plus transformer la fiche en 404 (risque **et** notes)
+
+### Ajustements du 2026-10-20 (nuit, autorisés), branche `feat/sprint3-ms-risque`
+*Écrits par l'IA à la demande : « corrige les routes explicites, le format est "In Danger", ajoute la
+javadoc et corrige les points mineurs ». À relire pour savoir les expliquer.*
+
+- ✅ **Routes explicites** `lb://` dans `ms-gateway/application.yml` (découverte retirée des deux
+  profils). `RoutesGatewayTest` : sans instance, chaque route répond 503 ; vérifié rouge (404) avec
+  l'ancienne configuration. Sur la pile Docker, fiche consultable pendant 30 s après l'arrêt de
+  `ms-risque` puis de `ms-notes`, gateway en 503.
+- ✅ `prod-start.sh` : seul un 401 prouve qu'une route est prête (une route sans instance répond
+  désormais 503, que l'ancien contrôle aurait pris pour « prête »).
+- ✅ Format **`In Danger` / `Early onset`** retenu (résumé des besoins), justifié dans le README.
+- ✅ Note sans contenu ignorée (test rouge d'abord : `NullPointerException`) ; `@Getter` sur
+  `NiveauRisque` ; tests de seuils et de comptage regroupés en `@CsvSource` / `@MethodSource`
+  (PMD `TooManyMethods` réglé, 5 bornes ajoutées) ; `EvaluationControllerTest` (401, texte brut,
+  404, 503).
+- ✅ Javadoc FR de `ms-risque` et du webclient, YAML commentés, `add-mappings: false` dans
+  `ms-risque` **et** `ms-notes`, fichiers de l'initializr supprimés, `depends_on` de la gateway retiré.
+- Mesures : `./mvnw clean verify` vert, 118 tests, Checkstyle/PMD/SpotBugs à 0 sur tous les modules.
+
+### Reste ouvert
+- [ ] (code propre) `ms-notes` et `ms-gateway` gardent leurs fichiers d'initializr (`mvnw*`, `HELP.md`…)
+- [ ] (architecture) `AppelRefuseException` n'a pas de gestionnaire dédié : elle sort en 500 générique
