@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-import com.mr486.commun.dto.NoteDto;
+import com.mr486.commun.dto.NoteForm;
 import com.mr486.mswebclient.configuration.ConstantesToast;
 import com.mr486.mswebclient.configuration.SecurityConfiguration;
 import com.mr486.mswebclient.service.NoteApiService;
@@ -73,7 +73,7 @@ class NotesControllerMvcTest {
                 .andExpect(flash().attribute(ConstantesToast.CLE_NIVEAU, ConstantesToast.NIVEAU_INFO))
                 .andExpect(flash().attribute(ConstantesToast.CLE_MESSAGE, "Note ajoutée au dossier."));
 
-        ArgumentCaptor<NoteDto> note = ArgumentCaptor.forClass(NoteDto.class);
+        ArgumentCaptor<NoteForm> note = ArgumentCaptor.forClass(NoteForm.class);
         verify(noteApiService).ajouteUneNote(eq(1L), note.capture());
         assertThat(note.getValue().getContent()).isEqualTo("Poids en hausse");
     }

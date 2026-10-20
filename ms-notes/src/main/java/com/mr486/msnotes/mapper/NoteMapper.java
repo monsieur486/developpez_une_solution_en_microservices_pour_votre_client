@@ -10,6 +10,7 @@ public class NoteMapper {
     public NoteDto versDto(Note note) {
         return NoteDto.builder()
                 .content(note.getContent())
+                .createdDate(note.getCreatedDate())
                 .build();
     }
 

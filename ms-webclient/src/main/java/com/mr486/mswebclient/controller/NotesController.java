@@ -1,6 +1,6 @@
 package com.mr486.mswebclient.controller;
 
-import com.mr486.commun.dto.NoteDto;
+import com.mr486.commun.dto.NoteForm;
 import com.mr486.mswebclient.service.NoteApiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class NotesController {
 
     @GetMapping("/patients/{patientId}/notes/ajout")
     public String showCreateNoteForm(@PathVariable Long patientId, Model model) {
-        model.addAttribute("note", new NoteDto());
+        model.addAttribute("note", new NoteForm());
         model.addAttribute(ATTRIBUT_ID, patientId);
         return VUE_AJOUT;
     }
@@ -34,7 +34,7 @@ public class NotesController {
     @PostMapping("/patients/{patientId}/notes")
     public String ajoutNoteSubmit(
             @PathVariable Long patientId,
-            @Valid @ModelAttribute("note") NoteDto note,
+            @Valid @ModelAttribute("note") NoteForm note,
             BindingResult resultatDeLiaison,
             Model model,
             RedirectAttributes redirection) {

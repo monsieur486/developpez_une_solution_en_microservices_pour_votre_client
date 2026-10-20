@@ -1,6 +1,7 @@
 package com.mr486.msnotes.controller;
 
 import com.mr486.commun.dto.NoteDto;
+import com.mr486.commun.dto.NoteForm;
 import com.mr486.msnotes.mapper.NoteMapper;
 import com.mr486.msnotes.service.NoteService;
 import jakarta.validation.Valid;
@@ -30,8 +31,8 @@ public class NoteController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<NoteDto> addNote(
-            @PathVariable Long patientId, @Valid @RequestBody NoteDto noteDto) {
-        NoteDto creee = noteMapper.versDto(noteService.save(patientId, noteDto));
+            @PathVariable Long patientId, @Valid @RequestBody NoteForm noteForm) {
+        NoteDto creee = noteMapper.versDto(noteService.save(patientId, noteForm));
         return ResponseEntity.status(HttpStatus.CREATED).body(creee);
     }
 }

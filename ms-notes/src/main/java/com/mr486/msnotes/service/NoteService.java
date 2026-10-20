@@ -1,6 +1,6 @@
 package com.mr486.msnotes.service;
 
-import com.mr486.commun.dto.NoteDto;
+import com.mr486.commun.dto.NoteForm;
 import com.mr486.msnotes.model.Note;
 import com.mr486.msnotes.repository.NoteRepository;
 import java.time.Clock;
@@ -26,17 +26,17 @@ public class NoteService {
         return notes;
     }
 
-    public Note save(Long patientId, NoteDto noteDto) {
-        Note enregistree = noteRepository.save(construitNote(patientId, noteDto));
+    public Note save(Long patientId, NoteForm noteForm) {
+        Note enregistree = noteRepository.save(construitNote(patientId, noteForm));
         log.info("note créée pour le patient {}", patientId);
         return enregistree;
     }
 
-    private Note construitNote(Long patientId, NoteDto noteDto) {
+    private Note construitNote(Long patientId, NoteForm noteForm) {
         log.debug("construction d'une note pour le patient {}", patientId);
         return Note.builder()
                 .patientId(patientId)
-                .content(noteDto.getContent())
+                .content(noteForm.getContent())
                 .createdDate(Instant.now(horloge))
                 .build();
     }

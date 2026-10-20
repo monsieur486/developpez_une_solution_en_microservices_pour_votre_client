@@ -61,8 +61,10 @@
             <div class="alert alert-warning mb-0">Aucune note pour ce patient.</div>
         </div>
         <ul class="list-group list-group-flush" th:unless="${notes.isEmpty()}">
-            <li class="list-group-item" th:each="note : ${notes}"
-                th:text="${note.content}">Contenu de la note
+            <li class="list-group-item" th:each="note : ${notes}">
+                <div class="small text-body-secondary"
+                     th:text="${#temporals.format(note.createdDate, 'dd/MM/yyyy HH:mm')}">20/10/2026 18:13</div>
+                <div th:text="${note.content}">Contenu de la note</div>
             </li>
         </ul>
     </div>

@@ -2,6 +2,7 @@ package com.mr486.mswebclient.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -12,9 +13,11 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.mr486.commun.dto.NoteDto;
+import com.mr486.commun.dto.NoteForm;
 import com.mr486.commun.exception.ServiceIndisponibleException;
 import com.mr486.mswebclient.configuration.GatewaySecurityConfiguration;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -56,14 +59,16 @@ class NoteApiServiceTest {
         gateway.expect(requestTo(NOTES_DU_PATIENT_1))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(HttpHeaders.AUTHORIZATION, BASIC_ATTENDU))
-                .andRespond(withSuccess("[{\"content\":\"Le patient déclare se sentir bien\"}]",
+                .andRespond(withSuccess("[{\"content\":\"Le patient déclare se sentir bien\","
+                                + "\"createdDate\":\"2026-10-20T16:13:39Z\"}]",
                         MediaType.APPLICATION_JSON));
 
         List<NoteDto> notes = noteApiService.listeLesNotes(1L);
 
         gateway.verify();
-        assertThat(notes).extracting(NoteDto::getContent)
-                .containsExactly("Le patient déclare se sentir bien");
+        assertThat(notes).extracting(NoteDto::getContent, NoteDto::getCreatedDate)
+                .containsExactly(tuple("Le patient déclare se sentir bien",
+                        Instant.parse("2026-10-20T16:13:39Z")));
     }
 
     @Test
@@ -77,7 +82,7 @@ class NoteApiServiceTest {
                 .andRespond(withStatus(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON).body("{\"content\":\"Poids en hausse\"}"));
 
-        NoteDto creee = noteApiService.ajouteUneNote(1L, NoteDto.builder().content("Poids en hausse").build());
+        NoteDto creee = noteApiService.ajouteUneNote(1L, NoteForm.builder().content("Poids en hausse").build());
 
         gateway.verify();
         assertThat(creee.getContent()).isEqualTo("Poids en hausse");

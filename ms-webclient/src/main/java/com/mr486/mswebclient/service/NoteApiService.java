@@ -1,6 +1,7 @@
 package com.mr486.mswebclient.service;
 
 import com.mr486.commun.dto.NoteDto;
+import com.mr486.commun.dto.NoteForm;
 import com.mr486.mswebclient.configuration.ConstantesWebclient;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class NoteApiService {
                 ConstantesWebclient.SERVICE_NOTES);
     }
 
-    public NoteDto ajouteUneNote(Long patientId, NoteDto note) {
+    public NoteDto ajouteUneNote(Long patientId, NoteForm note) {
         return clientPasserelle.echange(
                 HttpMethod.POST,
                 ConstantesWebclient.CHEMIN_NOTES + patientId + "/notes",
