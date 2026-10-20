@@ -666,7 +666,7 @@ Mesures : `./mvnw clean verify` vert (115 tests), Checkstyle 2 (Javadoc de
 - [x] (présentation) Un `@Tag` par contrôleur, `@Operation(summary)` par méthode
 - [x] (architecture) Documenter les codes réels : 201 sur les `POST`, 400/401/404/409/502/503
 - [x] (architecture) Sortir `@OpenAPIDefinition` des contrôleurs
-- [ ] (code propre) Test : `/v3/api-docs` public, API toujours en 401
+- [x] (code propre) Test : `/v3/api-docs` public, API toujours en 401 (fait par toi : `CheminsPublicsSecuriteTest` dans les trois services)
 
 ### Ajustements du 2026-10-21 (autorisés), branche `feat/etape4-openapi`
 *Écrits par l'IA à la demande : « crée la branche, annule le reformatage et corrige les annotations ».*
@@ -682,3 +682,13 @@ Mesures : `./mvnw clean verify` vert (115 tests), Checkstyle 2 (Javadoc de
   service et les codes réels ; l'interface Swagger répond.
 - Mesures : `./mvnw clean verify` vert, 115 tests ; Checkstyle 2 (Javadoc de
   `DocumentationApiConfiguration`, reportée à l'étape 5) ; PMD et SpotBugs 0.
+
+### Point d'étape du 2026-10-21 — test des chemins publics
+- ✅ `CheminsPublicsSecuriteTest` (patients, notes, risque) : contrat servi sans identifiants, avec
+  le titre de `@OpenAPIDefinition`. Vérifié rouge (200 attendu, 401 obtenu) en retirant
+  `/v3/api-docs/**` des chemins publics de `ms-commun`. Build vert : 121 tests.
+- ⚠️ (code propre) Le second test (401 sur la route métier) refait ce que `PatientControllerTest`,
+  `NoteControllerTest` et `EvaluationControllerTest` vérifient déjà : charger springdoc ne
+  change pas la chaîne de sécurité. À garder si tu l'assumes comme garde-fou, sinon à retirer.
+- [ ] (code propre) Option : vérifier aussi `$.servers[0].url` (`/ms-patients`…), le comportement
+  le plus subtil de `DocumentationApiConfiguration`, que rien ne teste aujourd'hui
