@@ -50,6 +50,18 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  notes-db:
+    image: mongo:8.0.14
+    container_name: notes-db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-notes_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?à définir dans .env (voir dist.env)}
+    # Lié à la boucle locale : la base n'est joignable que depuis le poste.
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - database-data:/data/db
+
   ms-patients-migration:
     build:
       context: .
@@ -93,6 +105,29 @@ services:
       APP_USERNAME: ${APP_USERNAME:-app_user}
       APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
 
+  ms-notes:
+    build:
+      context: .
+      dockerfile: ms-notes/Dockerfile
+    profiles: ["fullstack"]
+    deploy:
+      replicas: ${REPLICA_MS_NOTES:-2}
+    depends_on:
+      ms-eureka:
+        condition: service_started
+      ms-gateway:
+        condition: service_started
+      notes-db:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-notes_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?à définir dans .env (voir dist.env)}
+      # Profil « demo » : insère les notes de démonstration ; le défaut « prod » n'en insère aucune.
+      MONGOCK_PROFILES: ${MONGOCK_PROFILES:-prod}
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
+
   ms-webclient:
     build:
       context: .
@@ -101,6 +136,7 @@ services:
     container_name: ms-webclient
     depends_on:
       - ms-patients
+      - ms-notes
     environment:
       SPRING_PROFILES_ACTIVE: docker
       APP_USERNAME: ${APP_USERNAME:-app_user}
@@ -110,3 +146,4 @@ services:
 
 volumes:
   db_data:
+  database-data:
