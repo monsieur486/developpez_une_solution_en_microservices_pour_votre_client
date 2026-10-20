@@ -223,6 +223,11 @@ un doublon refusé par l'API s'affiche comme « service indisponible ». Et il *
 
 ## Suivi `ms-webclient` — à cocher au fil de l'eau
 
+> **Point du 2026-10-20 (4ᵉ passage, corrections par l'IA à ma demande)** : 32 tests verts, Checkstyle 0,
+> PMD 0, SpotBugs 0, Javadoc sans avertissement. Le test de `PatientApiService` a révélé un **bug réel** :
+> les dates partaient en tableau `[1966,12,31]` vers la gateway (corrigé via `RestTemplateBuilder`).
+> Constante `ConstantesToast.NIVEAU_ERREUR` jamais utilisée : à supprimer ou à employer.
+>
 > **Point du 2026-10-20 (3ᵉ passage)** : 26 tests verts, PMD 1 (`SecurityConfiguration`), Checkstyle 35 (Javadoc). Les autres 4xx deviennent `AppelRefuseException` (choix documenté et testé). 4 points réglés, 1 nouveau.
 >
 > **Point du 2026-10-20 (2ᵉ passage)** : bug du 409 corrigé en TDD, 15 tests verts, Checkstyle 35 (Javadoc), PMD 6. 3 points réglés, 5 nouveaux.
@@ -235,10 +240,11 @@ un doublon refusé par l'API s'affiche comme « service indisponible ». Et il *
 - [x] (code propre) Remplacer le test par réflexion `doublon_repondConflit` par une vérification HTTP réelle (MockMvc)
 - [x] (code propre) PMD `LooseCoupling` (5, tests) : déclarer `Model` et `RedirectAttributes` plutôt que les implémentations
 - [x] (architecture) Décider et justifier le sort des autres 4xx (400, 401, 403), encore traduites en « service indisponible »
+- [ ] (code propre) Supprimer `ConstantesToast.NIVEAU_ERREUR` (jamais utilisée) ou l'employer
 - [ ] (code propre) Factoriser le `catch (DuplicateException)` dupliqué dans les deux contrôleurs (optionnel)
-- [ ] (code propre) Sortir `versFormulaire` du contrôleur
-- [ ] (code propre) Champs vides → `null` (`StringTrimmerEditor`)
-- [ ] (architecture) `SecurityConfiguration` : identifiants en paramètres de méthode `@Bean`, `@SuppressWarnings` justifié
-- [ ] (code propre) Renommer `/app/dashboard` en `/app/patients` (optionnel)
-- [ ] (architecture) Tester `PatientApiService` (0 % : les chemins `CHEMIN_PATIENTS + "/" + id` ne sont vérifiés nulle part) — `MockRestServiceServer` vérifierait aussi l'en-tête Basic
-- [ ] (présentation) Javadoc FR : 35 manques (classes, méthodes)
+- [x] (code propre) Sortir `versFormulaire` du contrôleur *(IA, autorisé — voir journal)*
+- [x] (code propre) Champs vides → `null` (`StringTrimmerEditor`) *(IA, autorisé — voir journal)*
+- [x] (architecture) `SecurityConfiguration` : identifiants en paramètres de méthode `@Bean`, `@SuppressWarnings` justifié *(IA, autorisé — voir journal)*
+- [x] (code propre) Renommer `/app/dashboard` en `/app/patients` (optionnel) *(IA, autorisé — voir journal)*
+- [x] (architecture) Tester `PatientApiService` (0 % : les chemins `CHEMIN_PATIENTS + "/" + id` ne sont vérifiés nulle part) — `MockRestServiceServer` vérifierait aussi l'en-tête Basic *(IA, autorisé — voir journal)*
+- [x] (présentation) Javadoc FR : 35 manques (classes, méthodes) *(IA, autorisé — voir journal)*
