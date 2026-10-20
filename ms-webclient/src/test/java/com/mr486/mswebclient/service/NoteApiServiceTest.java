@@ -2,7 +2,6 @@ package com.mr486.mswebclient.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
@@ -66,9 +65,9 @@ class NoteApiServiceTest {
         List<NoteDto> notes = noteApiService.listeLesNotes(1L);
 
         gateway.verify();
-        assertThat(notes).extracting(NoteDto::getContent, NoteDto::getCreatedDate)
-                .containsExactly(tuple("Le patient déclare se sentir bien",
-                        Instant.parse("2026-10-20T16:13:39Z")));
+        assertThat(notes).singleElement()
+                .returns("Le patient déclare se sentir bien", NoteDto::getContent)
+                .returns(Instant.parse("2026-10-20T16:13:39Z"), NoteDto::getCreatedDate);
     }
 
     @Test
