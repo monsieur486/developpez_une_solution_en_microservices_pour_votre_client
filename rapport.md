@@ -223,19 +223,22 @@ un doublon refusé par l'API s'affiche comme « service indisponible ». Et il *
 
 ## Suivi `ms-webclient` — à cocher au fil de l'eau
 
+> **Point du 2026-10-20 (3ᵉ passage)** : 26 tests verts, PMD 1 (`SecurityConfiguration`), Checkstyle 35 (Javadoc). Les autres 4xx deviennent `AppelRefuseException` (choix documenté et testé). 4 points réglés, 1 nouveau.
+>
 > **Point du 2026-10-20 (2ᵉ passage)** : bug du 409 corrigé en TDD, 15 tests verts, Checkstyle 35 (Javadoc), PMD 6. 3 points réglés, 5 nouveaux.
 
 - [x] (architecture) `ClientPasserelleTest` : appel abouti, corps transmis, 404 → introuvable, injoignable → indisponible
 - [x] (architecture) ⚠️ Réécrire `erreur4xxAutreQue404_leveServiceIndisponible` : il **fige le bug** (une 4xx n'est pas une panne). Remplacer par 409 → `DuplicateException`, rouge avant correction
 - [x] (architecture) Traduire le 409 en `DuplicateException` au lieu de « service indisponible »
 - [x] (code propre) Réafficher le formulaire avec un message en cas de doublon
-- [ ] (architecture) `@WebMvcTest` sur `PatientsController` et `PatientDetailController` (tests unitaires écrits ; manquent : formulaire invalide, route, redirection vers `/login` sans session)
-- [ ] (code propre) Remplacer le test par réflexion `doublon_repondConflit` par une vérification HTTP réelle (MockMvc)
-- [ ] (code propre) PMD `LooseCoupling` (5, tests) : déclarer `Model` et `RedirectAttributes` plutôt que les implémentations
-- [ ] (architecture) Décider et justifier le sort des autres 4xx (400, 401, 403), encore traduites en « service indisponible »
+- [x] (architecture) `@WebMvcTest` sur `PatientsController` et `PatientDetailController` (tests unitaires écrits ; manquent : formulaire invalide, route, redirection vers `/login` sans session)
+- [x] (code propre) Remplacer le test par réflexion `doublon_repondConflit` par une vérification HTTP réelle (MockMvc)
+- [x] (code propre) PMD `LooseCoupling` (5, tests) : déclarer `Model` et `RedirectAttributes` plutôt que les implémentations
+- [x] (architecture) Décider et justifier le sort des autres 4xx (400, 401, 403), encore traduites en « service indisponible »
 - [ ] (code propre) Factoriser le `catch (DuplicateException)` dupliqué dans les deux contrôleurs (optionnel)
 - [ ] (code propre) Sortir `versFormulaire` du contrôleur
 - [ ] (code propre) Champs vides → `null` (`StringTrimmerEditor`)
 - [ ] (architecture) `SecurityConfiguration` : identifiants en paramètres de méthode `@Bean`, `@SuppressWarnings` justifié
 - [ ] (code propre) Renommer `/app/dashboard` en `/app/patients` (optionnel)
-- [ ] (présentation) Javadoc FR : 11 classes, 23 méthodes
+- [ ] (architecture) Tester `PatientApiService` (0 % : les chemins `CHEMIN_PATIENTS + "/" + id` ne sont vérifiés nulle part) — `MockRestServiceServer` vérifierait aussi l'en-tête Basic
+- [ ] (présentation) Javadoc FR : 35 manques (classes, méthodes)
