@@ -17,6 +17,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Pages d'un patient : consultation et modification de sa fiche.
+ *
+ * <p><b>Exemple :</b> {@code GET /app/patients/1} affiche la fiche ; {@code GET /app/patients/1/update}
+ * ouvre le formulaire pré-rempli.</p>
+ */
 @Controller
 @RequestMapping("/app")
 @RequiredArgsConstructor
@@ -28,6 +34,15 @@ public class PatientDetailController {
     private final PatientApiService patientApiService;
     private final PatientFormMapper patientFormMapper;
 
+    /**
+     * Affiche la fiche d'un patient.
+     *
+     * <p><b>Exemple :</b> un identifiant inconnu affiche la page d'erreur en 404.</p>
+     *
+     * @param id    identifiant du patient
+     * @param model modèle de la page
+     * @return la vue {@code patient-detail}
+     */
     @GetMapping("/patients/{id}")
     public String detail(@PathVariable Long id, Model model) {
         model.addAttribute("patient", patientApiService.recupereLePatient(id));
@@ -35,6 +50,15 @@ public class PatientDetailController {
         return "patient-detail";
     }
 
+    /**
+     * Affiche le formulaire de modification, pré-rempli avec la fiche actuelle.
+     *
+     * <p><b>Exemple :</b> le formulaire de {@code TestNone} s'ouvre avec sa date de naissance 1966-12-31.</p>
+     *
+     * @param id    identifiant du patient
+     * @param model modèle de la page
+     * @return la vue {@code patient-update}
+     */
     @GetMapping("/patients/{id}/update")
     public String updatePatientForm(@PathVariable Long id, Model model) {
         model.addAttribute("patient", patientFormMapper.versFormulaire(patientApiService.recupereLePatient(id)));
@@ -42,6 +66,22 @@ public class PatientDetailController {
         return VUE_MODIFICATION;
     }
 
+    /**
+     * Enregistre la modification d'une fiche.
+     *
+     * <p>Un formulaire invalide ou une identité déjà prise réaffiche le formulaire ; sinon, retour à
+     * la fiche avec un message de confirmation.</p>
+     *
+     * <p><b>Exemple :</b> changer l'adresse redirige vers {@code /app/patients/1} avec « Fiche patient
+     * mise à jour. ».</p>
+     *
+     * @param id               identifiant du patient
+     * @param patient          données saisies
+     * @param resultatDeLiaison erreurs de validation du formulaire
+     * @param model            modèle, pour réafficher le formulaire
+     * @param redirection      attributs transmis à la page suivante
+     * @return la vue du formulaire, ou la redirection vers la fiche
+     */
     @PostMapping("/patients/{id}/update")
     public String updatePatient(
             @PathVariable Long id,
