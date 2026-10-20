@@ -57,7 +57,7 @@ class PatientsControllerTest {
                 patient, new BeanPropertyBindingResult(patient, "patient"),
                 new ExtendedModelMap(), redirection);
 
-        assertThat(vue).isEqualTo("redirect:/app/dashboard");
+        assertThat(vue).isEqualTo("redirect:/app/patients");
         assertThat(redirection.getFlashAttributes().get(ConstantesToast.CLE_MESSAGE))
                 .isEqualTo("Patient créé.");
     }

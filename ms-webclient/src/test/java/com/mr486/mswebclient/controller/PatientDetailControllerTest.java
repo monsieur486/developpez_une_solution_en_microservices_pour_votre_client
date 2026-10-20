@@ -60,7 +60,7 @@ class PatientDetailControllerTest {
                 ID, patient, new BeanPropertyBindingResult(patient, "patient"),
                 new ExtendedModelMap(), redirection);
 
-        assertThat(vue).isEqualTo("redirect:/app/dashboard/" + ID);
+        assertThat(vue).isEqualTo("redirect:/app/patients/" + ID);
         assertThat(redirection.getFlashAttributes().get(ConstantesToast.CLE_MESSAGE))
                 .isEqualTo("Fiche patient mise à jour.");
     }

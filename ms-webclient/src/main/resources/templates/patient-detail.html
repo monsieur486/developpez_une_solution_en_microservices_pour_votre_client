@@ -14,7 +14,7 @@
             <span th:text="${patient.firstName}">Jean</span>
             <span th:text="${patient.lastName}">Dupont</span>
         </h1>
-        <a class="btn btn-outline-secondary" th:href="@{/app/dashboard}">Retour à la liste</a>
+        <a class="btn btn-outline-secondary" th:href="@{/app/patients}">Retour à la liste</a>
     </div>
 
     <div class="row g-4">
@@ -42,7 +42,7 @@
                 </ul>
                 <div class="card-footer text-end">
                     <a class="btn btn-sm btn-outline-primary"
-                       th:href="@{/app/dashboard/{id}/update(id=${patientId})}">Modifier</a>
+                       th:href="@{/app/patients/{id}/update(id=${patientId})}">Modifier</a>
                 </div>
             </div>
         </div>

@@ -32,7 +32,7 @@ public class SecurityConfiguration {
                 .formLogin(formulaire -> formulaire
                         .loginPage("/login")
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/app/dashboard", true)
+                        .defaultSuccessUrl("/app/patients", true)
                         .permitAll())
                 .logout(deconnexion -> deconnexion
                         .logoutUrl("/logout")

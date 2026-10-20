@@ -16,7 +16,7 @@
             de risque calculé à partir de celles-ci.
         </p>
         <a class="btn btn-primary" sec:authorize="isAuthenticated()"
-           th:href="@{/app/dashboard}">Accéder aux patients</a>
+           th:href="@{/app/patients}">Accéder aux patients</a>
         <a class="btn btn-primary" sec:authorize="!isAuthenticated()"
            th:href="@{/login}">Se connecter</a>
     </div>

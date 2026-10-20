@@ -40,7 +40,7 @@ class PatientsControllerMvcTest {
     @Test
     @DisplayName("un visiteur non connecté est renvoyé vers la page de connexion")
     void visiteurAnonyme_estRedirigeVersLaConnexion() throws Exception {
-        mockMvc.perform(get("/app/dashboard"))
+        mockMvc.perform(get("/app/patients"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrlPattern("**/login"));
 
@@ -51,7 +51,7 @@ class PatientsControllerMvcTest {
     @WithMockUser
     @DisplayName("un formulaire invalide est réaffiché avec ses erreurs, sans appel à l'API")
     void formulaireInvalide_estReafficheSansAppelALApi() throws Exception {
-        mockMvc.perform(post("/app/dashboard/ajout").with(csrf())
+        mockMvc.perform(post("/app/patients/ajout").with(csrf())
                         .param("firstName", "")
                         .param("lastName", "")
                         .param("birthDate", "2999-01-01")
@@ -68,7 +68,7 @@ class PatientsControllerMvcTest {
     @WithMockUser
     @DisplayName("un envoi sans jeton CSRF est refusé, sans appel à l'API")
     void envoiSansJetonCsrf_estRefuse() throws Exception {
-        mockMvc.perform(post("/app/dashboard/ajout")
+        mockMvc.perform(post("/app/patients/ajout")
                         .param("firstName", "Test")
                         .param("lastName", "TestNone")
                         .param("birthDate", "1966-12-31")
@@ -82,12 +82,12 @@ class PatientsControllerMvcTest {
     @WithMockUser
     @DisplayName("un formulaire valide transmet à l'API les champs saisis, date comprise")
     void formulaireValide_transmetLesChampsSaisis() throws Exception {
-        mockMvc.perform(post("/app/dashboard/ajout").with(csrf())
+        mockMvc.perform(post("/app/patients/ajout").with(csrf())
                         .param("firstName", "Test")
                         .param("lastName", "TestNone")
                         .param("birthDate", "1966-12-31")
                         .param("gender", "F"))
-                .andExpect(redirectedUrl("/app/dashboard"));
+                .andExpect(redirectedUrl("/app/patients"));
 
         ArgumentCaptor<PatientForm> envoye = ArgumentCaptor.forClass(PatientForm.class);
         verify(patientApiService).creeLePatient(envoye.capture());

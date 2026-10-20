@@ -32,7 +32,7 @@ class PatientDetailControllerMvcTest {
     @WithMockUser
     @DisplayName("une modification invalide réaffiche le formulaire de ce patient, sans appel à l'API")
     void modificationInvalide_reafficheLeFormulaireSansAppelALApi() throws Exception {
-        mockMvc.perform(post("/app/dashboard/42/update").with(csrf())
+        mockMvc.perform(post("/app/patients/42/update").with(csrf())
                         .param("firstName", "")
                         .param("lastName", "TestNone")
                         .param("birthDate", "1966-12-31")

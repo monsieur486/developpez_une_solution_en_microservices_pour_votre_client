@@ -23,19 +23,19 @@ public class PatientsController {
 
     private final PatientApiService patientApiService;
 
-    @GetMapping("/dashboard")
-    public String dashboard(Model model) {
+    @GetMapping("/patients")
+    public String listePatients(Model model) {
         model.addAttribute("patients", patientApiService.listeLesPatients());
         return "patients";
     }
 
-    @GetMapping("/dashboard/ajout")
+    @GetMapping("/patients/ajout")
     public String showCreatePatientForm(Model model) {
         model.addAttribute("patient", new PatientForm());
         return VUE_AJOUT;
     }
 
-    @PostMapping("/dashboard/ajout")
+    @PostMapping("/patients/ajout")
     public String ajoutPatientSubmit(
             @Valid @ModelAttribute("patient") PatientForm patient,
             BindingResult resultatDeLiaison,
@@ -53,6 +53,6 @@ public class PatientsController {
         }
         redirection.addFlashAttribute(ConstantesToast.CLE_NIVEAU, ConstantesToast.NIVEAU_INFO);
         redirection.addFlashAttribute(ConstantesToast.CLE_MESSAGE, "Patient créé.");
-        return "redirect:/app/dashboard";
+        return "redirect:/app/patients";
     }
 }

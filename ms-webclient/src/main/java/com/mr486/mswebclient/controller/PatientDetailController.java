@@ -27,21 +27,21 @@ public class PatientDetailController {
 
     private final PatientApiService patientApiService;
 
-    @GetMapping("/dashboard/{id}")
+    @GetMapping("/patients/{id}")
     public String detail(@PathVariable Long id, Model model) {
         model.addAttribute("patient", patientApiService.recupereLePatient(id));
         model.addAttribute(ATTRIBUT_ID, id);
         return "patient-detail";
     }
 
-    @GetMapping("/dashboard/{id}/update")
+    @GetMapping("/patients/{id}/update")
     public String updatePatientForm(@PathVariable Long id, Model model) {
         model.addAttribute("patient", versFormulaire(patientApiService.recupereLePatient(id)));
         model.addAttribute(ATTRIBUT_ID, id);
         return VUE_MODIFICATION;
     }
 
-    @PostMapping("/dashboard/{id}/update")
+    @PostMapping("/patients/{id}/update")
     public String updatePatient(
             @PathVariable Long id,
             @Valid @ModelAttribute("patient") PatientForm patient,
@@ -62,7 +62,7 @@ public class PatientDetailController {
         }
         redirection.addFlashAttribute(ConstantesToast.CLE_NIVEAU, ConstantesToast.NIVEAU_INFO);
         redirection.addFlashAttribute(ConstantesToast.CLE_MESSAGE, "Fiche patient mise à jour.");
-        return "redirect:/app/dashboard/" + id;
+        return "redirect:/app/patients/" + id;
     }
 
     private PatientForm versFormulaire(PatientDto patient) {

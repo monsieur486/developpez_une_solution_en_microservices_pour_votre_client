@@ -13,7 +13,7 @@
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form method="post" th:action="@{/app/dashboard/{id}/update(id=${patientId})}" th:object="${patient}">
+            <form method="post" th:action="@{/app/patients/{id}/update(id=${patientId})}" th:object="${patient}">
                 <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
                     <ul class="mb-0">
                         <li th:each="erreur : ${#fields.allErrors()}" th:text="${erreur}">Erreur</li>
@@ -58,7 +58,7 @@
 
                 <div class="mt-4">
                     <button class="btn btn-primary" type="submit">Enregistrer</button>
-                    <a class="btn btn-outline-secondary" th:href="@{/app/dashboard/{id}(id=${patientId})}">Annuler</a>
+                    <a class="btn btn-outline-secondary" th:href="@{/app/patients/{id}(id=${patientId})}">Annuler</a>
                 </div>
             </form>
         </div>

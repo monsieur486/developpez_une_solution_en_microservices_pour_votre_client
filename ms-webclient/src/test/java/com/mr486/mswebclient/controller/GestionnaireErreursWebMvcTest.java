@@ -28,7 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @WithMockUser
 @DisplayName("Statuts HTTP des pages d'erreur de l'interface web")
 class GestionnaireErreursWebMvcTest {
-    private static final String FICHE = "/app/dashboard/42";
+    private static final String FICHE = "/app/patients/42";
 
     @Autowired
     private MockMvc mockMvc;
