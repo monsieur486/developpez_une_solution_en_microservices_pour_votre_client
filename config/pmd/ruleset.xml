@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<ruleset name="Maison"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+                             https://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+  <description>
+    Ruleset PMD maison — reprend les catégories intégrées bestpractices,
+    design et errorprone (autant de garde-fous), et en exclut les règles
+    qui heurtent des choix maison assumés ou produisent du bruit :
+      - tests multi-asserts et tests via Mockito.verify (on asserte le
+        comportement, pas « un assert par test ») ;
+      - GuardLogStatement : les logs sont déjà en SLF4J paramétré ({}) ;
+      - LawOfDemeter / DataClass / LoosePackageCoupling : bruyants et en
+        conflit avec les DTO/entités de frontière ;
+      - AvoidFieldNameMatchingMethodName : résolveurs statiques volontaires.
+    TooManyMethods est exclue du bloc design puis re-référencée pour porter la
+    limite dure « 6/10 méthodes » de la doctrine (cf. conventions.md §3, S) :
+    seuil machine à 10, avec tolérance à 15 pour les classes de test.
+    AvoidDuplicateLiterals est de même exclue puis re-référencée hors tests :
+    en production une chaîne répétée doit devenir une constante nommée (package
+    `configuration`, cf. conventions.md §7bis) ; les littéraux répétés des classes
+    de test (*Test/*Tests/*IT) restent tolérés.
+    Une règle XPath maison (TropDeCollaborateursInjectes) porte le seuil de
+    couplage « ~5 collaborateurs injectés » (cf. architecture-et-qualite.md §1bis).
+    Objectif : 0 violation. Rapport non bloquant (cf. pom.xml).
+  </description>
+
+  <rule ref="category/java/bestpractices.xml">
+    <exclude name="UnitTestContainsTooManyAsserts"/>
+    <exclude name="UnitTestShouldIncludeAssert"/>
+    <exclude name="GuardLogStatement"/>
+  </rule>
+
+  <rule ref="category/java/design.xml">
+    <exclude name="LawOfDemeter"/>
+    <exclude name="DataClass"/>
+    <exclude name="LoosePackageCoupling"/>
+
+    <exclude name="TooManyMethods"/>
+  </rule>
+
+  <rule ref="category/java/design.xml/TooManyMethods">
+    <properties>
+      <property name="maxmethods" value="10"/>
+      <property name="violationSuppressXPath"
+                value="ancestor-or-self::ClassDeclaration[
+                         (ends-with(@SimpleName, 'Test')
+                          or ends-with(@SimpleName, 'Tests')
+                          or ends-with(@SimpleName, 'IT'))
+                         and count(ClassBody/MethodDeclaration) &lt;= 15]"/>
+    </properties>
+  </rule>
+
+  <rule ref="category/java/errorprone.xml">
+    <exclude name="AvoidDuplicateLiterals"/>
+    <exclude name="AvoidFieldNameMatchingMethodName"/>
+  </rule>
+
+  <rule ref="category/java/errorprone.xml/AvoidDuplicateLiterals">
+    <properties>
+      <property name="skipAnnotations" value="true"/>
+      <property name="minimumLength" value="5"/>
+      <property name="violationSuppressXPath"
+                value="ancestor-or-self::ClassDeclaration[
+                         ends-with(@SimpleName, 'Test')
+                         or ends-with(@SimpleName, 'Tests')
+                         or ends-with(@SimpleName, 'IT')]"/>
+    </properties>
+  </rule>
+
+  <rule name="TropDeCollaborateursInjectes"
+        language="java"
+        message="Plus de 5 collaborateurs injectés (champs private final) : interroger la cohésion — découper, façade, strategy/factory, événements ou mediator (architecture-et-qualite.md §1bis)."
+        class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+    <description>
+      Signale une classe déclarant plus de 5 champs private final non statiques —
+      proxy des collaborateurs injectés par constructeur (@RequiredArgsConstructor).
+      Au-delà de ce seuil, la cohésion est probablement trop faible : appliquer la
+      hiérarchie de remèdes de architecture-et-qualite.md §1bis.
+    </description>
+    <priority>3</priority>
+    <properties>
+      <property name="xpath">
+        <value><![CDATA[
+//ClassDeclaration[
+  not(ends-with(@SimpleName, 'Test')
+      or ends-with(@SimpleName, 'Tests')
+      or ends-with(@SimpleName, 'IT'))
+  and count(ClassBody/FieldDeclaration[
+        pmd-java:modifiers() = 'private'
+        and pmd-java:modifiers() = 'final'
+        and not(pmd-java:modifiers() = 'static')
+        and not(PrimitiveType)
+      ]) > 5
+]
+        ]]></value>
+      </property>
+    </properties>
+  </rule>
+
+</ruleset>

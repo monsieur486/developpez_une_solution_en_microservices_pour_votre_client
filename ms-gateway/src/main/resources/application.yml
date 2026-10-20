@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: ms-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:9000"
+                  - "http://ms-gateway:9000"
+                allowedMethods: [ GET, POST, PUT, PATCH, DELETE, OPTIONS ]
+                allowedHeaders: [ "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With", "*" ]
+                exposedHeaders: [ "Authorization" ]
+                allowCredentials: true
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+              filters:
+                - name: StripPrefix
+                  args:
+                    parts: 1
+
+server:
+  port: 9000

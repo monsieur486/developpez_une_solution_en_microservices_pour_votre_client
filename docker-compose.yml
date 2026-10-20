@@ -1,0 +1,54 @@
+services:
+
+  ms-eureka:
+    build:
+      context: .
+      dockerfile: ms-eureka/Dockerfile
+    container_name: ms-eureka
+    profiles: ["fullstack"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    # Lié à la boucle locale : le tableau de bord reste consultable depuis le poste,
+    # mais personne d'autre ne peut y inscrire une fausse instance.
+    ports:
+      - "127.0.0.1:8761:8761"
+    # Sain dès que l'actuator répond UP : les clients peuvent alors s'inscrire.
+    # wget est fourni par l'image alpine, curl ne l'est pas.
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8761/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+  ms-gateway:
+    build:
+      context: .
+      dockerfile: ms-gateway/Dockerfile
+    container_name: ms-gateway
+    profiles: ["fullstack"]
+    # Attend qu'Eureka soit sain, et pas seulement démarré, pour éviter les
+    # « Connection refused » à l'inscription.
+    depends_on:
+      ms-eureka:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "9000:9000"
+
+  patients-db:
+    image: postgres:16
+    container_name: patients-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-patientsdb}
+      POSTGRES_USER: ${POSTGRES_USER:-patient_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-patient_pass}
+    # Lié à la boucle locale : la base n'est joignable que depuis le poste.
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

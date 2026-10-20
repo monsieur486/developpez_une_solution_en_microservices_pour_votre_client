@@ -1,0 +1,16 @@
+# Secrets locaux — JAMAIS commités (le modèle dist.env, lui, est versionné).
+.env
+
+# Build Maven — régénéré par ./mvnw.
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Divers
+*.log
+
+# Consignes locales destinées à l'assistant, propres au poste de travail.
+CLAUDE.md
