@@ -150,9 +150,9 @@ la validation des entrées.
 - [x] (sécurité) `@Past` sur `birthDate`, `@Size(max = 255)` sur les chaînes de `PatientForm` *(IA, autorisé — voir journal)*
 - [x] (architecture) Mettre à jour la description de `ms-commun` + justifier le partage des DTO
 - [x] (architecture) Isoler les données de test (context Liquibase)
-- [ ] (sécurité) Retirer les mots de passe par défaut des `application*.yml` et du `docker-compose.yml`
-- [ ] (sécurité) 🐞 **Régression Docker** : `ms-patients` et `ms-patients-migration` ne reçoivent pas `POSTGRES_PASSWORD` dans `docker-compose.yml` → le placeholder `${POSTGRES_PASSWORD}` part tel quel et PostgreSQL refuse (`password authentication failed`)
-- [ ] (sécurité) Aligner `ms-webclient` : `application*.yml` gardent `${APP_PASSWORD:app_password}`
+- [x] (sécurité) Retirer les mots de passe par défaut des `application*.yml` et du `docker-compose.yml`
+- [x] (sécurité) 🐞 **Régression Docker** : `ms-patients` et `ms-patients-migration` ne reçoivent pas `POSTGRES_PASSWORD` dans `docker-compose.yml` → le placeholder `${POSTGRES_PASSWORD}` part tel quel et PostgreSQL refuse (`password authentication failed`)
+- [x] (sécurité) Aligner `ms-webclient` : `application*.yml` gardent `${APP_PASSWORD:app_password}`
 - [x] (code propre) Réduire `application-docker.yml` aux seules différences avec `application.yml`
 
 ---
