@@ -103,6 +103,10 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <configuration>
+                        <!-- spring-boot:run lance chaque module depuis son propre dossier, où le
+                             .env de la racine est introuvable : les mots de passe restent alors en
+                             ${...} non résolus. On lance donc depuis la racine du dépôt. -->
+                        <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
                         <excludes>
                             <exclude>
                                 <groupId>org.projectlombok</groupId>
