@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.mr486.commun.exception.AppelRefuseException;
 import com.mr486.commun.exception.ServiceIndisponibleException;
 import com.mr486.msrisque.exception.PatientIntrouvableException;
 import com.mr486.msrisque.service.EvaluationService;
@@ -75,5 +76,20 @@ class EvaluationControllerTest {
 
         mockMvc.perform(get("/evaluation/{id}", PATIENT_EN_DANGER))
                 .andExpect(status().isServiceUnavailable());
+    }
+
+    // Un refus en aval trahit un défaut de configuration de ms-risque, pas une faute du client :
+    // le statut 502 le désigne, sans exposer le code reçu ni l'identité du service.
+    @Test
+    @WithMockUser
+    @DisplayName("un service en aval qui refuse l'appel donne un 502 au message générique")
+    void evaluation_appelRefuse_renvoie502() throws Exception {
+        when(evaluationService.evaluationDuRisque(PATIENT_EN_DANGER))
+                .thenThrow(new AppelRefuseException("ms-notes", 403, new IllegalStateException("403")));
+
+        mockMvc.perform(get("/evaluation/{id}", PATIENT_EN_DANGER))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.messages[0]")
+                        .value("Un service interne a refusé la requête."));
     }
 }

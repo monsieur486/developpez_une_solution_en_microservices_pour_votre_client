@@ -46,6 +46,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     /** Message renvoyé pour toute erreur serveur non anticipée, sans détail technique. */
     private static final String MESSAGE_ERREUR_INTERNE = "Une erreur interne est survenue.";
 
+    /** Message renvoyé lorsqu'un microservice appelé refuse la requête, sans en nommer la cause. */
+    private static final String MESSAGE_APPEL_REFUSE = "Un service interne a refusé la requête.";
+
     /** Journalise chaque erreur et fabrique la réponse normalisée renvoyée au client. */
     private final ReponsesErreur reponses;
 
@@ -134,6 +137,28 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             ServiceIndisponibleException ex, HttpServletRequest requete) {
         return reponses.serveur(
                 HttpStatus.SERVICE_UNAVAILABLE, List.of(ex.getMessage()), requete, ex);
+    }
+
+    /**
+     * Traduit le refus d'un microservice appelé en réponse 502.
+     *
+     * <p>Le client n'y est pour rien : c'est l'appel émis par ce service qui a été rejeté
+     * (identifiants techniques erronés, droits insuffisants). Un 4xx l'accuserait à tort et un
+     * 500 masquerait l'origine en aval. Le message reste générique : le statut reçu et le nom
+     * du service ne sont consultables que dans les journaux.</p>
+     *
+     * <p><b>Exemple :</b> un appel vers un microservice qui répond 403 retourne un statut 502
+     * et le message « Un service interne a refusé la requête. ».</p>
+     *
+     * @param ex      exception signalant le refus du service appelé
+     * @param requete requête à l'origine de l'erreur
+     * @return la réponse 502 normalisée
+     */
+    @ExceptionHandler(AppelRefuseException.class)
+    public ResponseEntity<Object> handleAppelRefuse(
+            AppelRefuseException ex, HttpServletRequest requete) {
+        return reponses.serveur(
+                HttpStatus.BAD_GATEWAY, List.of(MESSAGE_APPEL_REFUSE), requete, ex);
     }
 
     /**
