@@ -222,7 +222,8 @@ un doublon refusé par l'API s'affiche comme « service indisponible ». Et il *
 3. `@WebMvcTest` du formulaire d'ajout, puis la Javadoc.
 
 ## Suivi `ms-webclient` — à cocher au fil de l'eau
-- [ ] (architecture) `ClientPasserelleTest` : 404 → introuvable, 409 → doublon, injoignable → indisponible
+- [x] (architecture) `ClientPasserelleTest` : appel abouti, corps transmis, 404 → introuvable, injoignable → indisponible
+- [ ] (architecture) ⚠️ Réécrire `erreur4xxAutreQue404_leveServiceIndisponible` : il **fige le bug** (une 4xx n'est pas une panne). Remplacer par 409 → `DuplicateException`, rouge avant correction
 - [ ] (architecture) Traduire le 409 en `DuplicateException` au lieu de « service indisponible »
 - [ ] (code propre) Réafficher le formulaire avec un message en cas de doublon
 - [ ] (architecture) `@WebMvcTest` sur `PatientsController` et `PatientDetailController`
