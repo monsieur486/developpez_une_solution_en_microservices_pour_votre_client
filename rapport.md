@@ -343,7 +343,7 @@ du Sprint 1, alors que la PR #1 n'est pas encore fusionnée.
 ## Suivi `ms-notes` — à cocher au fil de l'eau
 
 ### Phase 1 — Outillage et tests
-- [ ] (architecture) Créer la branche `feat/sprint2-ms-notes` avant le premier commit du Sprint 2
+- [x] (architecture) Créer la branche `feat/sprint2-ms-notes` avant le premier commit du Sprint 2
 - [x] (architecture) Gérer la version de Mongock dans le pom parent (BOM) → `./mvnw verify` vert
 - [x] (code propre) Premier test Testcontainers MongoDB (fait en `@SpringBootTest` : démarrage + données de démo)
 - [x] (architecture) Créer le `@ChangeUnit` des 9 notes de démo sous `@Profile("demo")`
@@ -352,8 +352,8 @@ du Sprint 1, alors que la PR #1 n'est pas encore fusionnée.
 - [x] (architecture) `COPY ms-notes/pom.xml ms-notes/` dans les Dockerfiles d'Eureka, de la gateway, de ms-patients et de ms-webclient
 - [x] (architecture) Services `notes-db` et `ms-notes` dans `docker-compose.yml`
 - [x] (sécurité) `MONGO_INITDB_ROOT_USERNAME`, `MONGO_INITDB_ROOT_PASSWORD` et `MONGOCK_PROFILES` dans `dist.env`
-- [ ] (présentation) Commenter `application.yml` de `ms-notes` — reporté à l'étape 5 (choix assumé dans le README)
-- [ ] (présentation) Javadoc du code ajouté (26 manques Checkstyle) — reportée à l'étape 5
+- [x] (présentation) Commenter `application.yml` de `ms-notes` — fait (ajustements autorisés)
+- [x] (présentation) Javadoc du code ajouté (26 manques Checkstyle) — faite (ajustements autorisés)
 - [ ] (sécurité) Optionnel : compte MongoDB limité à `notesdb` plutôt que root
 
 ### Point d'étape du 2026-10-20 (soir) — fonctionnalité notes de bout en bout
@@ -400,9 +400,34 @@ variable exportée, et les 9 notes sont en base.
 - **Branche** : tout est encore non commité sur `feat/sprint1-ms-patients`.
 
 - [x] (outillage) Lancer `spring-boot:run` depuis la racine pour que `.env` soit lu
-- [ ] (architecture) Créer `feat/sprint2-ms-notes` et y commiter le Sprint 2
-- [ ] (architecture) Exposer la date de création des notes (séparer formulaire et réponse)
-- [ ] (architecture) Décider du comportement de la fiche patient quand `ms-notes` est indisponible
-- [ ] (code propre) Tests MockMvc de `NoteController` (401, 400, 201) et test de `NoteService` avec `Clock.fixed`
-- [ ] (sécurité) `@Size(max = …)` sur le contenu d'une note
-- [ ] (code propre) Traiter les 3 `LooseCoupling` de PMD dans le changelog
+- [x] (architecture) Créer `feat/sprint2-ms-notes` et y commiter le Sprint 2
+- [x] (architecture) Exposer la date de création des notes (séparer formulaire et réponse)
+- [x] (architecture) Décider du comportement de la fiche patient quand `ms-notes` est indisponible
+- [x] (code propre) Tests MockMvc de `NoteController` (401, 400, 201) et test de `NoteService` avec `Clock.fixed`
+- [x] (sécurité) `@Size(max = …)` sur le contenu d'une note
+- [x] (code propre) Traiter les 3 `LooseCoupling` de PMD dans le changelog
+
+### Ajustements du 2026-10-20 (autorisés), branche `feat/sprint2-ms-notes`
+
+Ces ajustements ont été **écrits par l'IA**, à ta demande (« je t'autorise à apporter les
+ajustements »). Ils sont donc à relire et à savoir expliquer :
+- `NoteForm` (saisie, 5000 caractères au plus) est séparé de `NoteDto` (texte et date) ;
+  l'historique est daté ;
+- la fiche reste consultable sans `ms-notes`, avec un avertissement à la place des notes ;
+- `@EnableMongock` est déplacé dans `MongockConfiguration`, sans quoi les tests de tranche
+  exigeaient une base ;
+- tests `NoteControllerTest`, `NoteServiceTest` et `NoteRepositoryTest`, plus un test de
+  non-régression sur la date des notes de démo ;
+- les notes de démo sont datées dans le passé : avant, elles étaient dans le futur et passaient
+  devant une note saisie juste après le démarrage ;
+- le volume s'appelle désormais `notes_data` ; Javadoc et YAML commentés ; README complété.
+
+**Vérifié** : `./mvnw clean verify` vert (14 + 12 + 41 = 67 tests), avec Checkstyle, PMD et
+SpotBugs à 0. Les 6 images Docker se construisent. Parcours réel dans le webclient (avec Eureka et
+la gateway de l'IDE) : connexion, fiche datée, ajout d'une note, puis fiche consultable avec
+`ms-notes` arrêté.
+
+**Reste à toi** :
+- [ ] Relire les ajustements ci-dessus et remplir Décision / Vérification dans `utilisation-ia.md`
+- [ ] (optionnel) Supprimer l'ancien volume orphelin : `docker volume rm livrables_database-data`
+- [ ] (sécurité, optionnel) Compte MongoDB limité à `notesdb` plutôt que root
