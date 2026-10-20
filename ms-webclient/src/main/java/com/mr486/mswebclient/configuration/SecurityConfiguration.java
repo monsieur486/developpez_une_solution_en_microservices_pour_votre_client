@@ -17,12 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfiguration {
     private static final String[] PAGES_PUBLIQUES = {"/", "/home", "/webjars/**", "/favicon.*"};
 
-    @Value("${app.auth.username}")
-    private String utilisateur;
-
-    @Value("${app.auth.password}")
-    private String motDePasse;
-
+    @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     @Bean
     public SecurityFilterChain filtreDeSecurite(HttpSecurity http) throws Exception {
         http
@@ -48,7 +43,10 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public UserDetailsService utilisateurs(PasswordEncoder encodeur) {
+    public UserDetailsService utilisateurs(
+            PasswordEncoder encodeur,
+            @Value("${app.auth.username}") String utilisateur,
+            @Value("${app.auth.password}") String motDePasse) {
         return new InMemoryUserDetailsManager(
                 User.withUsername(utilisateur)
                         .password(encodeur.encode(motDePasse))
