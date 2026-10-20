@@ -250,3 +250,159 @@ un doublon refusé par l'API s'affiche comme « service indisponible ». Et il *
 - [x] (code propre) Renommer `/app/dashboard` en `/app/patients` (optionnel) *(IA, autorisé — voir journal)*
 - [x] (architecture) Tester `PatientApiService` (0 % : les chemins `CHEMIN_PATIENTS + "/" + id` ne sont vérifiés nulle part) — `MockRestServiceServer` vérifierait aussi l'en-tête Basic *(IA, autorisé — voir journal)*
 - [x] (présentation) Javadoc FR : 35 manques (classes, méthodes) *(IA, autorisé — voir journal)*
+
+---
+
+# Revue pédagogique — Sprint 2 : démarrage de `ms-notes`
+
+*Revue du 2026-10-20, sur le travail non commité de la branche `feat/sprint1-ms-patients`.*
+
+*Point d'étape du 2026-10-20 : build de nouveau vert (BOM Mongock 5.5.1, `dbchangelogs` exclu de JaCoCo), 46 tests verts, Checkstyle signale 4 Javadoc manquantes dans `ms-notes`. 1 point réglé, 9 restants, dont la branche.*
+
+## En bref
+
+Le squelette de `ms-notes` est bien pensé : un Dockerfile qui reprend le modèle de `ms-patients`,
+aucun mot de passe par défaut, un `Clock` injectable pour dater les notes et un `prod-start.sh`
+qui attend que la passerelle connaisse vraiment les routes. Mais **le build du projet entier est
+cassé** : deux dépendances Mongock n'ont pas de version. Le travail est aussi posé sur la branche
+du Sprint 1, alors que la PR #1 n'est pas encore fusionnée.
+
+## Points forts
+
+- **Dockerfile de `ms-notes`** : il copie bien les pom de tous les modules, y compris le sien.
+- **Secrets** : `MONGO_INITDB_ROOT_PASSWORD` et `APP_PASSWORD` n'ont pas de valeur par défaut, et
+  les tests ont leur propre mot de passe inventé dans `src/test/resources/config/`.
+- **`HorlogeConfiguration`** : la date d'une note viendra d'un `Clock` injecté, donc les tests
+  pourront fixer l'heure (test déterministe).
+- **Profils pour les données de démo** (`MONGOCK_PROFILES`, défaut `prod`) : le même raisonnement
+  que `LIQUIBASE_CONTEXTS`, donc facile à expliquer au jury.
+- **`prod-start.sh`** : l'attente active des routes (404 = pas encore connue, 401 = service
+  atteint) évite de déclarer la pile prête trop tôt, et le tout sans aucun secret.
+
+## Phase 1 — Outillage   ❌ bloquant
+### Les dépendances Mongock n'ont pas de version   ·   axe : architecture
+- **Constat** : `mongock-springboot-v3` et `mongodb-springdata-v4-driver` ne sont gérés ni par le
+  BOM Spring Boot ni par le pom parent. Comme `ms-notes` est déclaré dans les `<modules>` du parent,
+  **Maven refuse de lire tout le réacteur** : `./mvnw verify` échoue aussi pour `ms-patients` et
+  `ms-webclient`, et même `./mvnw -pl ms-commun install`.
+- **Pourquoi ça compte** : on ne commite que du vert, et tes autres modules ne se construisent plus.
+- **Exemple** : déclarer une fois le BOM Mongock dans le `<dependencyManagement>` du parent, comme
+  pour Testcontainers.
+  ```xml
+  <dependency>
+      <groupId>io.mongock</groupId>
+      <artifactId>mongock-bom</artifactId>
+      <version>${mongock.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+  </dependency>
+  ```
+- **À toi de jouer** : choisir une version de Mongock 5.x compatible Spring Boot 3, l'ajouter dans
+  `<properties>`, puis vérifier avec `./mvnw -pl ms-notes -am verify`.
+
+### Le package de migrations Mongock n'existe pas encore   ·   axe : architecture
+- **Constat** : `mongock.migration-scan-package` pointe vers `com.mr486.msnotes.dbchangelogs`, qui
+  n'existe pas. C'est logique à ce stade, mais il faudra le vérifier au premier démarrage.
+- **À toi de jouer** : y écrire le `@ChangeUnit` des 9 notes de démo, marqué `@Profile("demo")`, et
+  prouver par un test qu'il ne s'exécute pas avec le profil `prod`.
+
+### Aucun test pour l'instant   ·   axe : code propre
+- **Constat** : il n'y a pas encore de dossier `src/test/java`. Les dépendances Testcontainers
+  MongoDB sont prêtes.
+- **À toi de jouer** : comme prévu, commencer par `@DataMongoTest` + `MongoDBContainer` sur la
+  requête « notes d'un patient, de la plus ancienne à la plus récente ».
+
+## Phase 5 — Docker, configuration, Javadoc   ⚠️ à améliorer
+### Les 4 autres Dockerfiles ne connaissent pas `ms-notes`   ·   axe : architecture
+- **Constat** : `ms-eureka`, `ms-gateway`, `ms-patients` et `ms-webclient` ne copient pas
+  `ms-notes/pom.xml`. C'est la même régression qu'au Sprint 1 : leur build Docker échouera avec
+  « Child module … does not exist ».
+- **À toi de jouer** : ajouter la ligne `COPY ms-notes/pom.xml ms-notes/` dans ces 4 Dockerfiles.
+
+### La pile Docker ne contient ni MongoDB ni `ms-notes`   ·   axe : architecture
+- **Constat** : `docker-compose.yml` n'a pas de service `notes-db` (pourtant attendu par
+  `application-docker.yml`) ni `ms-notes`. `dist.env` ne déclare pas `MONGO_*` ni `MONGOCK_PROFILES`.
+  Conséquences : `dev-start.sh` annonce « Bases démarrées » mais ne lance que PostgreSQL, et
+  `prod-start.sh` attendra la route `ms-notes` pendant 5 minutes avant d'échouer.
+- **À toi de jouer** : ajouter `notes-db` (image `mongo`, port lié à `127.0.0.1`, volume, mot de
+  passe en `:?`), puis `ms-notes` (profil `fullstack`, `SPRING_PROFILES_ACTIVE: docker`, dépendant de
+  `notes-db` et d'Eureka), et compléter `dist.env`.
+
+### Petits points   ·   axe : présentation / sécurité
+- `application.yml` n'est pas commenté, contrairement à celui de `ms-patients`.
+- `MsNotesApplication` et `HorlogeConfiguration` n'ont pas de Javadoc : Checkstyle la réclamera.
+- (sécurité) L'application se connecte avec le compte **root** de MongoDB
+  (`MONGO_INITDB_ROOT_*`). C'est acceptable pour ce projet, mais un compte limité à `notesdb`
+  serait plus propre. C'est un bon point à mentionner au jury (moindre privilège).
+
+## Par où commencer
+1. Basculer sur une branche `feat/sprint2-ms-notes` (tes modifications non commitées te suivent).
+2. Rendre le build vert : versions Mongock dans le parent.
+3. Compléter les 4 Dockerfiles, puis `docker-compose.yml` et `dist.env`.
+
+## Suivi `ms-notes` — à cocher au fil de l'eau
+
+### Phase 1 — Outillage et tests
+- [ ] (architecture) Créer la branche `feat/sprint2-ms-notes` avant le premier commit du Sprint 2
+- [x] (architecture) Gérer la version de Mongock dans le pom parent (BOM) → `./mvnw verify` vert
+- [x] (code propre) Premier test Testcontainers MongoDB (fait en `@SpringBootTest` : démarrage + données de démo)
+- [x] (architecture) Créer le `@ChangeUnit` des 9 notes de démo sous `@Profile("demo")`
+
+### Phase 5 — Docker, configuration, Javadoc
+- [x] (architecture) `COPY ms-notes/pom.xml ms-notes/` dans les Dockerfiles d'Eureka, de la gateway, de ms-patients et de ms-webclient
+- [x] (architecture) Services `notes-db` et `ms-notes` dans `docker-compose.yml`
+- [x] (sécurité) `MONGO_INITDB_ROOT_USERNAME`, `MONGO_INITDB_ROOT_PASSWORD` et `MONGOCK_PROFILES` dans `dist.env`
+- [ ] (présentation) Commenter `application.yml` de `ms-notes` — reporté à l'étape 5 (choix assumé dans le README)
+- [ ] (présentation) Javadoc du code ajouté (26 manques Checkstyle) — reportée à l'étape 5
+- [ ] (sécurité) Optionnel : compte MongoDB limité à `notesdb` plutôt que root
+
+### Point d'étape du 2026-10-20 (soir) — fonctionnalité notes de bout en bout
+
+**Progrès** : le Sprint 2 fonctionne de bout en bout. L'API `ms-notes` (GET/POST), la migration
+Mongock des 9 notes sous `@Profile("demo")` (avec son test et sa contre-épreuve), la carte « Notes »
+et le formulaire d'ajout du webclient sont en place, ainsi que les Dockerfiles, le compose,
+`dist.env` et le README. `./mvnw clean verify` est vert : 57 tests (14 + 4 + 39), SpotBugs 0.
+Checkstyle relève 27 Javadoc manquantes (reportées à l'étape 5) et PMD 3 `LooseCoupling` sur
+`org.bson.Document` dans le changelog.
+
+**Problème `.env` résolu** (🐞) : `./mvnw -pl ms-notes spring-boot:run` lance l'application depuis
+`ms-notes/`, où `optional:file:.env` ne trouve rien. Spring laisse alors le texte
+`${MONGO_INITDB_ROOT_PASSWORD}` tel quel comme mot de passe, d'où le « storedKey mismatch » dans les
+journaux de MongoDB. Correctif d'outillage dans le pom parent : `workingDirectory` =
+`${maven.multiModuleProjectDirectory}`. Vérifié : `ms-notes` et `ms-patients` démarrent sans
+variable exportée, et les 9 notes sont en base.
+
+#### Points ouverts
+- **L'historique n'affiche pas de date** · axe : architecture. `NoteDto` ne transporte que
+  `content` : le mapper perd `createdDate`. Or un historique sans date est difficile à lire pour
+  un praticien. Au Sprint 1, tu as séparé ce qui entre (`PatientForm`) de ce qui sort
+  (`PatientDto`). La même séparation règle le problème ici : le formulaire ne porte que le
+  contenu, la réponse porte le contenu et la date.
+- **La fiche patient dépend de `ms-notes`** · axe : architecture. Si `ms-notes` est arrêté,
+  `PatientDetailController` échoue et toute la fiche devient inaccessible. Faut-il plutôt afficher
+  le patient avec un message « notes indisponibles » ? C'est une décision à prendre et à
+  justifier devant le jury (isolement des pannes entre microservices).
+- **Il manque les tests de l'API `ms-notes`** · axe : code propre. Il n'y a ni MockMvc (401 sans
+  identifiants, 400 sur une note vide, 201) ni test de `NoteService`. Avec `Clock.fixed` et un
+  `ArgumentCaptor`, on prouve que la date vient de l'horloge et que le `patientId` est bien celui
+  de l'URL.
+- **(sécurité) Le contenu d'une note n'a pas de taille maximale** : `@NotBlank` seul accepte un
+  texte de plusieurs mégaoctets.
+- **Les notes de démo visent les identifiants 1 à 4** : cela suppose que PostgreSQL a attribué ces
+  identifiants aux 4 patients de démo, dans cet ordre. C'est acceptable pour une démo, mais à
+  savoir expliquer.
+- **Petits points** :
+  - `LocalDateTime.now()` suivi d'une conversion en `Instant` peut devenir simplement
+    `Instant.now()` ;
+  - le volume `database-data` gagnerait à s'appeler `notes_data` ;
+  - `ms-notes` attend Eureka en `service_started`, alors que la gateway l'attend en
+    `service_healthy`.
+- **Branche** : tout est encore non commité sur `feat/sprint1-ms-patients`.
+
+- [x] (outillage) Lancer `spring-boot:run` depuis la racine pour que `.env` soit lu
+- [ ] (architecture) Créer `feat/sprint2-ms-notes` et y commiter le Sprint 2
+- [ ] (architecture) Exposer la date de création des notes (séparer formulaire et réponse)
+- [ ] (architecture) Décider du comportement de la fiche patient quand `ms-notes` est indisponible
+- [ ] (code propre) Tests MockMvc de `NoteController` (401, 400, 201) et test de `NoteService` avec `Clock.fixed`
+- [ ] (sécurité) `@Size(max = …)` sur le contenu d'une note
+- [ ] (code propre) Traiter les 3 `LooseCoupling` de PMD dans le changelog
