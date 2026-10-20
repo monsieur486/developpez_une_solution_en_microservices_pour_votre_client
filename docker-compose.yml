@@ -50,5 +50,54 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  ms-patients-migration:
+    build:
+      context: .
+      dockerfile: ms-patients/Dockerfile
+    profiles: ["fullstack"]
+    depends_on:
+      - patients-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_MAIN_WEB_APPLICATION_TYPE: none
+      EUREKA_CLIENT_ENABLED: "false"
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+    restart: "no"
+
+  ms-patients:
+    build:
+      context: .
+      dockerfile: ms-patients/Dockerfile
+    profiles: ["fullstack"]
+    deploy:
+      replicas: ${REPLICA_MS_PATIENTS:-2}
+    depends_on:
+      ms-eureka:
+        condition: service_started
+      ms-gateway:
+        condition: service_started
+      ms-patients-migration:
+        condition: service_completed_successfully
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+
+  ms-webclient:
+    build:
+      context: .
+      dockerfile: ms-webclient/Dockerfile
+    profiles: ["fullstack"]
+    container_name: ms-webclient
+    depends_on:
+      - ms-patients
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      APP_USERNAME: ${APP_USERNAME:-app_user}
+      APP_PASSWORD: ${APP_PASSWORD:-app_password}
+    ports:
+      - "${PORT_WEBCLIENT:-8080}:8080"
+
 volumes:
   db_data:
