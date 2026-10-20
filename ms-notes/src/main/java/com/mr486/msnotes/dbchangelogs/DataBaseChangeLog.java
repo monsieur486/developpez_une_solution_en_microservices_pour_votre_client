@@ -4,8 +4,6 @@ import io.mongock.api.annotations.ChangeUnit;
 import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +14,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @ChangeUnit(id = "seed-demo-notes", order = "001", author = "mr486")
 @Profile("demo")
 @Slf4j
+// org.bson.Document est le type imposé par le pilote MongoDB : PMD y voit à tort une Map concrète.
+@SuppressWarnings("PMD.LooseCoupling")
 public class DataBaseChangeLog {
     private static final String COLLECTION = "notes";
 
@@ -88,19 +88,15 @@ public class DataBaseChangeLog {
     }
 
     private List<Document> construitLesNotesDeDemonstration() {
-        LocalDateTime maintenant = LocalDateTime.now();
+        Instant maintenant = Instant.now();
         List<Document> notes = new ArrayList<>();
         for (NoteDeDemonstration modele : MODELES) {
             notes.add(new Document()
                     .append(CHAMP_PATIENT, modele.patientId())
                     .append(CHAMP_CONTENU, modele.contenu())
-                    .append(CHAMP_DATE, versInstant(maintenant.plusSeconds(notes.size()))));
+                    .append(CHAMP_DATE, maintenant.plusSeconds(notes.size())));
         }
         return notes;
-    }
-
-    private Instant versInstant(LocalDateTime dateHeure) {
-        return dateHeure.atZone(ZoneId.systemDefault()).toInstant();
     }
 
     private record NoteDeDemonstration(long patientId, String contenu) {
