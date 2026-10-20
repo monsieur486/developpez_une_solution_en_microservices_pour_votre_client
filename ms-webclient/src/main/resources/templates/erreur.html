@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${titre}">Erreur</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body class="bg-body-tertiary">
+<div th:replace="~{fragments/menu :: menu}"></div>
+
+<main class="container py-5">
+    <div class="alert" role="alert"
+         th:classappend="${reessayable} ? 'alert-warning' : 'alert-danger'">
+        <h1 class="h5 alert-heading" th:text="${titre}">Erreur</h1>
+        <p class="mb-0" th:text="${message}">Une erreur est survenue.</p>
+        <hr th:if="${reessayable}"/>
+        <p class="mb-0" th:if="${reessayable}">
+            Cette interruption est temporaire : réessayez dans quelques instants.
+        </p>
+    </div>
+    <a class="btn btn-outline-secondary" th:href="@{/app/dashboard}">Retour à la liste des patients</a>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<div th:replace="~{fragments/header :: header-js}"></div>
+</body>
+</html>

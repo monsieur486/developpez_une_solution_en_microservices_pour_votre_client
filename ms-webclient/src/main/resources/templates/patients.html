@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Patients</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body class="bg-body-tertiary">
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">Patients</h1>
+        <a class="btn btn-primary" th:href="@{/app/dashboard/ajout}">Ajouter un patient</a>
+    </div>
+
+    <div class="alert alert-warning" th:if="${patients.isEmpty()}">
+        Aucun patient enregistré pour le moment.
+    </div>
+
+    <div class="card shadow-sm" th:unless="${patients.isEmpty()}">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th scope="col">Nom</th>
+                    <th scope="col">Prénom</th>
+                    <th scope="col">Naissance</th>
+                    <th scope="col">Genre</th>
+                    <th class="text-end" scope="col">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="patient : ${patients}">
+                    <td th:text="${patient.lastName}">Dupont</td>
+                    <td th:text="${patient.firstName}">Jean</td>
+                    <td th:text="${#temporals.format(patient.birthDate, 'dd/MM/yyyy')}">12/05/1990</td>
+                    <td th:text="${patient.gender}">M</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary"
+                           th:href="@{/app/dashboard/{id}(id=${patient.id})}">Fiche</a>
+                        <a class="btn btn-sm btn-outline-secondary"
+                           th:href="@{/app/dashboard/{id}/update(id=${patient.id})}">Modifier</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <p class="text-body-secondary mt-3 small">
+        <span th:text="${patients.size()}">0</span> patient(s) au total
+    </p>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<div th:replace="~{fragments/header :: header-js}"></div>
+</body>
+</html>

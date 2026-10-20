@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <!--
+      Icône de l'onglet : l'emoji est rendu par la police du système, ce qui évite
+      d'embarquer une image binaire et reste net à toutes les tailles d'affichage.
+    -->
+    <text x="50" y="50" dominant-baseline="central" text-anchor="middle" font-size="88">🚑</text>
+</svg>

@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Dépistage du risque de diabète</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body class="bg-body-tertiary">
+<div th:replace="~{fragments/menu :: menu}"></div>
+
+<main class="container py-5">
+    <div class="p-5 bg-body rounded shadow-sm">
+        <h1 class="h3">Dépistage du risque de diabète</h1>
+        <p class="text-body-secondary">
+            Consultez les dossiers de vos patients, leurs notes de consultation et le niveau
+            de risque calculé à partir de celles-ci.
+        </p>
+        <a class="btn btn-primary" sec:authorize="isAuthenticated()"
+           th:href="@{/app/dashboard}">Accéder aux patients</a>
+        <a class="btn btn-primary" sec:authorize="!isAuthenticated()"
+           th:href="@{/login}">Se connecter</a>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<div th:replace="~{fragments/header :: header-js}"></div>
+</body>
+</html>

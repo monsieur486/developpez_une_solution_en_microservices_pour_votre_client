@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Nouveau patient</title>
+    <div th:replace="~{fragments/header :: header-css}"></div>
+</head>
+<body class="bg-body-tertiary">
+<div th:replace="~{fragments/menu :: menu}"></div>
+<div th:replace="~{fragments/toast :: toast}"></div>
+
+<main class="container py-4">
+    <h1 class="h4 mb-3">Nouveau patient</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" th:action="@{/app/dashboard/ajout}" th:object="${patient}">
+                <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+                    <ul class="mb-0">
+                        <li th:each="erreur : ${#fields.allErrors()}" th:text="${erreur}">Erreur</li>
+                    </ul>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="firstName">Prénom</label>
+                        <input class="form-control" id="firstName" th:field="*{firstName}"
+                               th:errorclass="is-invalid" type="text"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="lastName">Nom</label>
+                        <input class="form-control" id="lastName" th:field="*{lastName}"
+                               th:errorclass="is-invalid" type="text"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="birthDate">Date de naissance</label>
+                        <input class="form-control" id="birthDate" th:field="*{birthDate}"
+                               th:errorclass="is-invalid" type="date"/>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="gender">Genre</label>
+                        <select class="form-select" id="gender" th:field="*{gender}"
+                                th:errorclass="is-invalid">
+                            <option value="M">Masculin</option>
+                            <option value="F">Féminin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="postalAddress">Adresse</label>
+                        <input class="form-control" id="postalAddress" th:field="*{postalAddress}"
+                               type="text"/>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="phoneNumber">Téléphone</label>
+                        <input class="form-control" id="phoneNumber" th:field="*{phoneNumber}"
+                               type="text"/>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary" type="submit">Créer le patient</button>
+                    <a class="btn btn-outline-secondary" th:href="@{/app/dashboard}">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<div th:replace="~{fragments/header :: header-js}"></div>
+</body>
+</html>
