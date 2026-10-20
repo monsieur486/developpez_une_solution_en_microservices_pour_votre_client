@@ -141,7 +141,7 @@ la validation des entrées.
 - [x] (code propre) Conteneur Testcontainers en `static final` *(IA, autorisé — voir journal)*
 - [x] (code propre) Exclure `*Application` de `UseUtilityClass` dans le ruleset PMD *(IA, autorisé — voir journal)*
 - [x] (code propre) `@SuppressWarnings` justifié sur `SecuriteApiConfiguration.filtreDeSecurite` *(IA, autorisé — voir journal)*
-- [ ] (architecture) `GlobalExceptionHandler` (9 méthodes) : justifier ou découper — toujours signalé par PMD (le constructeur ajouté compte) : `@SuppressWarnings` justifié ou découpage
+- [x] (architecture) `GlobalExceptionHandler` (9 méthodes) : justifier ou découper *(découpé par l'IA : `ReponsesErreur`)* — toujours signalé par PMD (le constructeur ajouté compte) : `@SuppressWarnings` justifié ou découpage
 - [x] (code propre) Retirer `@Repository` de `PatientRepository` *(IA, autorisé — voir journal)*
 - [x] (code propre) Contraindre les valeurs de `gender` *(IA, autorisé — voir journal)*
 
