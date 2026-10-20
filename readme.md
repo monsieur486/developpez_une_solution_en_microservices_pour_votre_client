@@ -306,6 +306,7 @@ Pour repartir de bases vierges : `docker compose down -v` (supprime les volumes 
 ```
 config/              règles Checkstyle, PMD, SpotBugs partagées par tous les modules
 ms-*/                un dossier par microservice, chacun avec son Dockerfile
+docs/captures/       captures d'écran des erreurs, présentées en fin de README
 docker-compose.yml   pile complète (profil « fullstack ») ou bases seules
 dist.env             modèle des variables d'environnement (à copier en .env)
 rapport.md           revues de code et checklist de suivi qualité
@@ -316,3 +317,102 @@ utilisation-ia.md    journal de l'usage de l'IA dans le projet
 
 *À rédiger à l'étape 6 du projet : enjeux du Green Code et pistes d'amélioration propres à ce
 projet.*
+
+## Captures des erreurs et exceptions
+
+Chaque erreur que l'application sait produire, telle que la voit le praticien dans l'interface web
+ou un développeur dans l'interface Swagger. Captures prises sur la pile Docker complète
+(`./prod-start.sh`), données de démonstration ; aucune tentative refusée n'a modifié les bases.
+L'en-tête `Authorization` des commandes `curl` affichées par Swagger est masqué.
+
+### Interface web — saisie et navigation
+
+**Connexion refusée** : identifiant ou mot de passe incorrect.
+
+![Connexion refusée](docs/captures/01-connexion-refusee.png)
+
+**Création d'un patient sans les champs obligatoires** : la validation de `PatientForm` liste
+chaque champ manquant et le signale en rouge.
+
+![Champs obligatoires manquants](docs/captures/02-patient-champs-obligatoires.png)
+
+**Date de naissance dans le futur** (`@Past`).
+
+![Date de naissance future](docs/captures/03-patient-date-future.png)
+
+**Patient déjà enregistré** : `ms-patients` répond 409, le formulaire reste rempli et un
+avertissement s'affiche.
+
+![Patient en doublon](docs/captures/04-patient-doublon.png)
+
+**Modification invalide** : le formulaire de mise à jour applique les mêmes règles que la création.
+
+![Modification invalide](docs/captures/05-patient-modification-invalide.png)
+
+**Patient inconnu** : `ms-patients` répond 404, l'interface affiche son message.
+
+![Patient introuvable](docs/captures/06-patient-introuvable.png)
+
+**Adresse inexistante dans l'interface** : page 404 générique.
+
+![Page introuvable](docs/captures/07-page-introuvable.png)
+
+**Note vide**, puis **note de plus de 5000 caractères** (`NoteForm`).
+
+![Note vide](docs/captures/08-note-vide.png)
+
+![Note trop longue](docs/captures/09-note-trop-longue.png)
+
+### API — à travers l'interface Swagger
+
+**401 sans identifiants.** L'API répond aussi `WWW-Authenticate: Basic`, qui ferait ouvrir au
+navigateur sa propre fenêtre de connexion : cet en-tête a été retiré pour la capture, le statut et
+le corps sont ceux de l'API.
+
+![401 sans identifiants](docs/captures/10-api-401-sans-identifiants.png)
+
+**400** : patient invalide, chaque règle enfreinte est nommée.
+
+![400 patient invalide](docs/captures/11-api-400-patient-invalide.png)
+
+**404** : patient inconnu.
+
+![404 patient inconnu](docs/captures/12-api-404-patient-inconnu.png)
+
+**409** : patient déjà enregistré.
+
+![409 doublon](docs/captures/13-api-409-patient-doublon.png)
+
+**400** : note vide.
+
+![400 note vide](docs/captures/14-api-400-note-vide.png)
+
+### Interruptions de service
+
+**`ms-risque` arrêté** : la fiche reste consultable, un avertissement remplace le risque.
+
+![Fiche sans ms-risque](docs/captures/16-fiche-sans-ms-risque.png)
+
+**Aucune instance de `ms-risque`** : la route explicite de la gateway reste en place et répond 503,
+au lieu du 404 qui faisait croire à un patient introuvable.
+
+![503 de la gateway](docs/captures/17-api-503-gateway-sans-instance.png)
+
+**`ms-notes` arrêté** : la fiche reste consultable. Les notes sont remplacées par un avertissement,
+et le risque aussi, puisque `ms-risque` a besoin des notes pour l'évaluer.
+
+![Fiche sans ms-notes](docs/captures/18-fiche-sans-ms-notes.png)
+
+**`ms-patients` arrêté** : sans fiche, rien ne peut s'afficher ; la page signale une interruption
+temporaire.
+
+![Liste sans ms-patients](docs/captures/20-liste-sans-ms-patients.png)
+
+### Ce qui n'est pas encore capturé
+
+- **Les erreurs de `ms-risque` vues depuis Swagger** (404 patient inconnu, 503 si `ms-notes` est
+  injoignable, 502 si un service refuse l'appel). Swagger envoie `Accept: text/plain`, le type du
+  résultat, alors que les erreurs sont en JSON : Spring ne peut pas satisfaire la demande et
+  répond **500 sans corps**. Avec `Accept: */*`, comme le webclient ou `curl`, les bons statuts
+  sont renvoyés. Les captures seront ajoutées une fois ce défaut corrigé.
+- **La page d'erreur interne (500)** de l'interface web : aucune action normale ne la déclenche.
