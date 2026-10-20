@@ -2,7 +2,6 @@ package com.mr486.mswebclient.controller;
 
 import com.mr486.commun.dto.PatientForm;
 import com.mr486.commun.exception.DuplicateException;
-import com.mr486.mswebclient.configuration.ConstantesToast;
 import com.mr486.mswebclient.mapper.PatientFormMapper;
 import com.mr486.mswebclient.service.PatientApiService;
 import jakarta.validation.Valid;
@@ -97,12 +96,10 @@ public class PatientDetailController {
             patientApiService.metAJourLePatient(id, patient);
         } catch (DuplicateException ex) {
             model.addAttribute(ATTRIBUT_ID, id);
-            model.addAttribute(ConstantesToast.CLE_NIVEAU, ConstantesToast.NIVEAU_AVERTISSEMENT);
-            model.addAttribute(ConstantesToast.CLE_MESSAGE, ex.getMessage());
+            Notifications.avertit(model, ex.getMessage());
             return VUE_MODIFICATION;
         }
-        redirection.addFlashAttribute(ConstantesToast.CLE_NIVEAU, ConstantesToast.NIVEAU_INFO);
-        redirection.addFlashAttribute(ConstantesToast.CLE_MESSAGE, "Fiche patient mise à jour.");
+        Notifications.confirme(redirection, "Fiche patient mise à jour.");
         return "redirect:/app/patients/" + id;
     }
 }

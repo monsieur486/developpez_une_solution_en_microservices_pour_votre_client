@@ -3,7 +3,8 @@ package com.mr486.mswebclient.configuration;
 /**
  * Clés et niveaux des notifications (« toasts ») affichées après une action.
  *
- * <p>Les contrôleurs les placent dans le modèle ou en attribut flash ; le fragment
+ * <p>Les contrôleurs les placent dans le modèle ou en attribut flash via la classe
+ * {@code controller.Notifications} ; le fragment
  * {@code fragments/toast.html} les lit pour afficher le message.</p>
  *
  * <p><b>Exemple :</b> {@code redirection.addFlashAttribute(CLE_MESSAGE, "Patient créé.")} avec
@@ -21,9 +22,6 @@ public final class ConstantesToast {
 
     /** Niveau d'un avertissement (action refusée, à corriger par l'utilisateur). */
     public static final String NIVEAU_AVERTISSEMENT = "avertissement";
-
-    /** Niveau d'une erreur. */
-    public static final String NIVEAU_ERREUR = "erreur";
 
     private ConstantesToast() {
     }

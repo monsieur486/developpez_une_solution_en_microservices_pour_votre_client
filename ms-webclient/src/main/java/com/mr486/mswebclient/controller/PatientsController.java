@@ -2,7 +2,6 @@ package com.mr486.mswebclient.controller;
 
 import com.mr486.commun.dto.PatientForm;
 import com.mr486.commun.exception.DuplicateException;
-import com.mr486.mswebclient.configuration.ConstantesToast;
 import com.mr486.mswebclient.service.PatientApiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -85,12 +84,10 @@ public class PatientsController {
         try {
             patientApiService.creeLePatient(patient);
         } catch (DuplicateException ex) {
-            model.addAttribute(ConstantesToast.CLE_NIVEAU, ConstantesToast.NIVEAU_AVERTISSEMENT);
-            model.addAttribute(ConstantesToast.CLE_MESSAGE, ex.getMessage());
+            Notifications.avertit(model, ex.getMessage());
             return VUE_AJOUT;
         }
-        redirection.addFlashAttribute(ConstantesToast.CLE_NIVEAU, ConstantesToast.NIVEAU_INFO);
-        redirection.addFlashAttribute(ConstantesToast.CLE_MESSAGE, "Patient créé.");
+        Notifications.confirme(redirection, "Patient créé.");
         return "redirect:/app/patients";
     }
 }
