@@ -596,3 +596,89 @@ javadoc et corrige les points mineurs ». À relire pour savoir les expliquer.*
 ### Reste ouvert
 - [x] (code propre) Fichiers d'initializr supprimés de `ms-notes` et `ms-gateway` puis de `ms-eureka`, `ms-patients` et `ms-webclient` : plus aucun module n'en porte
 - [x] (architecture) `AppelRefuseException` traduite en 502 au message générique (fait par toi, testé dans `EvaluationControllerTest`)
+
+---
+
+# Revue pédagogique — Étape 4 (documentation des API, OpenAPI et Swagger)
+
+*Revue du 2026-10-21, code non commité, encore sur la branche `feat/sprint3-ms-risque`.*
+
+## En bref
+L'architecture est bien pensée : un socle commun dans `ms-commun`, une interface Swagger unique
+servie par la gateway, et des serveurs de contrat préfixés qui font passer les essais par la
+gateway. Vérifié sur la pile Docker : les trois contrats s'affichent. Mais le **contenu** des
+contrats décrit mal l'API (tags détournés, 201 annoncé 200, aucune erreur documentée), et le
+diff mélange l'étape 4 avec un reformatage de 42 fichiers.
+
+Mesures : `./mvnw clean verify` vert (115 tests), Checkstyle 2 (Javadoc de
+`DocumentationApiConfiguration`, reportée à l'étape 5 comme l'annonce le README), PMD et SpotBugs 0.
+
+## Points forts
+- `DocumentationApiConfiguration` dans `ms-commun`, activée par `@Import` comme la sécurité et le
+  gestionnaire d'erreurs : un seul endroit pour le schéma `basicAuth`.
+- Serveur du contrat = `/{spring.application.name}` : « Try it out » passe par la gateway. Fine
+  observation, à savoir expliquer.
+- Variante `-api` (sans interface) dans les services, `webflux-ui` dans la gateway seule.
+- `/v3/api-docs/**` ouvert avec une justification écrite dans le README.
+
+## Le contrat ne décrit pas fidèlement l'API   ❌ à corriger
+### `@Tag` utilisé comme résumé d'opération   ·   axe : présentation
+- **Constat** : chaque méthode a son `@Tag(name = "Récupère un patient par son ID")`. Swagger crée
+  un **groupe par opération** : 4 groupes d'une ligne pour `ms-patients`.
+- **Pourquoi** : un tag regroupe des opérations (« Patients »), le résumé d'une opération est le
+  rôle de `@Operation(summary = …)`.
+- **À toi de jouer** : un `@Tag` sur la classe, un `@Operation` par méthode.
+
+### Codes de réponse absents ou faux   ·   axe : architecture
+- **Constat** (lu dans les contrats générés) : chaque opération n'annonce que `200`. Les deux
+  `POST` répondent pourtant **201**, et aucun 400, 401, 404, 409, 502 ou 503 n'apparaît.
+- **Pourquoi** : le contrat est ce que lit le consommateur de l'API ; un contrat qui ment est
+  pire qu'absent. Le jury testera dans Swagger.
+- **À toi de jouer** : `@ApiResponse` (ou `@ResponseStatus` sur les `POST`), avec le schéma
+  d'erreur commun pour les 4xx/5xx.
+
+### `@OpenAPIDefinition` posé sur un contrôleur   ·   axe : architecture
+- **Constat** : la définition décrit **toute l'application** mais vit sur un contrôleur ; un
+  deuxième contrôleur dans le même service en porterait une seconde, concurrente.
+- **À toi de jouer** : la porter par la classe d'application, ou fournir `Info` dans le bean
+  `OpenAPI` commun (titre par service via une propriété).
+
+## Hygiène du diff   ⚠️
+- **42 fichiers sur 58** ne changent que par des lignes vides (reformatage de l'IDE : ligne vide
+  après chaque `class {`, dans les méthodes vides, suppression dans les XML et les `pom.xml`). Ce
+  bruit noie les 16 fichiers utiles en revue et touche du code des sprints 1 à 3.
+  Choisir : l'annuler, ou en faire un commit `style:` séparé, et régler l'IDE pour qu'il ne recommence pas.
+- **Branche** : l'étape 4 est sur `feat/sprint3-ms-risque`, donc pousser l'ajouterait à la
+  **PR #3**. Créer `feat/etape4-openapi` avant de commiter.
+
+## Tests   ⚠️
+- Il manque un test qui prouve que `/v3/api-docs` répond **sans** identifiants (changement de
+  sécurité) et que le reste de l'API exige toujours le 401.
+
+## Par où commencer
+1. Nouvelle branche, et sortir le reformatage du diff.
+2. `@Tag` par classe, `@Operation` par méthode, codes de réponse réels.
+3. Test du chemin public `/v3/api-docs`.
+
+## Suivi — étape 4
+- [x] (architecture) Créer `feat/etape4-openapi` et y commiter l'étape 4
+- [x] (présentation) Annuler le reformatage de l'IDE ou l'isoler dans un commit `style:`
+- [x] (présentation) Un `@Tag` par contrôleur, `@Operation(summary)` par méthode
+- [x] (architecture) Documenter les codes réels : 201 sur les `POST`, 400/401/404/409/502/503
+- [x] (architecture) Sortir `@OpenAPIDefinition` des contrôleurs
+- [ ] (code propre) Test : `/v3/api-docs` public, API toujours en 401
+
+### Ajustements du 2026-10-21 (autorisés), branche `feat/etape4-openapi`
+*Écrits par l'IA à la demande : « crée la branche, annule le reformatage et corrige les annotations ».*
+
+- ✅ Branche `feat/etape4-openapi` créée depuis `feat/sprint3-ms-risque`.
+- ✅ Reformatage annulé : le diff passe de 58 à 18 fichiers, sans aucune ligne vide parasite.
+  Ton diff complet d'origine a été sauvegardé avant l'opération.
+- ✅ Annotations : un `@Tag` par contrôleur (« Patients », « Notes », « Évaluation »),
+  `@Operation(summary)` par méthode, `@ApiResponse` pour chaque code réel (201 sur les `POST`,
+  401 sans corps, erreurs avec le schéma `ErrorResponse` en JSON, valeurs possibles du niveau de
+  risque en `text/plain`), `@OpenAPIDefinition` déplacé sur les classes d'application.
+- ✅ Vérifié sur la pile Docker : les trois contrats lus via la gateway donnent un seul groupe par
+  service et les codes réels ; l'interface Swagger répond.
+- Mesures : `./mvnw clean verify` vert, 115 tests ; Checkstyle 2 (Javadoc de
+  `DocumentationApiConfiguration`, reportée à l'étape 5) ; PMD et SpotBugs 0.
