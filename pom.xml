@@ -23,6 +23,7 @@
         <module>ms-gateway</module>
         <module>ms-patients</module>
         <module>ms-notes</module>
+        <module>ms-risque</module>
         <module>ms-webclient</module>
     </modules>
 

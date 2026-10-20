@@ -1,0 +1,53 @@
+spring:
+  config:
+    # Secrets locaux lus depuis .env (copie de dist.env), s'il existe dans le dossier de lancement.
+    import: optional:file:.env[.properties]
+
+  application:
+    # Nom d'inscription dans Eureka, repris aussi dans les réponses d'erreur.
+    name: ms-risque
+
+  web:
+    resources:
+      # API pure : aucun fichier statique servi, une URL inconnue donne un 404 JSON.
+      add-mappings: false
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          # Réglages communs aux clients Feign vers ms-patients et ms-notes.
+          default:
+            # Une ligne de journal par appel : méthode, URL, statut et durée.
+            logger-level: basic
+            # Délais en millisecondes : au-delà, l'appel échoue et la panne est signalée vite.
+            connectTimeout: 2000
+            readTimeout: 2000
+
+security:
+  app-user:
+    # Utilisateur technique : il protège l'API et sert aussi aux appels vers les autres services.
+    username: ${APP_USERNAME:app_user}
+    # Son mot de passe, sans valeur par défaut : à fournir par l'environnement.
+    password: ${APP_PASSWORD}
+
+server:
+  # Port HTTP du microservice.
+  port: 9300
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Seuls la santé et les informations sont exposées par l'actuator.
+        include: health,info
+
+eureka:
+  client:
+    service-url:
+      # Adresse du registre Eureka, sur le poste en développement.
+      defaultZone: http://localhost:8761/eureka
+    # Inscrit le service dans le registre, pour que la gateway le trouve.
+    registerWithEureka: true
+    # Lit le registre, pour que Feign trouve ms-patients et ms-notes.
+    fetchRegistry: true
