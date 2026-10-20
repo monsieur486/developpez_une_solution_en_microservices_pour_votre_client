@@ -152,3 +152,82 @@ la validation des entrées.
 - [ ] (architecture) Isoler les données de test (context Liquibase)
 - [ ] (sécurité) Retirer les mots de passe par défaut des `application*.yml` et du `docker-compose.yml`
 - [ ] (code propre) Réduire `application-docker.yml` aux seules différences avec `application.yml`
+
+---
+
+# Revue pédagogique — Sprint 1 : `ms-webclient`
+
+**Date de la revue** : 2026-10-20
+**Mesures** : `./mvnw -pl ms-commun,ms-webclient verify` → build vert, **aucun test**, SpotBugs 0,
+PMD 1 (`SignatureDeclareThrowsException` sur `SecurityConfiguration`), Checkstyle 34
+(toutes des Javadoc manquantes : 11 classes, 23 méthodes).
+
+## En bref
+Le front couvre tout le Sprint 1 : liste, détail, ajout et modification, avec une architecture
+nette (contrôleurs → `PatientApiService` → `ClientPasserelle` → gateway). Il y a **un vrai bug** :
+un doublon refusé par l'API s'affiche comme « service indisponible ». Et il **manque tous les tests**.
+
+## Points forts
+- **`ClientPasserelle` est le seul point de contact avec la gateway.** Il traduit les erreurs HTTP
+  en exceptions métier (`ResourceNotFoundException`, `ServiceIndisponibleException`) : les
+  contrôleurs ne voient jamais `RestTemplate`.
+- **Le schéma Post/Redirect/Get est respecté**, avec un message flash après création ou
+  modification : un rafraîchissement de la page ne renvoie pas le formulaire.
+- **`@Valid` + `BindingResult`** réaffichent le formulaire avec ses erreurs, grâce au `PatientForm`
+  partagé (mêmes règles côté front et côté API).
+- **Les templates sont sûrs** : `th:text` partout (pas de `th:utext`, donc pas d'injection HTML),
+  formulaires en `th:action` (jeton CSRF ajouté automatiquement), déconnexion en POST, liste
+  déroulante M/F alignée sur la validation.
+- `GestionnaireErreursWeb` sépare bien le 404 (avertissement) du 503 / 500 (erreur avec pile d'appels).
+
+## Phase 1 — Tests   ❌ manquant
+### Aucun test dans `ms-webclient`   ·   axe : architecture
+- **Constat** : `No tests to run`. Pourtant `ClientPasserelle` **décide** : 404 → introuvable,
+  le reste → indisponible. C'est exactement ce qui doit être testé, et un test aurait révélé le bug ci-dessous.
+- **Exemple** : `MockRestServiceServer.bindTo(restTemplate)` simule la gateway :
+  `.andRespond(withStatus(HttpStatus.CONFLICT))`, puis on vérifie l'exception levée.
+- **À toi de jouer** : écris `ClientPasserelleTest` (404, 409, gateway injoignable), puis un
+  `@WebMvcTest` sur `PatientsController` (formulaire invalide → vue `patient-ajout` réaffichée).
+
+## Phase 3 — PMD et architecture   ⚠️ à améliorer
+### Un doublon s'affiche « service indisponible »   ·   axe : architecture
+- **Constat** : `ClientPasserelle.echange` n'attrape que `HttpClientErrorException.NotFound`.
+  Le 409 renvoyé par `ms-patients` (patient déjà existant) est aussi une `RestClientException` :
+  il tombe donc dans le second `catch` et devient `ServiceIndisponibleException`.
+  Créer deux fois `TestNone` affiche « Le service ms-patients est momentanément indisponible »
+  et journalise une **erreur** avec sa pile d'appels.
+- **Pourquoi ça compte** : on fait passer une erreur de **saisie** pour une **panne**. L'utilisateur
+  croit que le service est tombé, et l'exploitant reçoit une fausse alerte.
+- **Exemple** : distingue les familles d'erreur. Une 4xx relève de l'appelant, une 5xx ou une
+  absence de réponse relève du service (le `GlobalExceptionHandler` de `ms-commun` fait déjà ce tri).
+- **À toi de jouer** : traduis le 409 en `DuplicateException`, puis réaffiche le formulaire avec
+  un message, par exemple avec `resultatDeLiaison.reject(...)`. Commence par le test.
+
+### Petits points   ·   axe : code propre
+- `versFormulaire` (dans `PatientDetailController`) est une conversion : elle a plus sa place dans
+  un mapper que dans un contrôleur, comme tu l'as fait dans `ms-patients`.
+- Les champs optionnels laissés vides arrivent en `""` et non en `null` : l'API enregistre une adresse
+  vide plutôt qu'une adresse absente. Regarde `StringTrimmerEditor` (`@InitBinder`).
+- `SecurityConfiguration` : les identifiants sont toujours injectés par `@Value` sur des champs, et
+  le `throws Exception` est à justifier (`@SuppressWarnings`, comme dans `ms-commun`).
+- Nommage des routes : `/app/dashboard` affiche la **liste des patients**. `/app/patients` dirait
+  ce que fait la page.
+
+## Phase 5 — Javadoc   ⚠️ à améliorer
+- 34 Javadoc manquantes. Commence par `ClientPasserelle` et `PatientApiService` : ce sont les contrats.
+
+## Par où commencer
+1. `ClientPasserelleTest` avec `MockRestServiceServer` : écris le cas 409 **avant** de corriger.
+2. Corriger la traduction du 409 et réafficher le formulaire avec le message de doublon.
+3. `@WebMvcTest` du formulaire d'ajout, puis la Javadoc.
+
+## Suivi `ms-webclient` — à cocher au fil de l'eau
+- [ ] (architecture) `ClientPasserelleTest` : 404 → introuvable, 409 → doublon, injoignable → indisponible
+- [ ] (architecture) Traduire le 409 en `DuplicateException` au lieu de « service indisponible »
+- [ ] (code propre) Réafficher le formulaire avec un message en cas de doublon
+- [ ] (architecture) `@WebMvcTest` sur `PatientsController` et `PatientDetailController`
+- [ ] (code propre) Sortir `versFormulaire` du contrôleur
+- [ ] (code propre) Champs vides → `null` (`StringTrimmerEditor`)
+- [ ] (architecture) `SecurityConfiguration` : identifiants en paramètres de méthode `@Bean`, `@SuppressWarnings` justifié
+- [ ] (code propre) Renommer `/app/dashboard` en `/app/patients` (optionnel)
+- [ ] (présentation) Javadoc FR : 11 classes, 23 méthodes
