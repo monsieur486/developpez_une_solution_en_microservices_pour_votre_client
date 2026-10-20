@@ -8,8 +8,8 @@ exposés au diabète de type 2. Projet 9 du parcours *Développeur d'application
 > son contrat OpenAPI, et les trois sont réunis dans une interface Swagger unique servie par
 > la gateway.
 >
-> Le code hérité des étapes 1 à 3 est documenté ; le code ajouté à cette étape est livré **brut,
-> sans Javadoc**, pour ne montrer que la structure : il est documenté à l'étape 5.
+> Le contrat de chaque service est vérifié par un test : servi sans identifiants, avec la gateway
+> pour serveur, et listé dans le sélecteur de l'interface.
 
 | Étape | Besoin | État |
 |---|---|---|
@@ -292,7 +292,9 @@ Pour repartir de bases vierges : `docker compose down -v` (supprime les volumes 
 - **Algorithme du risque** : tests paramétrés (`@CsvSource`, `@MethodSource`) sur chaque seuil,
   chaque choix d'interprétation et les 4 cas officiels avec le texte exact de leurs notes.
 - **Routes de la gateway** : `@SpringBootTest` sans Eureka, qui vérifie qu'un service sans
-  instance répond 503 et non 404.
+  instance répond 503 et non 404, et que l'interface Swagger liste les trois contrats.
+- **Contrats OpenAPI** : `@WebMvcTest` avec springdoc, qui vérifie que `/v3/api-docs` est servi
+  sans identifiants et annonce la gateway pour serveur.
 - **Tranches légères** : Mongock est activé dans une classe `@Configuration` dédiée, et non sur
   la classe principale, pour que `@WebMvcTest` et `@DataMongoTest` n'exigent pas de base complète.
 - La couverture JaCoCo est un **repère**, pas un objectif : on teste le comportement métier,

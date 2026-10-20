@@ -690,5 +690,18 @@ Mesures : `./mvnw clean verify` vert (115 tests), Checkstyle 2 (Javadoc de
 - ⚠️ (code propre) Le second test (401 sur la route métier) refait ce que `PatientControllerTest`,
   `NoteControllerTest` et `EvaluationControllerTest` vérifient déjà : charger springdoc ne
   change pas la chaîne de sécurité. À garder si tu l'assumes comme garde-fou, sinon à retirer.
-- [ ] (code propre) Option : vérifier aussi `$.servers[0].url` (`/ms-patients`…), le comportement
-  le plus subtil de `DocumentationApiConfiguration`, que rien ne teste aujourd'hui
+- [x] (code propre) `$.servers[0].url` vérifié dans les trois `CheminsPublicsSecuriteTest`
+
+### Ajustements du 2026-10-21 (autorisés) — tests et Javadoc de l'étape 4
+*Écrits par l'IA à la demande : « corrige les doublons de tests, ajuste le test de la gateway,
+vérifie toute la javadoc manquante puis commit ».*
+
+- ✅ Second test de `CheminsPublicsSecuriteTest` retiré (doublon des tests de contrôleur),
+  remplacé par l'assertion sur le serveur du contrat.
+- ✅ `RoutesGatewayTest` : la configuration Swagger liste les trois contrats (vérifié rouge en
+  retirant `ms-risque` du YAML), l'interface est servie sans identifiants.
+- ✅ Javadoc de `DocumentationApiConfiguration`, `MsEurekaApplication` et `MsGatewayApplication`
+  (les deux dernières échappaient à Checkstyle, désactivé dans ces modules) ; bloc `springdoc`
+  du YAML de la gateway commenté.
+- Mesures : `./mvnw clean verify` vert, 120 tests ; Checkstyle, PMD et SpotBugs à 0 partout ;
+  `javadoc:javadoc` sans avertissement sur les 8 modules.
