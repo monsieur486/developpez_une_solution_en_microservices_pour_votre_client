@@ -1,5 +1,7 @@
 package com.mr486.msgateway;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,7 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "eureka.client.enabled=false")
 @AutoConfigureWebTestClient
-@DisplayName("Routes explicites de la gateway")
+@DisplayName("Routes explicites et documentation des API de la gateway")
 class RoutesGatewayTest {
 
     @Autowired
@@ -37,5 +39,25 @@ class RoutesGatewayTest {
     void cheminInconnu_repond404() {
         client.get().uri("/ms-inconnu/quelque-chose").exchange()
                 .expectStatus().isNotFound();
+    }
+
+    // Le sélecteur de l'interface Swagger doit proposer chaque contrat, lu à travers la route du
+    // service : un oubli dans application.yml rendrait une API invisible dans la documentation.
+    @Test
+    @DisplayName("la configuration Swagger liste les contrats des trois microservices")
+    void swaggerConfig_listeLesTroisContrats() {
+        client.get().uri("/v3/api-docs/swagger-config").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.urls[*].url").value(containsInAnyOrder(
+                        "/ms-patients/v3/api-docs", "/ms-notes/v3/api-docs", "/ms-risque/v3/api-docs"))
+                .jsonPath("$['urls.primaryName']").isEqualTo("ms-patients");
+    }
+
+    @Test
+    @DisplayName("l'interface Swagger est servie par la gateway, sans identifiants")
+    void swaggerUi_estServie() {
+        client.get().uri("/swagger-ui/index.html").exchange()
+                .expectStatus().isOk();
     }
 }
