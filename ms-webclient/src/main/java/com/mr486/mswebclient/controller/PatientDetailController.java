@@ -1,9 +1,9 @@
 package com.mr486.mswebclient.controller;
 
-import com.mr486.commun.dto.PatientDto;
 import com.mr486.commun.dto.PatientForm;
 import com.mr486.commun.exception.DuplicateException;
 import com.mr486.mswebclient.configuration.ConstantesToast;
+import com.mr486.mswebclient.mapper.PatientFormMapper;
 import com.mr486.mswebclient.service.PatientApiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +26,7 @@ public class PatientDetailController {
     private static final String ATTRIBUT_ID = "patientId";
 
     private final PatientApiService patientApiService;
+    private final PatientFormMapper patientFormMapper;
 
     @GetMapping("/patients/{id}")
     public String detail(@PathVariable Long id, Model model) {
@@ -36,7 +37,7 @@ public class PatientDetailController {
 
     @GetMapping("/patients/{id}/update")
     public String updatePatientForm(@PathVariable Long id, Model model) {
-        model.addAttribute("patient", versFormulaire(patientApiService.recupereLePatient(id)));
+        model.addAttribute("patient", patientFormMapper.versFormulaire(patientApiService.recupereLePatient(id)));
         model.addAttribute(ATTRIBUT_ID, id);
         return VUE_MODIFICATION;
     }
@@ -63,16 +64,5 @@ public class PatientDetailController {
         redirection.addFlashAttribute(ConstantesToast.CLE_NIVEAU, ConstantesToast.NIVEAU_INFO);
         redirection.addFlashAttribute(ConstantesToast.CLE_MESSAGE, "Fiche patient mise à jour.");
         return "redirect:/app/patients/" + id;
-    }
-
-    private PatientForm versFormulaire(PatientDto patient) {
-        return PatientForm.builder()
-                .firstName(patient.getFirstName())
-                .lastName(patient.getLastName())
-                .birthDate(patient.getBirthDate())
-                .gender(patient.getGender())
-                .postalAddress(patient.getPostalAddress())
-                .phoneNumber(patient.getPhoneNumber())
-                .build();
     }
 }

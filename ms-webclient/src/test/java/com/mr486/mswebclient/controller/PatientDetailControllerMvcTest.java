@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.mr486.mswebclient.configuration.SecurityConfiguration;
+import com.mr486.mswebclient.mapper.PatientFormMapper;
 import com.mr486.mswebclient.service.PatientApiService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(PatientDetailController.class)
-@Import(SecurityConfiguration.class)
+@Import({SecurityConfiguration.class, PatientFormMapper.class})
 @DisplayName("Modification d'un patient à travers Spring MVC : validation")
 class PatientDetailControllerMvcTest {
     @Autowired

@@ -11,6 +11,7 @@ import com.mr486.commun.exception.DuplicateException;
 import com.mr486.commun.exception.ResourceNotFoundException;
 import com.mr486.commun.exception.ServiceIndisponibleException;
 import com.mr486.mswebclient.configuration.SecurityConfiguration;
+import com.mr486.mswebclient.mapper.PatientFormMapper;
 import com.mr486.mswebclient.service.PatientApiService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 // La fiche patient sert de point d'entrée : c'est le statut HTTP rendu par le gestionnaire
 // qui est vérifié, quelle que soit la façon dont il est produit (annotation, ResponseEntity…).
 @WebMvcTest(PatientDetailController.class)
-@Import(SecurityConfiguration.class)
+@Import({SecurityConfiguration.class, PatientFormMapper.class})
 @WithMockUser
 @DisplayName("Statuts HTTP des pages d'erreur de l'interface web")
 class GestionnaireErreursWebMvcTest {
