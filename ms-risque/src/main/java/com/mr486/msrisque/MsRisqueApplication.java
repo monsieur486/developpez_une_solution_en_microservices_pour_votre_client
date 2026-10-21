@@ -1,7 +1,10 @@
 package com.mr486.msrisque;
 
+import com.mr486.commun.configuration.DocumentationApiConfiguration;
 import com.mr486.commun.configuration.SecuriteApiConfiguration;
 import com.mr486.commun.exception.GlobalExceptionHandler;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -17,9 +20,11 @@ import org.springframework.context.annotation.Import;
  * <p><b>Exemple :</b> une fois lancé, {@code GET /evaluation/4} répond {@code Early onset}.</p>
  */
 @SpringBootApplication
+@OpenAPIDefinition(info = @Info(title = "Gestion du risque de diabète d'un patient API", version = "v1"))
 @EnableFeignClients
 @Import({
         SecuriteApiConfiguration.class,
+        DocumentationApiConfiguration.class,
         GlobalExceptionHandler.class})
 public class MsRisqueApplication {
     /**

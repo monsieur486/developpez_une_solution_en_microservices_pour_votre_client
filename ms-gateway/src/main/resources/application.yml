@@ -45,3 +45,22 @@ spring:
 
 server:
   port: 9000
+
+springdoc:
+  api-docs:
+    # Point de configuration lu par l'interface Swagger (/v3/api-docs/swagger-config).
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    # N'affiche pas le contrat d'exemple « Petstore » fourni par défaut.
+    disable-swagger-default-url: true
+    # Contrats proposés dans le sélecteur, lus à travers la route de chaque service.
+    urls:
+      - name: ms-patients
+        url: /ms-patients/v3/api-docs
+      - name: ms-notes
+        url: /ms-notes/v3/api-docs
+      - name: ms-risque
+        url: /ms-risque/v3/api-docs
+    # Contrat affiché à l'ouverture de l'interface.
+    urlsPrimaryName: ms-patients

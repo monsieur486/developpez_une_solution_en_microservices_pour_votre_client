@@ -1,9 +1,16 @@
 package com.mr486.mspatients.controller;
 
+import com.mr486.commun.dto.ErrorResponse;
 import com.mr486.commun.dto.PatientDto;
 import com.mr486.commun.dto.PatientForm;
 import com.mr486.mspatients.mapper.PatientMapper;
 import com.mr486.mspatients.service.PatientService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +37,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/patients", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
+@Tag(name = "Patients", description = "Fiches d'identité des patients")
+@SecurityRequirement(name = "basicAuth")
 public class PatientController {
     private final PatientService patientService;
     private final PatientMapper patientMapper;
@@ -42,6 +51,9 @@ public class PatientController {
      *
      * @return 200 et la liste des patients
      */
+    @Operation(summary = "Liste tous les patients")
+    @ApiResponse(responseCode = "200", description = "Liste des patients, vide s'il n'y en a aucun")
+    @ApiResponse(responseCode = "401", description = "Identifiants absents ou invalides", content = @Content)
     @GetMapping
     public ResponseEntity<List<PatientDto>> getPatients() {
         return ResponseEntity.ok(patientMapper.versListeDto(patientService.findAll()));
@@ -56,6 +68,11 @@ public class PatientController {
      * @param id identifiant du patient
      * @return 200 et la fiche du patient
      */
+    @Operation(summary = "Renvoie la fiche d'un patient")
+    @ApiResponse(responseCode = "200", description = "Fiche du patient")
+    @ApiResponse(responseCode = "401", description = "Identifiants absents ou invalides", content = @Content)
+    @ApiResponse(responseCode = "404", description = "Aucun patient avec cet identifiant",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
     public ResponseEntity<PatientDto> getPatient(@PathVariable Long id) {
         return ResponseEntity.ok(patientMapper.versDto(patientService.findById(id)));
@@ -70,6 +87,14 @@ public class PatientController {
      * @param patientForm données du patient, validées avant l'appel
      * @return 201 et la fiche créée, avec son identifiant
      */
+    @Operation(summary = "Crée un patient")
+    @ApiResponse(responseCode = "201", description = "Fiche créée, avec son identifiant")
+    @ApiResponse(responseCode = "400",
+            description = "Formulaire invalide : champ obligatoire absent, date future, genre inconnu…",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Identifiants absents ou invalides", content = @Content)
+    @ApiResponse(responseCode = "409", description = "Un patient identique existe déjà",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientDto> createPatient(@Valid @RequestBody PatientForm patientForm) {
         PatientDto cree = patientMapper.versDto(patientService.savePatient(patientForm));
@@ -86,6 +111,15 @@ public class PatientController {
      * @param patientForm nouvelles données, validées avant l'appel
      * @return 200 et la fiche mise à jour
      */
+    @Operation(summary = "Met à jour la fiche d'un patient")
+    @ApiResponse(responseCode = "200", description = "Fiche mise à jour")
+    @ApiResponse(responseCode = "400", description = "Formulaire invalide",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "401", description = "Identifiants absents ou invalides", content = @Content)
+    @ApiResponse(responseCode = "404", description = "Aucun patient avec cet identifiant",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "409", description = "La modification ferait doublon avec un autre patient",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<PatientDto> update(
             @PathVariable Long id, @Valid @RequestBody PatientForm patientForm) {
