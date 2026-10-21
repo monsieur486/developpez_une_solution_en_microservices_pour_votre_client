@@ -24,4 +24,20 @@ public class DuplicateException extends RuntimeException {
     public DuplicateException(String message) {
         super(message);
     }
+
+    /**
+     * Construit l'exception en conservant l'erreur technique d'origine.
+     *
+     * <p>À employer depuis un bloc {@code catch} : la cause reste attachée à la trace, sans
+     * quoi le diagnostic perd l'appel distant qui a réellement échoué.</p>
+     *
+     * <p><b>Exemple :</b> {@code new DuplicateException("La ressource existe déjà.", ex)}
+     * lorsqu'un appel à un autre microservice répond 409.</p>
+     *
+     * @param message description du conflit détecté
+     * @param cause   erreur technique à l'origine de l'échec, conservée pour le diagnostic
+     */
+    public DuplicateException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

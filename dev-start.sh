@@ -5,4 +5,6 @@
 set -euo pipefail
 
 docker compose up -d
-echo "Base démarrée. Lancez ensuite ms-eureka, puis ms-gateway."
+echo "Base démarrée. Lancez ensuite, dans cet ordre :"
+echo "  ms-eureka, ms-gateway, ms-patients, ms-webclient"
+echo "(après une modification de ms-commun : ./mvnw -pl ms-commun install -DskipTests)"

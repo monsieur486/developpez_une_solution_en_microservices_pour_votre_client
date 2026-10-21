@@ -21,6 +21,8 @@
         <module>ms-commun</module>
         <module>ms-eureka</module>
         <module>ms-gateway</module>
+        <module>ms-patients</module>
+        <module>ms-webclient</module>
     </modules>
 
     <properties>
@@ -33,6 +35,13 @@
         <spring-cloud.version>2025.0.0</spring-cloud.version>
 
         <config.qualite.dir>${maven.multiModuleProjectDirectory}/config</config.qualite.dir>
+
+        <bootstrap.version>5.3.3</bootstrap.version>
+
+        <!-- Surcharge la version imposée par Spring Boot 3.5.6 (1.21.3) : celle-ci dialogue
+             avec Docker en API 1.32, que Docker 29 refuse (« client version 1.32 is too old »).
+             À retirer quand Spring Boot embarquera une version ≥ 1.21.4. -->
+        <testcontainers.version>1.21.4</testcontainers.version>
 
         <jacoco.plugin.version>0.8.13</jacoco.plugin.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>

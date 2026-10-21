@@ -1,0 +1,13 @@
+# Profil « docker » : se superpose à application.yml. Seuls les noms d'hôte changent,
+# les conteneurs se joignant par leur nom de service sur le réseau Compose.
+
+spring:
+  datasource:
+    # URL JDBC de la base, joignable par le nom du service patients-db.
+    url: jdbc:postgresql://patients-db:5432/${POSTGRES_DB:patientsdb}
+
+eureka:
+  client:
+    service-url:
+      # Adresse du registre, joignable par le nom du service ms-eureka.
+      defaultZone: http://ms-eureka:8761/eureka

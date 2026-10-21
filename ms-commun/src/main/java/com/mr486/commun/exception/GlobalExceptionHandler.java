@@ -1,12 +1,9 @@
 package com.mr486.commun.exception;
 
-import com.mr486.commun.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -44,15 +41,26 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * statut 500 et le seul message « Une erreur interne est survenue. ».</p>
  */
 @RestControllerAdvice
-@Slf4j
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     /** Message renvoyé pour toute erreur serveur non anticipée, sans détail technique. */
     private static final String MESSAGE_ERREUR_INTERNE = "Une erreur interne est survenue.";
 
-    /** Nom du microservice, repris dans chaque réponse pour situer l'erreur. */
-    @Value("${spring.application.name:application}")
-    private String nomDuMicroservice;
+    /** Journalise chaque erreur et fabrique la réponse normalisée renvoyée au client. */
+    private final ReponsesErreur reponses;
+
+    /**
+     * Construit le gestionnaire pour le microservice qui l'importe.
+     *
+     * <p><b>Exemple :</b> importé par {@code ms-patients}, il signe chaque réponse d'erreur
+     * {@code "microserviceName": "ms-patients"}.</p>
+     *
+     * @param nomDuMicroservice valeur de {@code spring.application.name}, {@code application} à défaut
+     */
+    public GlobalExceptionHandler(
+            @Value("${spring.application.name:application}") String nomDuMicroservice) {
+        this.reponses = new ReponsesErreur(nomDuMicroservice);
+    }
 
     /**
      * Traduit une ressource introuvable en réponse 404.
@@ -67,7 +75,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFound(
             ResourceNotFoundException ex, HttpServletRequest requete) {
-        return erreurClient(HttpStatus.NOT_FOUND, List.of(ex.getMessage()), requete);
+        return reponses.client(HttpStatus.NOT_FOUND, List.of(ex.getMessage()), requete);
     }
 
     /**
@@ -86,7 +94,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DuplicateException.class)
     public ResponseEntity<Object> handleDuplication(
             DuplicateException ex, HttpServletRequest requete) {
-        return erreurClient(HttpStatus.CONFLICT, List.of(ex.getMessage()), requete);
+        return reponses.client(HttpStatus.CONFLICT, List.of(ex.getMessage()), requete);
     }
 
     /**
@@ -105,7 +113,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         List<String> messages = ex.getConstraintViolations().stream()
                 .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                 .toList();
-        return erreurClient(HttpStatus.BAD_REQUEST, messages, requete);
+        return reponses.client(HttpStatus.BAD_REQUEST, messages, requete);
     }
 
     /**
@@ -124,7 +132,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ServiceIndisponibleException.class)
     public ResponseEntity<Object> handleServiceIndisponible(
             ServiceIndisponibleException ex, HttpServletRequest requete) {
-        return erreurServeur(
+        return reponses.serveur(
                 HttpStatus.SERVICE_UNAVAILABLE, List.of(ex.getMessage()), requete, ex);
     }
 
@@ -141,11 +149,25 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleAll(Exception ex, HttpServletRequest requete) {
-        return erreurServeur(
+        return reponses.serveur(
                 HttpStatus.INTERNAL_SERVER_ERROR, List.of(MESSAGE_ERREUR_INTERNE), requete, ex);
     }
 
-    /** Traduit les erreurs de validation d'un corps de requête annoté {@code @Valid} en 400. */
+    /**
+     * Traduit les erreurs de validation d'un corps de requête annoté {@code @Valid} en réponse 400.
+     *
+     * <p>Chaque champ refusé donne un message « champ: motif » ; les règles portant sur l'objet
+     * entier donnent « objet: motif ».</p>
+     *
+     * <p><b>Exemple :</b> un patient envoyé sans nom retourne un statut 400 et le message
+     * « lastName: Le nom de famille est obligatoire ».</p>
+     *
+     * @param ex         exception portant le résultat de la validation
+     * @param enTetes    en-têtes prévus par Spring pour la réponse (non repris)
+     * @param statut     statut prévu par Spring (non repris : toujours 400)
+     * @param webRequest requête à l'origine de l'erreur
+     * @return la réponse 400 normalisée
+     */
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders enTetes,
@@ -158,44 +180,28 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ex.getBindingResult().getGlobalErrors()
                 .forEach(err -> messages.add(err.getObjectName() + ": " + err.getDefaultMessage()));
 
-        return erreurClient(HttpStatus.BAD_REQUEST, messages, requeteDe(webRequest));
+        return reponses.client(HttpStatus.BAD_REQUEST, messages, requeteDe(webRequest));
     }
 
-    /** Traduit l'absence de route correspondant à l'URL appelée en 404. */
+    /**
+     * Traduit l'absence de route correspondant à l'URL appelée en réponse 404.
+     *
+     * <p><b>Exemple :</b> {@code GET /inconnue} retourne un statut 404 et le message
+     * « Route non trouvée: GET /inconnue ».</p>
+     *
+     * @param ex         exception portant la méthode et l'URL demandées
+     * @param enTetes    en-têtes prévus par Spring pour la réponse (non repris)
+     * @param statut     statut prévu par Spring (non repris : toujours 404)
+     * @param webRequest requête à l'origine de l'erreur
+     * @return la réponse 404 normalisée
+     */
     @Override
     protected ResponseEntity<Object> handleNoHandlerFoundException(
             NoHandlerFoundException ex, HttpHeaders enTetes, HttpStatusCode statut,
             WebRequest webRequest) {
 
         String message = "Route non trouvée: " + ex.getHttpMethod() + " " + ex.getRequestURL();
-        return erreurClient(HttpStatus.NOT_FOUND, List.of(message), requeteDe(webRequest));
-    }
-
-    // Erreur imputable à l'appelant : le message explicatif lui est utile, l'incident reste bénin.
-    private ResponseEntity<Object> erreurClient(
-            HttpStatus statut, List<String> messages, HttpServletRequest requete) {
-        log.warn("requête refusée ({}) sur {} : {}", statut.value(), requete.getRequestURI(), messages);
-        return reponse(statut, messages, requete);
-    }
-
-    // Erreur imputable au service : l'appelant n'obtient qu'un message générique, la cause est tracée.
-    private ResponseEntity<Object> erreurServeur(
-            HttpStatus statut, List<String> messages, HttpServletRequest requete, Exception ex) {
-        log.error("échec du traitement ({}) sur {}", statut.value(), requete.getRequestURI(), ex);
-        return reponse(statut, messages, requete);
-    }
-
-    // Assemble le corps normalisé renvoyé au client.
-    private ResponseEntity<Object> reponse(
-            HttpStatus statut, List<String> messages, HttpServletRequest requete) {
-        ErrorResponse corps = ErrorResponse.builder()
-                .timestamp(Instant.now().toString())
-                .path(requete.getRequestURI())
-                .errorCode(statut.name())
-                .microserviceName(nomDuMicroservice)
-                .messages(messages)
-                .build();
-        return ResponseEntity.status(statut).body(corps);
+        return reponses.client(HttpStatus.NOT_FOUND, List.of(message), requeteDe(webRequest));
     }
 
     // Extrait la requête servlet des handlers hérités, qui reçoivent un WebRequest.

@@ -14,3 +14,6 @@ target/
 
 # Consignes locales destinées à l'assistant, propres au poste de travail.
 CLAUDE.md
+
+# Notes personnelles de révision sur les notions introduites par l'IA.
+infos-ia.md

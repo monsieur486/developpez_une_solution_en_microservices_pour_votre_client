@@ -1,0 +1,17 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
+  application:
+    name: ms-webclient
+
+app:
+  gateway:
+    base-url: http://localhost:9000
+  auth:
+    username: ${APP_USERNAME:app_user}
+    # Mot de passe technique, sans valeur par défaut : à fournir par l'environnement (.env).
+    password: ${APP_PASSWORD}
+
+server:
+  port: 8080
