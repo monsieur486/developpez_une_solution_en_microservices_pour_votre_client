@@ -1,0 +1,14 @@
+# Profil « docker » : se superpose à application.yml. Seuls les noms d'hôte changent,
+# les conteneurs se joignant par leur nom de service sur le réseau Compose.
+
+spring:
+  data:
+    mongodb:
+      # Base des notes, joignable par le nom du service notes-db.
+      host: notes-db
+
+eureka:
+  client:
+    service-url:
+      # Adresse du registre, joignable par le nom du service ms-eureka.
+      defaultZone: http://ms-eureka:8761/eureka

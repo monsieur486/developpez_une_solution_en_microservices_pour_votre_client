@@ -22,6 +22,7 @@
         <module>ms-eureka</module>
         <module>ms-gateway</module>
         <module>ms-patients</module>
+        <module>ms-notes</module>
         <module>ms-webclient</module>
     </modules>
 
@@ -35,6 +36,8 @@
         <spring-cloud.version>2025.0.0</spring-cloud.version>
 
         <config.qualite.dir>${maven.multiModuleProjectDirectory}/config</config.qualite.dir>
+
+        <mongock.version>5.5.1</mongock.version>
 
         <bootstrap.version>5.3.3</bootstrap.version>
 
@@ -78,6 +81,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>io.mongock</groupId>
+                <artifactId>mongock-bom</artifactId>
+                <version>${mongock.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -103,6 +113,10 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <configuration>
+                        <!-- spring-boot:run lance chaque module depuis son propre dossier, où le
+                             .env de la racine est introuvable : les mots de passe restent alors en
+                             ${...} non résolus. On lance donc depuis la racine du dépôt. -->
+                        <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
                         <excludes>
                             <exclude>
                                 <groupId>org.projectlombok</groupId>
@@ -143,6 +157,7 @@
                         <exclude>**/client/**</exclude>
                         <exclude>**/repository/**</exclude>
                         <exclude>**/controller/**</exclude>
+                        <exclude>**/dbchangelogs/**</exclude>
                         <exclude>**/*Application.class</exclude>
                     </excludes>
                 </configuration>
@@ -342,6 +357,7 @@
                         <exclude>**/client/**</exclude>
                         <exclude>**/repository/**</exclude>
                         <exclude>**/controller/**</exclude>
+                        <exclude>**/dbchangelogs/**</exclude>
                         <exclude>**/*Application.class</exclude>
                     </excludes>
                 </configuration>

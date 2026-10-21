@@ -11,6 +11,7 @@ COPY ms-commun/pom.xml ms-commun/
 COPY ms-eureka/pom.xml ms-eureka/
 COPY ms-gateway/pom.xml ms-gateway/
 COPY ms-patients/pom.xml ms-patients/
+COPY ms-notes/pom.xml ms-notes/
 COPY ms-webclient/pom.xml ms-webclient/
 RUN mvn -B -pl ms-patients -am dependency:go-offline -DskipTests
 
