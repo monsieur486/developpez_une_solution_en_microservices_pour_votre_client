@@ -1,0 +1,7 @@
+# Complète la configuration principale pour les tests : placé dans config/, ce fichier se
+# superpose à application.yml au lieu de le remplacer.
+
+security:
+  app-user:
+    # Mot de passe inventé pour les tests : la configuration principale n'en fournit plus par défaut.
+    password: mot-de-passe-de-test

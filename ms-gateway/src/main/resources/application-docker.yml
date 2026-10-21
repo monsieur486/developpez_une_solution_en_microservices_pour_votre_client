@@ -5,18 +5,7 @@ spring:
   application:
     name: ms-gateway
 
-  cloud:
-    gateway:
-      server:
-        webflux:
-          discovery:
-            locator:
-              enabled: true
-              lower-case-service-id: true
-              filters:
-                - name: StripPrefix
-                  args:
-                    parts: 1
+# Les routes explicites viennent de application.yml : ce profil ne change que l'adresse d'Eureka.
 
 server:
   port: 9000

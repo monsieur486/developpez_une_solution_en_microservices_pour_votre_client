@@ -15,6 +15,7 @@ import com.mr486.commun.dto.PatientDto;
 import com.mr486.commun.exception.ServiceIndisponibleException;
 import com.mr486.mswebclient.configuration.SecurityConfiguration;
 import com.mr486.mswebclient.mapper.PatientFormMapper;
+import com.mr486.mswebclient.service.EvaluationApiService;
 import com.mr486.mswebclient.service.NoteApiService;
 import com.mr486.mswebclient.service.PatientApiService;
 import java.time.Instant;
@@ -42,6 +43,9 @@ class PatientDetailControllerMvcTest {
 
     @MockitoBean
     private NoteApiService noteApiService;
+
+    @MockitoBean
+    private EvaluationApiService evaluationApiService;
 
     // Un historique sans date ne permet pas au praticien de suivre l'évolution du patient.
     @Test
@@ -76,6 +80,25 @@ class PatientDetailControllerMvcTest {
                 .andExpect(content().string(Matchers.containsString("TestInDanger")))
                 .andExpect(content().string(Matchers.containsString("momentanément indisponibles")))
                 .andExpect(content().string(Matchers.not(Matchers.containsString("Ajouter une note"))));
+    }
+
+    // Isolement des pannes : sans ms-risque, la fiche reste consultable, et aucun badge ne doit
+    // laisser croire à un risque nul.
+    @Test
+    @WithMockUser
+    @DisplayName("une panne de ms-risque laisse la fiche s'afficher, avec un avertissement à la place du risque")
+    void fiche_risqueIndisponible_afficheLePatientEtUnAvertissement() throws Exception {
+        when(patientApiService.recupereLePatient(1L)).thenReturn(unPatient());
+        when(noteApiService.listeLesNotes(1L)).thenReturn(List.of());
+        when(evaluationApiService.evalueLeRisque(1L))
+                .thenThrow(new ServiceIndisponibleException("ms-risque", new IllegalStateException("arrêté")));
+
+        mockMvc.perform(get("/app/patients/1"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("evaluationIndisponible", true))
+                .andExpect(content().string(Matchers.containsString("TestInDanger")))
+                .andExpect(content().string(Matchers.containsString("risque est momentanément indisponible")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("text-bg-success"))));
     }
 
     @Test

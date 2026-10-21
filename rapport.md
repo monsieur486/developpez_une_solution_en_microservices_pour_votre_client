@@ -431,3 +431,168 @@ la gateway de l'IDE) : connexion, fiche datée, ajout d'une note, puis fiche con
 - [ ] Relire les ajustements ci-dessus et remplir Décision / Vérification dans `utilisation-ia.md`
 - [x] (optionnel) Supprimer l'ancien volume orphelin : `docker volume rm livrables_database-data`
 - [ ] (sécurité, optionnel) Compte MongoDB limité à `notesdb` plutôt que root
+
+---
+
+# Revue pédagogique — Sprint 3 (`ms-risque` et fiche patient)
+
+*Revue du 2026-10-20, branche `feat/sprint3-ms-risque`, code non commité.*
+
+## En bref
+Gros pas en avant : le service tourne avec Feign + Eureka, la gestion des erreurs distantes est
+propre et testée, et les **4 cas officiels donnent le bon niveau**. Mais ils le donnent en partie
+**par chance** : le comptage des déclencheurs est faux dans le cas général, « Fumeuse » n'est pas
+détecté, et le format renvoyé diffère du PDF du Sprint 3. Côté intégration, le module n'est pas
+encore dans le pom parent, Docker et les scripts.
+
+Mesures : `ms-risque` 23 tests verts, PMD 1, SpotBugs 0, Checkstyle 24 (Javadoc absente) ;
+`ms-webclient` 43 tests verts, Checkstyle 2 (Javadoc de `EvaluationApiService`).
+
+## Points forts
+- Clients **Feign** déclaratifs (`PatientClient`, `NoteClient`) résolus par **Eureka** : choix
+  défendable (appel interne direct, sans repasser par la gateway).
+- Traduction des erreurs Feign en exceptions de `ms-commun` (404 → introuvable, 4xx → refusé,
+  reste → indisponible), **testée** dans `PatientServiceTest` et `NotesServiceTest`.
+- **Horloge injectée** (`HorlogeConfiguration` + `Clock.fixed`) et test de l'anniversaire non
+  encore passé : exactement la bonne démarche.
+- Seuils en **constantes nommées**, trous des règles **tranchés et testés** (30 ans pile → règles
+  des plus de 30 ans ; jeune avec 2 déclencheurs → None).
+- Mot de passe sans valeur par défaut, `config/application.yml` de test qui se superpose.
+- Webclient : `EvaluationApiService` réutilise `ClientPasserelle`, avec un `@RestClientTest` qui
+  vérifie URL, en-tête Basic et texte brut.
+
+## Phase 3 — Algorithme (cœur du sprint)   ❌ à corriger
+### On compte des occurrences par note, pas des termes distincts   ·   axe : code propre
+- **Constat** : `compteDeclencheurs` ajoute 1 pour chaque couple (note, terme). Un même terme
+  présent dans deux notes compte deux fois.
+- **Pourquoi ça compte** : le patient 4 obtient 8 au lieu de 7 (« Réaction » est dans deux notes),
+  le patient 2 obtient 3 au lieu de 2 (« anormale » deux fois). Le bon niveau sort quand même, mais
+  un patient de 40 ans dont six notes disent « anormal » passerait **In Danger** avec un seul terme.
+- **Exemple** : la question à se poser est « *quels* termes apparaissent dans le dossier ? »,
+  pas « combien de fois ». Une structure qui ignore les doublons répond à la première.
+- **À toi de jouer** : écris d'abord le test rouge (même terme dans trois notes → un seul
+  déclencheur), puis corrige.
+
+### « Fumeuse » n'est pas détecté   ·   axe : code propre
+- **Constat** : la liste contient `fumeur` ; « fumeuse » ne contient pas cette chaîne.
+- **Pourquoi ça compte** : une patiente fumeuse perd un déclencheur. Le cahier des charges cite
+  « Fumeur, Fumeuse » comme **un seul** terme : attention à ne pas le compter deux fois non plus.
+- **À toi de jouer** : un test « Fumeuse » et un test « fumeur et fumeuse dans le même dossier → 1 ».
+  Ton choix du radical `vertige` (qui couvre « Vertiges ») est la bonne piste : documente-le.
+
+### Le format renvoyé n'est pas celui du PDF du Sprint 3   ·   axe : architecture
+- **Constat** : `NiveauRisque` renvoie `In Danger` et `Early onset` (libellés du résumé des
+  besoins) ; le PDF des résultats attendus écrit `InDanger` et `EarlyOnset`.
+- **Pourquoi ça compte** : le guide insiste sur « le format de renvoi attendu ». Les deux sources
+  divergent : c'est **une décision à prendre et à justifier**, pas un oubli à laisser au hasard.
+- **À toi de jouer** : choisis, écris-le dans le README et aligne le gabarit du webclient (il
+  compare des chaînes en dur).
+
+### Les tests ne couvrent ni les 4 cas officiels ni les doublons   ·   axe : code propre
+- **Constat** : 14 tests bien nommés, mais construits avec des notes synthétiques (un terme
+  chacun, une seule note). Aucun ne rejoue les vraies notes des patients 1 à 4, aucun ne met le
+  même terme dans deux notes : c'est pour ça que le bug ci-dessus passe au vert.
+- **À toi de jouer** : un `@ParameterizedTest` avec les 4 cas officiels (âge, genre, textes réels
+  → niveau attendu). Il règle aussi l'avertissement PMD `TooManyMethods` sur la classe de test.
+
+### Petits points   ·   axe : code propre / architecture
+- L'algorithme vit dans des méthodes privées du service : il n'est testable qu'à travers deux
+  mocks. Une classe pure (âge, genre, textes → niveau) serait plus simple à tester.
+- `note.getContent()` peut être `null` (lecture d'un document Mongo incomplet) : `NullPointerException`.
+- `NiveauRisque.getLibelle()` écrit à la main : `@Getter` Lombok, comme ailleurs.
+- `FeignSecurityConfiguration` est annotée `@Configuration` : elle s'applique donc à **tous** les
+  clients Feign, ce qui rend `configuration = …` sur les clients redondant. Savoir l'expliquer.
+- Pas de test du contrôleur (401 sans identifiants, 404 patient inconnu, `text/plain`).
+
+## Phase 5 — Intégration, Javadoc, configuration   ❌ manquant
+- ✅ `ms-risque` ajouté aux `<modules>` : `./mvnw clean verify` le construit (8 modules verts, 106 tests). Conséquence vérifiée : `docker build` d'`ms-eureka` échoue (« Child module /build/ms-risque does not exist »)
+- Seul le Dockerfile du webclient copie `ms-risque/pom.xml` : les 4 autres (eureka, gateway,
+  patients, notes) échoueront dès que le module sera déclaré.
+- `docker-compose.yml`, `prod-start.sh`, `dev-start.sh`, README : rien pour `ms-risque`.
+- Fichiers de l'initializr à supprimer : `ms-risque/mvnw*`, `HELP.md`, `.gitignore`, `.gitattributes`.
+- **Fiche patient** : `evaluationApiService.evalueLeRisque(id)` est appelé sans filet. Si
+  `ms-risque` tombe, **toute la fiche** part en page d'erreur, alors qu'on a fait l'inverse pour
+  les notes au Sprint 2. Même principe à appliquer, avec son test MVC.
+- Javadoc absente sur tout `ms-risque` et sur `EvaluationApiService` ; `application.yml` non commenté ;
+  `spring.web.resources.add-mappings: false` comme dans `ms-patients`.
+
+## Par où commencer
+1. Test rouge sur les doublons, puis correction du comptage ; ajouter Fumeuse.
+2. Test paramétré des 4 cas officiels et décision sur le format (`InDanger` ou `In Danger`).
+3. Intégration : module parent, 6 Dockerfiles, compose, scripts ; fiche tolérante à la panne.
+
+## Suivi `ms-risque` — à cocher au fil de l'eau
+
+### Phase 3 — Algorithme et tests
+- [x] (code propre) Compter les termes **distincts** du dossier, test rouge d'abord
+- [x] (code propre) Détecter « Fumeuse », sans compter Fumeur + Fumeuse deux fois
+- [x] (architecture) Trancher le format `InDanger` / `In Danger` et le documenter
+- [x] (code propre) Test paramétré des 4 cas officiels avec les vrais textes des notes
+- [x] (code propre) Protéger le comptage contre un contenu de note `null`
+- [x] (code propre) `@Getter` Lombok sur `NiveauRisque`
+- [ ] (architecture) Option : extraire l'algorithme dans une classe pure
+- [x] (code propre) Tests MVC du contrôleur : 401, 404, `text/plain`
+
+### Phase 5 — Intégration, Javadoc, configuration
+- [x] (architecture) Ajouter `ms-risque` aux `<modules>` du pom parent
+- [x] (architecture) `COPY ms-risque/pom.xml` dans les 4 Dockerfiles restants
+- [x] (architecture) Service `ms-risque` dans `docker-compose.yml`, `prod-start.sh`, `dev-start.sh`
+- [x] (code propre) Supprimer `mvnw*`, `HELP.md`, `.gitignore`, `.gitattributes` du module
+- [x] (architecture) Fiche patient consultable quand `ms-risque` est arrêté, avec son test
+- [x] (présentation) Javadoc FR de `ms-risque` et de `EvaluationApiService`
+- [x] (présentation) `application.yml` commenté, README complété
+
+### Point d'étape du 2026-10-20 (23 h) — algorithme corrigé, pile complète testée
+*Depuis la revue : 6 points réglés, 9 restants, 1 nouveau (important).*
+
+Mesures : `./mvnw clean verify` vert sur les 8 modules (`ms-risque` 30 tests, `ms-webclient` 44) ;
+7 images construites ; `./prod-start.sh` démarre la pile et valide la route `ms-risque`.
+
+- ✅ Comptage des termes **distincts** (graphies regroupées : `List<List<String>>`), Fumeuse
+  reconnue, test des doublons qui aurait rougi avec l'ancien code, test paramétré des 4 cas officiels.
+- ✅ Vérifié en vrai, via la gateway : patients 1 à 4 → None, Borderline, In Danger, Early onset
+  (`text/plain`), patient 99 → 404 JSON, sans identifiants → 401. Fiches du webclient : bon badge
+  et bonne couleur pour les 4.
+- ⚠️ Format toujours `In Danger` / `Early onset` : décision à écrire dans le README.
+
+### 🆕 Un service arrêté fait passer **toute la fiche** en « Page introuvable »   ·   axe : architecture
+- **Constat** (reproduit sur la pile Docker) : juste après l'arrêt de `ms-risque`, la fiche affiche
+  bien l'avertissement. Quelques secondes plus tard, elle renvoie **404 « Page introuvable »**.
+  Même chose en arrêtant `ms-notes` : le défaut date donc du Sprint 2, il n'avait pas été vu
+  parce qu'on avait testé juste après l'arrêt.
+- **Pourquoi** : la gateway route par découverte. Quand le service se désinscrit d'Eureka, sa
+  route **disparaît** et la gateway répond elle-même **404**. `ClientPasserelle` traduit tout 404
+  en `ResourceNotFoundException`, ce qui donne la page 404 au lieu de l'avertissement.
+- **Indice** : le 404 de la gateway n'a pas de champ `microserviceName`, celui d'un microservice si.
+- **À toi de jouer** : deux pistes, à choisir et à justifier.
+  - Côté gateway, déclarer des routes explicites `lb://ms-risque` : sans instance, le
+    load-balancer répond **503**, qui devient bien une indisponibilité. C'est aussi la « mise à
+    jour de la config Gateway » demandée par le guide.
+  - Côté webclient, ne traiter un 404 comme « introuvable » que s'il vient du microservice.
+  - Dans les deux cas, un test qui simule le 404 de la gateway.
+
+### Suivi — ajouts du 2026-10-20 (23 h)
+- [x] (architecture) Un service arrêté ne doit plus transformer la fiche en 404 (risque **et** notes)
+
+### Ajustements du 2026-10-20 (nuit, autorisés), branche `feat/sprint3-ms-risque`
+*Écrits par l'IA à la demande : « corrige les routes explicites, le format est "In Danger", ajoute la
+javadoc et corrige les points mineurs ». À relire pour savoir les expliquer.*
+
+- ✅ **Routes explicites** `lb://` dans `ms-gateway/application.yml` (découverte retirée des deux
+  profils). `RoutesGatewayTest` : sans instance, chaque route répond 503 ; vérifié rouge (404) avec
+  l'ancienne configuration. Sur la pile Docker, fiche consultable pendant 30 s après l'arrêt de
+  `ms-risque` puis de `ms-notes`, gateway en 503.
+- ✅ `prod-start.sh` : seul un 401 prouve qu'une route est prête (une route sans instance répond
+  désormais 503, que l'ancien contrôle aurait pris pour « prête »).
+- ✅ Format **`In Danger` / `Early onset`** retenu (résumé des besoins), justifié dans le README.
+- ✅ Note sans contenu ignorée (test rouge d'abord : `NullPointerException`) ; `@Getter` sur
+  `NiveauRisque` ; tests de seuils et de comptage regroupés en `@CsvSource` / `@MethodSource`
+  (PMD `TooManyMethods` réglé, 5 bornes ajoutées) ; `EvaluationControllerTest` (401, texte brut,
+  404, 503).
+- ✅ Javadoc FR de `ms-risque` et du webclient, YAML commentés, `add-mappings: false` dans
+  `ms-risque` **et** `ms-notes`, fichiers de l'initializr supprimés, `depends_on` de la gateway retiré.
+- Mesures : `./mvnw clean verify` vert, 114 tests (115 avec le test du 502), Checkstyle/PMD/SpotBugs à 0 sur tous les modules.
+
+### Reste ouvert
+- [x] (code propre) Fichiers d'initializr supprimés de `ms-notes` et `ms-gateway` puis de `ms-eureka`, `ms-patients` et `ms-webclient` : plus aucun module n'en porte
+- [x] (architecture) `AppelRefuseException` traduite en 502 au message générique (fait par toi, testé dans `EvaluationControllerTest`)

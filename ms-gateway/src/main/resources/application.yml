@@ -17,14 +17,31 @@ spring:
                 allowedHeaders: [ "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With", "*" ]
                 exposedHeaders: [ "Authorization" ]
                 allowCredentials: true
-          discovery:
-            locator:
-              enabled: true
-              lower-case-service-id: true
+          # Routes déclarées une à une plutôt que créées par découverte : une route de découverte
+          # disparaît dès que son service quitte Eureka, et la gateway répond alors 404, que le
+          # front prendrait pour un patient introuvable. Une route explicite reste en place ; sans
+          # instance disponible, le load-balancer répond 503, qui signale bien une panne.
+          routes:
+            - id: ms-patients
+              # « lb:// » : adresse résolue dans Eureka, appels répartis entre les instances.
+              uri: lb://ms-patients
+              predicates:
+                - Path=/ms-patients/**
               filters:
-                - name: StripPrefix
-                  args:
-                    parts: 1
+                # Retire le préfixe du service : /ms-patients/patients → /patients.
+                - StripPrefix=1
+            - id: ms-notes
+              uri: lb://ms-notes
+              predicates:
+                - Path=/ms-notes/**
+              filters:
+                - StripPrefix=1
+            - id: ms-risque
+              uri: lb://ms-risque
+              predicates:
+                - Path=/ms-risque/**
+              filters:
+                - StripPrefix=1
 
 server:
   port: 9000
