@@ -8,9 +8,12 @@
 > 🔍 revue / analyse — l'IA pointe, je corrige · 💡 explication — l'IA enseigne un concept ·
 > ⚙️ génération assistée — du contenu IA entre au projet · 🐞 débogage — l'IA aide à diagnostiquer
 >
-> **Règle que je me fixe** : le code métier et les tests des microservices (`ms-patients`,
-> `ms-notes`, `ms-risque`, front) sont écrits **par moi**. L'IA génère seulement l'outillage,
-> les README, la Javadoc et les artefacts de suivi — et chaque génération est tracée ici.
+> **Règle suivie** : j'écris le code métier et les tests des microservices (`ms-patients`,
+> `ms-notes`, `ms-risque`, front) ; l'IA génère l'outillage, les README, la Javadoc et les
+> artefacts de suivi. Quand je l'y ai **autorisée explicitement**, elle a aussi écrit du code
+> métier ou des tests, par exemple pour corriger un défaut qu'elle avait trouvé : ces lignes
+> sont marquées en gras dans le tableau. Chaque génération est tracée ici, et j'ai relu et
+> vérifié tout ce qui a été gardé.
 
 ## Résumé
 
@@ -37,8 +40,8 @@ fusionné dans `master` a été **gardé tel quel**, et vérifié dans IntelliJ 
   qualité, Docker, scripts), `rapport.md`, ce journal, le README (dont les recommandations Green
   Code et les captures d'écran des erreurs), la Javadoc et les commentaires des fichiers de
   configuration.
-- **Code et tests**, à ma demande explicite, alors que ma règle de départ était de les écrire
-  moi-même. Chaque cas est marqué en gras dans le tableau :
+- **Code et tests**, uniquement sur mon autorisation explicite, comme le prévoit la règle
+  ci-dessus. Chaque cas est marqué en gras dans le tableau :
   - **Sprint 1** : dans `ms-patients`, les validations de `PatientForm`, `PatientMapper.appliquer`,
     les transactions, `PatientControllerTest` et des compléments à `PatientServiceTest` ; dans le
     webclient, les routes, `SecurityConfiguration`, `PatientApiServiceTest` (qui a révélé un bug de
