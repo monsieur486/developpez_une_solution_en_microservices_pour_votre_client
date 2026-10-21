@@ -1,21 +1,27 @@
 spring:
   application:
+    # Nom d'inscription dans Eureka.
     name: ms-gateway
 
   cloud:
     gateway:
       server:
         webflux:
+          # CORS : n'autorise que des pages servies par la gateway elle-même (interface Swagger). Le
+          # webclient appelle la gateway depuis le serveur, pas depuis le navigateur : il n'est pas concerné.
           globalcors:
+            # Applique aussi le CORS aux requêtes de pré-vérification (OPTIONS) sans route.
             add-to-simple-url-handler-mapping: true
             cors-configurations:
               '[/**]':
+                # Origines autorisées : la gateway, sur le poste et sur le réseau Compose.
                 allowedOrigins:
                   - "http://localhost:9000"
                   - "http://ms-gateway:9000"
                 allowedMethods: [ GET, POST, PUT, PATCH, DELETE, OPTIONS ]
                 allowedHeaders: [ "Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With", "*" ]
                 exposedHeaders: [ "Authorization" ]
+                # Autorise l'envoi des identifiants HTTP Basic avec la requête.
                 allowCredentials: true
           # Routes déclarées une à une plutôt que créées par découverte : une route de découverte
           # disparaît dès que son service quitte Eureka, et la gateway répond alors 404, que le
@@ -44,7 +50,15 @@ spring:
                 - StripPrefix=1
 
 server:
+  # Port d'entrée unique des API.
   port: 9000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Seuls la santé et les informations sont exposées par l'actuator.
+        include: health,info
 
 springdoc:
   api-docs:

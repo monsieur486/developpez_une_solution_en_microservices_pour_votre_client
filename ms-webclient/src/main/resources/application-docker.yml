@@ -1,17 +1,7 @@
-spring:
-  config:
-    import: optional:file:.env[.properties]
-
-  application:
-    name: ms-webclient
+# Profil « docker » : se superpose à application.yml. Seule l'adresse de la gateway change, les
+# conteneurs se joignant par leur nom de service sur le réseau Compose.
 
 app:
   gateway:
+    # Gateway joignable par le nom du service ms-gateway.
     base-url: http://ms-gateway:9000
-  auth:
-    username: ${APP_USERNAME:app_user}
-    # Mot de passe technique, sans valeur par défaut : à fournir par l'environnement (.env).
-    password: ${APP_PASSWORD}
-
-server:
-  port: 8080

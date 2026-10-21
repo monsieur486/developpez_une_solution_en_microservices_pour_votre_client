@@ -1,24 +1,8 @@
-spring:
-  config:
-    import: optional:file:.env[.properties]
-
-  application:
-    name: ms-gateway
-
-# Les routes explicites viennent de application.yml : ce profil ne change que l'adresse d'Eureka.
-
-server:
-  port: 9000
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
+# Profil « docker » : se superpose à application.yml, qui porte les routes, le CORS et Swagger.
+# Seule l'adresse du registre change, les conteneurs se joignant par leur nom de service.
 
 eureka:
   client:
     service-url:
+      # Adresse du registre, joignable par le nom du service ms-eureka.
       defaultZone: http://ms-eureka:8761/eureka
-    registerWithEureka: true
-    fetchRegistry: true

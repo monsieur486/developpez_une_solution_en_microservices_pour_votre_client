@@ -1,23 +1,11 @@
-server:
-  port: 8761
-
-spring:
-  application:
-    name: ms-eureka
+# Profil « docker » : se superpose à application.yml. Seuls les noms d'hôte changent, les
+# conteneurs se joignant par leur nom de service sur le réseau Compose.
 
 eureka:
   instance:
+    # Nom du service Compose du registre.
     hostname: ms-eureka
-    instance-id: ${HOSTNAME}:${server.port}
-    prefer-ip-address: true
   client:
-    register-with-eureka: false
-    fetch-registry: false
     service-url:
+      # Adresse du registre, joignable par le nom du service ms-eureka.
       defaultZone: http://ms-eureka:8761/eureka
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
