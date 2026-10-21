@@ -1,5 +1,9 @@
+# Pile complète de Médilabo. Sans profil (./dev-start.sh), seules les deux bases démarrent ; le
+# profil « fullstack » (./prod-start.sh) ajoute le registre, la gateway, les microservices et le front.
+# Les secrets viennent de .env (copie de dist.env) : sans eux, Compose refuse de démarrer.
 services:
 
+  # Registre des services : chaque microservice s'y inscrit au démarrage.
   ms-eureka:
     build:
       context: .
@@ -21,6 +25,7 @@ services:
       retries: 10
       start_period: 20s
 
+  # Point d'entrée unique des API, et interface Swagger.
   ms-gateway:
     build:
       context: .
@@ -37,6 +42,7 @@ services:
     ports:
       - "9000:9000"
 
+  # Base relationnelle des fiches patients.
   patients-db:
     image: postgres:16
     container_name: patients-db
@@ -50,6 +56,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
+  # Base documentaire des notes, au texte libre.
   notes-db:
     image: mongo:8.0.14
     container_name: notes-db
@@ -62,6 +69,8 @@ services:
     volumes:
       - notes_data:/data/db
 
+  # Applique les migrations Liquibase une seule fois, puis s'arrête : les répliques de
+  # ms-patients ne se disputent pas le schéma.
   ms-patients-migration:
     build:
       context: .
@@ -71,6 +80,7 @@ services:
       - patients-db
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      # Ni serveur web ni inscription dans Eureka : ce conteneur ne fait que migrer la base.
       SPRING_MAIN_WEB_APPLICATION_TYPE: none
       EUREKA_CLIENT_ENABLED: "false"
       # Seule la migration a besoin du contexte : les répliques trouvent la base déjà à jour.
@@ -81,8 +91,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?à définir dans .env (voir dist.env)}
       APP_USERNAME: ${APP_USERNAME:-app_user}
       APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
+    # Tâche ponctuelle : ne pas la relancer une fois terminée.
     restart: "no"
 
+  # API des patients, en plusieurs instances que la gateway se répartit. Sans port publié :
+  # elle n'est joignable que par la gateway et ms-risque.
   ms-patients:
     build:
       context: .
@@ -95,6 +108,7 @@ services:
         condition: service_started
       ms-gateway:
         condition: service_started
+      # Démarre seulement une fois le schéma à jour.
       ms-patients-migration:
         condition: service_completed_successfully
     environment:
@@ -105,6 +119,7 @@ services:
       APP_USERNAME: ${APP_USERNAME:-app_user}
       APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
 
+  # API des notes, en plusieurs instances, sans port publié.
   ms-notes:
     build:
       context: .
@@ -128,6 +143,7 @@ services:
       APP_USERNAME: ${APP_USERNAME:-app_user}
       APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
 
+  # Évaluation du risque de diabète, en plusieurs instances, sans port publié.
   ms-risque:
     build:
       context: .
@@ -149,6 +165,7 @@ services:
       APP_USERNAME: ${APP_USERNAME:-app_user}
       APP_PASSWORD: ${APP_PASSWORD:?à définir dans .env (voir dist.env)}
 
+  # Interface web des praticiens : seul service publié avec la gateway et le registre.
   ms-webclient:
     build:
       context: .
@@ -166,6 +183,7 @@ services:
     ports:
       - "${PORT_WEBCLIENT:-8080}:8080"
 
+# Volumes nommés : les données survivent à « docker compose down » (mais pas à « down -v »).
 volumes:
   db_data:
   notes_data:

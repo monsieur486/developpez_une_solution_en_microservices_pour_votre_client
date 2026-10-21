@@ -744,3 +744,26 @@ vérifie toute la javadoc manquante puis commit ».*
 - ✅ Captures 15 (404), 19 (503) et 21 (502) refaites et ajoutées au README ; 17 refaite (en-tête
   `accept` à jour). Données intactes, pile restaurée.
 - Mesures : `./mvnw clean verify` vert, 121 tests ; Checkstyle, PMD et SpotBugs à 0.
+
+---
+
+# Étape 5 — documentation du code (2026-10-21), branche `feat/etape5-documentation`
+*Écrite par l'IA à la demande : « termine par l'étape 5 et fais la dernière PR » ; le Green Code est
+à expliquer à l'oral, pas à implémenter.*
+
+- ✅ Javadoc : complète sur les 8 modules (Checkstyle 0, `javadoc:javadoc` sans avertissement).
+- ✅ Configuration commentée : `application*.yml` d'Eureka, de la gateway et du webclient,
+  `docker-compose.yml` (vérifié identique hors commentaires, `docker compose config` valide).
+- ✅ Profils `docker` d'Eureka, de la gateway et du webclient réduits à ce qui change, comme les
+  autres services : ils recopiaient toute la configuration de base. Vérifié sur la pile.
+- ⚠️ **Trouvé en documentant** : `@Indexed` sur `Note.patientId` ne crée aucun index
+  (`auto-index-creation` désactivé par défaut) ; la collection n'a que `_id`. Javadoc rendue exacte,
+  comportement inchangé, piste n° 4 du Green Code.
+- ✅ README : étapes 5 et 6 livrées, section Green Code (objectif, comment mesurer, 8 pistes
+  propres au projet, ce qui est déjà en place).
+- Mesures : `./mvnw clean verify` vert, 121 tests ; Checkstyle, PMD et SpotBugs à 0.
+
+### Suivi — étape 5
+- [ ] (architecture) Option : créer l'index `patientId` des notes (migration Mongock), puis
+  vérifier avec `getIndexes()`
+- [ ] (présentation) Préparer l'oral Green Code : objectif, mesure, 2 ou 3 pistes du README

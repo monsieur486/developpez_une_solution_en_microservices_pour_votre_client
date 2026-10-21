@@ -1,23 +1,32 @@
 server:
+  # Port du registre : les microservices s'y inscrivent, et son tableau de bord y est consultable.
   port: 8761
 
 spring:
   application:
+    # Nom du registre.
     name: ms-eureka
 
 eureka:
   instance:
+    # Nom d'hôte du registre sur le poste en développement.
     hostname: localhost
+    # Identifiant d'instance : nom de la machine (ou du conteneur) et port.
     instance-id: ${HOSTNAME}:${server.port}
+    # Annonce l'adresse IP plutôt que le nom d'hôte.
     prefer-ip-address: true
   client:
+    # Le registre ne s'inscrit pas auprès de lui-même ...
     register-with-eureka: false
+    # ... et n'a pas besoin de lire le catalogue : il en est la source.
     fetch-registry: false
     service-url:
+      # Adresse publiée du registre, sur le poste en développement.
       defaultZone: http://localhost:8761/eureka
 
 management:
   endpoints:
     web:
       exposure:
+        # Seuls la santé et les informations sont exposées ; /actuator/health sert au healthcheck Docker.
         include: health,info

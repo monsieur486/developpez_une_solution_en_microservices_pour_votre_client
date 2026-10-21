@@ -29,7 +29,13 @@ public class Note {
     @Id
     private String id;
 
-    /** Identifiant du patient dans {@code ms-patients} ; indexé, car l'historique filtre dessus. */
+    /**
+     * Identifiant du patient dans {@code ms-patients}, sur lequel l'historique filtre.
+     *
+     * <p>{@code @Indexed} ne crée l'index que si {@code spring.data.mongodb.auto-index-creation} est
+     * activé, ce qui n'est pas le cas : la collection n'a aujourd'hui que l'index {@code _id}. Voir
+     * les recommandations Green Code du README.</p>
+     */
     @Indexed
     private Long patientId;
 

@@ -1,17 +1,22 @@
 spring:
   config:
+    # Secrets locaux lus depuis .env (copie de dist.env), s'il existe dans le dossier de lancement.
     import: optional:file:.env[.properties]
 
   application:
+    # Nom de l'application, repris dans les journaux.
     name: ms-webclient
 
 app:
   gateway:
+    # Seule adresse connue du front : toutes les API passent par la gateway.
     base-url: http://localhost:9000
   auth:
+    # Utilisateur technique : il ouvre la session du praticien et authentifie les appels aux API.
     username: ${APP_USERNAME:app_user}
     # Mot de passe technique, sans valeur par défaut : à fournir par l'environnement (.env).
     password: ${APP_PASSWORD}
 
 server:
+  # Port de l'interface web.
   port: 8080

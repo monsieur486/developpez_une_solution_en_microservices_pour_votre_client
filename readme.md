@@ -4,12 +4,9 @@ Application en microservices qui aide les praticiens d'une clinique à repérer 
 exposés au diabète de type 2. Projet 9 du parcours *Développeur d'application Java*
 (OpenClassrooms).
 
-> **Étape 4 — documentation des API.** Sans rien changer au métier, chaque service publie
-> son contrat OpenAPI, et les trois sont réunis dans une interface Swagger unique servie par
-> la gateway.
->
-> Le contrat de chaque service est vérifié par un test : servi sans identifiants, avec la gateway
-> pour serveur, et listé dans le sélecteur de l'interface.
+> **Étape 5 — documentation du code.** Javadoc française sur tout le code public des huit
+> modules, configuration YAML et `docker-compose.yml` commentés ligne à ligne, et pistes
+> d'amélioration Green Code en fin de document.
 
 | Étape | Besoin | État |
 |---|---|---|
@@ -17,7 +14,8 @@ exposés au diabète de type 2. Projet 9 du parcours *Développeur d'application
 | 2 | Consulter l'historique des notes d'un patient et y ajouter une note (MongoDB) | ✅ livré |
 | 3 | Évaluer le risque de diabète d'un patient | ✅ livré |
 | 4 | Documenter les API (OpenAPI, Swagger) | ✅ livré |
-| 5 | Documenter le code (Javadoc, configuration commentée) | ⏳ à venir |
+| 5 | Documenter le code (Javadoc, configuration commentée) | ✅ livré |
+| 6 | Identifier les enjeux du Green Code et lister des pistes d'amélioration | ✅ livré |
 
 ## Architecture
 
@@ -315,8 +313,60 @@ utilisation-ia.md    journal de l'usage de l'IA dans le projet
 
 ## Recommandations Green Code
 
-*À rédiger à l'étape 6 du projet : enjeux du Green Code et pistes d'amélioration propres à ce
-projet.*
+Le Green Code vise à **réduire les ressources consommées par un logiciel** (processeur, mémoire,
+réseau, stockage), et donc l'énergie et le matériel nécessaires pour le faire tourner, sans
+dégrader le service rendu. Ces recommandations ne sont **pas appliquées** au projet : ce sont des
+pistes d'amélioration, chacune assortie de la façon de la mesurer avant d'agir.
+
+### Repérer ce qui consomme
+
+On ne corrige que ce qu'on a mesuré : optimiser au jugé déplace souvent le problème.
+
+- **Par conteneur** : `docker stats` donne la mémoire et le processeur de chaque service, au repos
+  et sous charge.
+- **Dans la JVM** : les métriques Micrometer de l'actuator (`jvm.memory.used`,
+  `jvm.gc.pause`, `http.server.requests`), Java Flight Recorder ou VisualVM pour repérer les
+  méthodes et les objets les plus coûteux.
+- **Côté base** : `explain()` dans MongoDB et `EXPLAIN ANALYZE` dans PostgreSQL montrent si une
+  requête parcourt toute la table au lieu d'utiliser un index.
+- **Signes d'alerte dans le code** : collections chargées en entier, appels réseau répétés pour la
+  même donnée, objets créés en boucle, journaux trop bavards.
+
+### Pistes pour ce projet
+
+1. **Moins de JVM au repos.** La pile démarre 9 JVM : 2 instances de chacun des 3 services
+   métier, plus le registre, la gateway et le front. Une instance par service suffit au trafic
+   d'une clinique ; on n'en ajoute que si la charge le justifie (`REPLICA_MS_*` dans `.env`).
+2. **Mémoire des conteneurs bornée.** Aucune limite n'est posée dans `docker-compose.yml`. Fixer
+   `mem_limit` et `-XX:MaxRAMPercentage` évite qu'une JVM réserve plus qu'il ne lui faut.
+3. **Données lues deux fois pour afficher une fiche.** Le front demande la fiche et les notes, puis
+   `ms-risque` redemande les mêmes données à `ms-patients` et `ms-notes` pour calculer le risque :
+   deux fois plus d'appels réseau et de lectures en base. Le niveau de risque pourrait être mis en
+   cache et recalculé seulement à l'ajout d'une note.
+4. **Index MongoDB manquant.** `Note.patientId` porte `@Indexed`, mais l'index n'est créé que si
+   `spring.data.mongodb.auto-index-creation` est activé : la collection n'a que l'index `_id`, et
+   chaque historique parcourt toutes les notes. Le créer explicitement (par une migration Mongock)
+   rend la lecture indépendante du volume de notes.
+5. **Liste des patients sans pagination.** `GET /patients` renvoie toute la table. Avec des
+   milliers de patients, une pagination (`Pageable`) limiterait la mémoire, le réseau et le rendu.
+6. **Journaux à doser.** Les clients Feign journalisent chaque appel (`logger-level: basic`) : utile
+   en développement, superflu en production, où chaque ligne est écrite et stockée.
+7. **Nouvelles tentatives et pannes.** Feign réessaie jusqu'à 3 fois une erreur réseau. Face à un
+   service durablement arrêté, un disjoncteur (Resilience4j) couperait les appels inutiles au lieu
+   de les multiplier.
+8. **Construction des images.** Chacune des 7 images télécharge et compile les dépendances du
+   projet. Un cache Maven partagé entre les constructions, ou une construction unique copiée dans
+   chaque image, réduirait le temps et l'énergie dépensés à chaque mise à jour.
+
+### Déjà en place
+
+- Images d'exécution `eclipse-temurin:17-jre-alpine` : un JRE seul, sans compilateur, dans une
+  image minimale ; construction en deux étapes, qui laisse les outils de build hors de l'image finale.
+- Analyses qualité désactivées dans les images Docker : elles tournent une fois, au build local.
+- API sans ressources statiques (`add-mappings: false`) ; front rendu côté serveur, dont le seul
+  script est celui de Bootstrap.
+- Évaluation du risque sans base de données dédiée : le texte des notes est assemblé une seule
+  fois, puis chaque terme déclencheur y est recherché.
 
 ## Captures des erreurs et exceptions
 
