@@ -12,6 +12,65 @@
 > `ms-notes`, `ms-risque`, front) sont écrits **par moi**. L'IA génère seulement l'outillage,
 > les README, la Javadoc et les artefacts de suivi — et chaque génération est tracée ici.
 
+## Résumé
+
+**50 tâches** tracées avec Claude Code : 18 revues 🔍, 4 explications 💡, 23 générations ⚙️ et
+6 débogages 🐞 (une tâche compte à la fois comme génération et comme débogage). Tout le contenu
+fusionné dans `master` a été **gardé tel quel**, et vérifié dans IntelliJ IDEA.
+
+### Ce que j'ai écrit moi-même
+
+- **Sprint 1** : `ms-patients` (entité, repository, migrations Liquibase, service, contrôleur,
+  premiers tests du service), les DTO de `ms-commun`, et le webclient (contrôleurs, gabarits,
+  `ClientPasserelle`, traduction du 409, tests MockMvc des contrôleurs).
+- **Sprint 2** : `ms-notes` (document MongoDB, migration Mongock, API), l'historique et l'ajout de
+  note dans le webclient, l'intégration Docker.
+- **Sprint 3** : `ms-risque` (clients Feign, algorithme d'évaluation, tests paramétrés des 4 cas
+  officiels), l'affichage du risque et sa tolérance à la panne sur la fiche, le gestionnaire du
+  refus en aval (statut 502) et son test.
+- **Étape 4** : la mise en place de springdoc, le socle `DocumentationApiConfiguration`,
+  l'ouverture de `/v3/api-docs`, et les tests `CheminsPublicsSecuriteTest`.
+
+### Ce que l'IA a généré
+
+- **Outillage et suivi**, de plein droit : le socle technique de départ (pom parent, règles
+  qualité, Docker, scripts), `rapport.md`, ce journal, le README (dont les recommandations Green
+  Code et les captures d'écran des erreurs), la Javadoc et les commentaires des fichiers de
+  configuration.
+- **Code et tests**, à ma demande explicite, alors que ma règle de départ était de les écrire
+  moi-même. Chaque cas est marqué en gras dans le tableau :
+  - **Sprint 1** : dans `ms-patients`, les validations de `PatientForm`, `PatientMapper.appliquer`,
+    les transactions, `PatientControllerTest` et des compléments à `PatientServiceTest` ; dans le
+    webclient, les routes, `SecurityConfiguration`, `PatientApiServiceTest` (qui a révélé un bug de
+    format des dates, corrigé), `PatientFormMapper` et `LiaisonFormulaires` ; la factorisation du
+    gestionnaire d'erreurs ;
+  - **Sprint 2** : séparation `NoteForm` / `NoteDto` avec la date, fiche tolérante à la panne de
+    `ms-notes`, tests de `ms-notes` ;
+  - **Sprint 3** : routes explicites de la gateway et leur test, notes sans contenu, tests regroupés
+    en tests paramétrés, test du contrôleur de `ms-risque` ;
+  - **Étape 4** : annotations OpenAPI, tests Swagger de la gateway, passage de l'évaluation du
+    risque en JSON.
+
+### Ce que l'IA m'a apporté au-delà du code
+
+- **Des défauts trouvés en vérifiant sur la pile Docker**, invisibles dans les tests :
+  - la gateway répondait 404 au lieu de 503 quand un service s'arrêtait ;
+  - les erreurs de `ms-risque` sortaient en 500 vide pour un client qui n'acceptait que du texte ;
+  - l'index MongoDB sur `patientId` n'a jamais été créé.
+- **Des pièges métier signalés sans me donner la solution** : compter les termes distincts plutôt
+  que les occurrences, « Vertige » au singulier dans les notes, « fume » qui n'est pas « Fumeur ».
+- **Ses propres erreurs, tracées** : un conseil faux sur `spring-boot:run` (ligne 🐞 dédiée) et des
+  décomptes de tests corrigés après coup dans `rapport.md`.
+
+### Ce que je dois savoir expliquer seul au jury
+
+L'`ArgumentCaptor`, `@WebMvcTest` avec `@WithMockUser`, `@Transactional(readOnly = true)`, la
+différence entre le 404 d'une route de découverte et le 503 du load-balancer, la négociation de
+contenu et le 406, les tag, opération et réponse d'OpenAPI, et deux ou trois pistes Green Code.
+La dernière colonne du tableau rappelle, ligne par ligne, les points à préparer.
+
+## Journal détaillé
+
 | Étape / Tâche | Outil IA | Prompt (résumé) | Ce que l'IA a proposé | Décision | Vérification et conclusion |
 |---------------|----------|-----------------|-----------------------|----------|----------------------------|
 | ⚙️ Génération du socle technique (avant le Sprint 1) | Claude Code (générateur de socle technique) | Contexte : projet P09 microservices, Spring Boot 3.5 / Java 17. Consigne : produire un socle multi-modules prêt pour le Sprint 1 | `pom.xml` parent (modules `ms-commun`, `ms-eureka`, `ms-gateway` ; Lombok, JaCoCo, Checkstyle, SpotBugs + FindSecBugs, PMD, site Maven) ; `config/` (règles Checkstyle, PMD, exclusions SpotBugs) ; `ms-commun` (`GlobalExceptionHandler`, `ResourceNotFoundException`, `DuplicateException`, `ServiceIndisponibleException`, `ErrorResponse`) ; classes de démarrage Eureka et Gateway ; `Dockerfile`s, `docker-compose.yml` (Eureka, Gateway, PostgreSQL), `dist.env`, scripts `dev-*/prod-*.sh`, `maj.sh` | Gardé | Vérifié dans IntelliJ IDEA |
