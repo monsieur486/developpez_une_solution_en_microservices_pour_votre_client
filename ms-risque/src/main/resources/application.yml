@@ -51,3 +51,5 @@ eureka:
     registerWithEureka: true
     # Lit le registre, pour que Feign trouve ms-patients et ms-notes.
     fetchRegistry: true
+    # Relit le registre toutes les 5 s (défaut : 30 s) pour suivre vite les arrêts et relances.
+    registryFetchIntervalSeconds: 5

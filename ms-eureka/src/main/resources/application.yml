@@ -8,6 +8,10 @@ spring:
     name: ms-eureka
 
 eureka:
+  server:
+    # Rafraîchit toutes les 3 s le cache des réponses servies aux clients (défaut : 30 s) :
+    # un service relancé est vu plus vite par la gateway.
+    response-cache-update-interval-ms: 3000
   instance:
     # Nom d'hôte du registre sur le poste en développement.
     hostname: localhost

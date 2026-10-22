@@ -4,6 +4,10 @@ spring:
     name: ms-gateway
 
   cloud:
+    loadbalancer:
+      cache:
+        # Garde la liste des instances 5 s (défaut : 35 s) : un service relancé est routé plus vite.
+        ttl: 5s
     gateway:
       server:
         webflux:
@@ -48,6 +52,11 @@ spring:
                 - Path=/ms-risque/**
               filters:
                 - StripPrefix=1
+
+eureka:
+  client:
+    # Relit le registre toutes les 5 s (défaut : 30 s) pour suivre vite les arrêts et relances.
+    registry-fetch-interval-seconds: 5
 
 server:
   # Port d'entrée unique des API.
